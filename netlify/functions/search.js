@@ -1,5 +1,5 @@
-const CLIENT_ID = '5957319555584722';
-const CLIENT_SECRET = '0mUN8v4yq9ZrtVK5KVdQUw5IAwUgAPkm';
+const CLIENT_ID = process.env.ML_CLIENT_ID;
+const CLIENT_SECRET = process.env.ML_CLIENT_SECRET;
 
 async function getToken() {
   const res = await fetch('https://api.mercadolibre.com/oauth/token', {
@@ -26,6 +26,14 @@ exports.handler = async (event) => {
   }
 
   try {
+    if (!CLIENT_ID || !CLIENT_SECRET) {
+      return {
+        statusCode: 200,
+        headers,
+        body: JSON.stringify({ error: 'Variáveis de ambiente ML_CLIENT_ID / ML_CLIENT_SECRET não configuradas no Netlify.' })
+      };
+    }
+
     const params = event.queryStringParameters || {};
     const { skin, hair_type, concern, hair_concern, maq_area, maq_prod,
             skin_prod, hair_prod, budget, cat } = params;
@@ -90,14 +98,12 @@ exports.handler = async (event) => {
     }
 
     const query = queries[queries.length - 1] || 'cosméticos beleza';
-
     const token = await getToken();
 
     const searchUrl = `https://api.mercadolibre.com/sites/MLB/search?q=${encodeURIComponent(query)}&limit=18`;
     const res = await fetch(searchUrl, {
       headers: { 'Authorization': `Bearer ${token}` }
     });
-
     const data = await res.json();
 
     if (!res.ok) {
@@ -112,8 +118,8 @@ exports.handler = async (event) => {
     }
 
     const results = data.results || [];
-
     let filtered = results;
+
     if (budget) {
       const ranges = {
         economico: [0, 50],
