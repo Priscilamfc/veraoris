@@ -909,33 +909,14 @@ var SUPABASE_URL = 'https://xwgizhavipjwyymviupz.supabase.co';
 var SUPABASE_KEY = 'sb_publishable_34MfyTUMwRGK8GXfvC9GLw_zb1J27OK';
 
 // ── SCRAPPA (comparação de preços via Google Search) ──
-var SCRAPPA_KEY = 'eyJpdiI6IitYSk1qMEk2WnIxajF5eThxRVNFSFE9PSIsInZhbHVlIjoiYnpZTkpnV20rQ1FrYnpyM0c3cFpkMEI2ODhTNWdTNWlvMWN1eldKTHprS25UZFJhU0g1OVhEcDBDaHBFeXk1R1hTclgvdzU4aVFORUxNRHFxajZoTkE9PSIsIm1hYyI6ImMyMWMyMzE1MDk0Mzc3NDZhMmY0MThkYzc0MmU4MTczNWQ3NmI5YWUzNjFlNDEzYWQ0NjQyNGZhM2FjNzNjZWUiLCJ0YWciOiIifQ==';
-
+// A chave da API fica apenas no servidor (Netlify function), nunca no código do site.
 function scrappaSearchPrices(query, callback){
   var countryCode = region==='PT' ? 'es' : 'br';
-  var url = 'https://scrappa.co/api/search-advanced?query='+encodeURIComponent(query)
-    +'&gl='+countryCode+'&search_type=shop';
-  fetch(url, {
-    headers: { 'X-API-KEY': SCRAPPA_KEY }
-  })
+  var url = '/.netlify/functions/scrappa-search?query='+encodeURIComponent(query)+'&gl='+countryCode;
+  fetch(url)
   .then(function(r){ return r.json(); })
   .then(function(data){
-    var products = data.popular_products || [];
-    var prices = data.immersive_products || [];
-    // Merge: match by position to get store name + price together
-    var merged = [];
-    for(var i=0;i<prices.length;i++){
-      var pr = prices[i];
-      var src = products[i] ? products[i].source : null;
-      if(pr.extracted_price){
-        merged.push({
-          title: pr.title,
-          price: pr.extracted_price,
-          store: src || 'Loja online'
-        });
-      }
-    }
-    callback(merged);
+    callback(data.merged || []);
   })
   .catch(function(err){
     console.log('Scrappa search failed:', err);
@@ -973,30 +954,6 @@ function supabaseSelect(table, callback){
   .catch(function(err){ console.log('Supabase select failed (offline?):', err); callback([]); });
 }
 
-function supabaseDelete(table, id, callback){
-  fetch(SUPABASE_URL + '/rest/v1/' + table + '?id=eq.' + id, {
-    method: 'DELETE',
-    headers: {
-      'apikey': SUPABASE_KEY,
-      'Authorization': 'Bearer ' + SUPABASE_KEY,
-      'Prefer': 'return=minimal'
-    }
-  })
-  .then(function(r){ if(callback) callback(r.ok); })
-  .catch(function(err){ console.log('Supabase delete failed (offline?):', err); if(callback) callback(false); });
-}
-function supabaseDeleteAll(table, callback){
-  fetch(SUPABASE_URL + '/rest/v1/' + table + '?id=gte.0', {
-    method: 'DELETE',
-    headers: {
-      'apikey': SUPABASE_KEY,
-      'Authorization': 'Bearer ' + SUPABASE_KEY,
-      'Prefer': 'return=minimal'
-    }
-  })
-  .then(function(r){ if(callback) callback(r.ok); })
-  .catch(function(err){ console.log('Supabase delete all failed (offline?):', err); if(callback) callback(false); });
-}
 
 var AFF={
   'Mercado Livre':function(s){return 'https://lista.mercadolivre.com.br/'+encodeURIComponent(s);}
@@ -1050,28 +1007,61 @@ var FAQS=[
 ];
 // ── DASHBOARD PASSWORD PROTECTION ──
 // To open dashboard: press D + A + S + H keys together
+// A password é validada no servidor (Netlify function) — nunca fica no código do site.
 var dashKeySeq = [];
-var DASH_PASSWORD = 'veraoris2025';
 var dashUnlocked = false;
+var adminPassword = null;
 
 document.addEventListener('keydown', function(e){
   dashKeySeq.push(e.key.toLowerCase());
   if(dashKeySeq.length > 4) dashKeySeq.shift();
   if(dashKeySeq.join('') === 'dash'){
     var pwd = prompt('Password:');
-    if(pwd === DASH_PASSWORD){
-      dashUnlocked = true;
-      document.getElementById('dashFab').style.display = 'block';
-      showToast('Dashboard desbloqueado ✓');
-    } else {
-      showToast('Password incorrecta');
-    }
     dashKeySeq = [];
+    if(!pwd) return;
+    adminPassword = pwd;
+    adminApi('verify', null, {}, function(ok){
+      if(ok){
+        dashUnlocked = true;
+        document.getElementById('dashFab').style.display = 'block';
+        showToast('Dashboard desbloqueado ✓');
+      } else {
+        adminPassword = null;
+        showToast('Password incorrecta');
+      }
+    });
   }
 });
 
 function checkDashPassword(){
   if(dashUnlocked) toggleDash();
+}
+
+// Chama a Netlify function que verifica a password e executa a ação no Supabase
+// com a service key (nunca exposta ao browser). Usada só para dados sensíveis
+// (mensagens, estatísticas e dicas administradas).
+function adminApi(action, table, extra, callback){
+  var body = Object.assign({action: action, table: table, password: adminPassword}, extra || {});
+  fetch('/.netlify/functions/admin', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body)
+  })
+  .then(function(r){ return r.json(); })
+  .then(function(res){
+    if(!res.ok && action !== 'verify' && res.error === 'Password incorreta'){
+      dashUnlocked = false;
+      adminPassword = null;
+      document.getElementById('dashFab').style.display = 'none';
+      closeAdmin();
+      showToast('Sessão expirada — volta a introduzir a password (D A S H)');
+    }
+    callback(res.ok, res.data, res.error);
+  })
+  .catch(function(err){
+    console.log('Admin API failed:', err);
+    callback(false, null, err.message);
+  });
 }
 
 window.onload=function(){
@@ -1625,7 +1615,7 @@ function saveDica(){
   var brandPT=document.getElementById('dicaProdBrandPT').value.trim();
   var nomePT=document.getElementById('dicaProdNomePT').value.trim();
   if(!texto){ showToast('Escreve o texto da dica'); return; }
-  supabaseInsert('dicas', {texto:texto, produto_brand_br:brandBR, produto_nome_br:nomeBR, produto_brand_pt:brandPT, produto_nome_pt:nomePT});
+  adminApi('insert', 'dicas', {data:{texto:texto, produto_brand_br:brandBR, produto_nome_br:nomeBR, produto_brand_pt:brandPT, produto_nome_pt:nomePT}}, function(){});
   closeDicaForm();
   renderAdminDicas();
   renderDicaHome();
@@ -1655,7 +1645,7 @@ function renderAdminDicas(){
 }
 function deleteDica(id){
   if(!confirm('Apagar esta dica?'))return;
-  supabaseDelete('dicas', id, function(ok){
+  adminApi('delete', 'dicas', {id:id}, function(ok){
     if(ok){ renderAdminDicas(); renderDicaHome(); showToast('Dica apagada ✓'); }
     else { showToast('Erro ao apagar — verifica a ligação'); }
   });
@@ -1739,7 +1729,8 @@ function renderAdminStats(){
   var tbody=document.getElementById('adClicksTable');
   tbody.innerHTML='<tr><td colspan="4" class="admin-empty">A carregar dados do servidor...</td></tr>';
 
-  supabaseSelect('cliques', function(cliquesData){
+  adminApi('select', 'cliques', {}, function(ok, cliquesData){
+    cliquesData = cliquesData || [];
     var totalClicks = cliquesData.length;
     document.getElementById('adStatClicks').textContent = totalClicks;
 
@@ -1754,7 +1745,8 @@ function renderAdminStats(){
     }
   });
 
-  supabaseSelect('quiz_completados', function(qc){
+  adminApi('select', 'quiz_completados', {}, function(ok, qc){
+    qc = qc || [];
     document.getElementById('adStatQuiz').textContent = qc.length;
     var catCounts={};
     qc.forEach(function(q){ if(q.categoria) catCounts[q.categoria]=(catCounts[q.categoria]||0)+1; });
@@ -1764,16 +1756,16 @@ function renderAdminStats(){
     document.getElementById('adStatTop').textContent=catLbl[topCat]||topCat;
   });
 
-  supabaseSelect('mensagens', function(msgs){
-    document.getElementById('adStatMsgs').textContent = msgs.length;
+  adminApi('select', 'mensagens', {}, function(ok, msgs){
+    document.getElementById('adStatMsgs').textContent = (msgs||[]).length;
   });
 }
 function clearStats(){
   if(!confirm('Tens a certeza? Isto vai apagar todos os cliques e dados de quiz registados no servidor.'))return;
   clicks=[];
   try{ localStorage.removeItem('veraoris_clicks'); localStorage.removeItem('veraoris_quiz_completions'); }catch(e){}
-  supabaseDeleteAll('cliques', function(ok1){
-    supabaseDeleteAll('quiz_completados', function(ok2){
+  adminApi('deleteAll', 'cliques', {}, function(ok1){
+    adminApi('deleteAll', 'quiz_completados', {}, function(ok2){
       renderAdminStats();
       updateDash();
       if(ok1 && ok2){ showToast('Estatísticas limpas ✓'); }
@@ -1935,7 +1927,8 @@ function exportAffiliatesCode(){
 function renderAdminMessages(){
   var el=document.getElementById('adMessagesList');
   el.innerHTML='<div class="admin-empty">A carregar mensagens do servidor...</div>';
-  supabaseSelect('mensagens', function(msgs){
+  adminApi('select', 'mensagens', {}, function(ok, msgs){
+    msgs = msgs || [];
     if(!msgs.length){
       el.innerHTML='<div class="admin-empty">Nenhuma mensagem recebida ainda</div>';
       return;
@@ -1957,14 +1950,14 @@ function renderAdminMessages(){
 }
 function deleteMessage(id){
   if(!confirm('Apagar esta mensagem?'))return;
-  supabaseDelete('mensagens', id, function(ok){
+  adminApi('delete', 'mensagens', {id:id}, function(ok){
     if(ok){ renderAdminMessages(); showToast('Mensagem apagada ✓'); }
     else { showToast('Erro ao apagar — verifica a ligação'); }
   });
 }
 function clearMessages(){
   if(!confirm('Apagar TODAS as mensagens? Esta acção não pode ser desfeita.'))return;
-  supabaseDeleteAll('mensagens', function(ok){
+  adminApi('deleteAll', 'mensagens', {}, function(ok){
     try{ localStorage.removeItem('veraoris_messages'); }catch(e){}
     renderAdminMessages();
     if(ok){ showToast('Mensagens apagadas ✓'); }
