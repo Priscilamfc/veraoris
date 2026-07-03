@@ -65,18 +65,25 @@ nav{background:rgba(255,255,255,0.97);border-bottom:1px solid var(--marble3);pos
 .particles span:nth-child(6){left:95%;top:95%;animation-delay:5s;animation-duration:14s}
 @keyframes floatUp{0%{transform:translateY(0) translateX(0);opacity:0}10%{opacity:.8}90%{opacity:.6}100%{transform:translateY(-90vh) translateX(20px);opacity:0}}
 @keyframes sh{0%{left:-120%}100%{left:220%}}
-.hero-in{max-width:1320px;margin:0 auto;padding:80px 40px;position:relative;z-index:2;display:grid;grid-template-columns:1.1fr .9fr;align-items:center;gap:60px;min-height:100vh}
+.hero-in{max-width:1320px;margin:0 auto;padding:80px 40px;position:relative;z-index:2;display:flex;flex-direction:column;gap:40px;min-height:100vh;justify-content:center}
+.hero-intro{max-width:720px}
 .hero-eye{display:inline-flex;align-items:center;gap:8px;background:rgba(232,144,122,.18);border:1px solid rgba(154,72,53,.35);color:var(--gold5);font-size:11px;font-weight:700;padding:7px 18px;border-radius:20px;margin-bottom:28px;letter-spacing:1px;text-transform:uppercase;backdrop-filter:blur(8px)}
 .hero-h1{font-family:Cormorant Garamond,serif;font-size:clamp(2.8rem,5vw,4.4rem);font-weight:600;color:var(--gold5);line-height:1.07;margin-bottom:10px;letter-spacing:-.5px}
 .hero-h1 .shine{background:var(--gg);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;font-style:italic;display:block}
-.hero-desc{font-size:16px;color:#B05C42;line-height:1.75;max-width:480px;margin-bottom:36px;font-weight:300}
-.hero-search{background:rgba(255,255,255,.65);border:1.5px solid rgba(154,72,53,.3);border-radius:50px;display:flex;align-items:center;padding:7px 7px 7px 22px;max-width:520px;margin-bottom:20px;backdrop-filter:blur(12px);transition:all .3s}
+.hero-desc{font-size:16px;color:#B05C42;line-height:1.75;max-width:480px;font-weight:300}
+.hero-split{display:grid;grid-template-columns:1fr 1fr;gap:22px}
+.hero-block{background:rgba(255,255,255,.72);border:1.5px solid rgba(154,72,53,.25);border-radius:20px;padding:30px 28px;backdrop-filter:blur(14px);display:flex;flex-direction:column;gap:14px;box-shadow:0 8px 30px rgba(26,16,10,.06)}
+.hb-icon{width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,#9A4835,#E8907A);color:#fff;font-size:19px;display:flex;align-items:center;justify-content:center}
+.hero-block h3{font-family:Cormorant Garamond,serif;font-size:1.4rem;font-weight:600;color:var(--gold5);line-height:1.25}
+.hero-block p{font-size:14px;color:#B05C42;line-height:1.6;font-weight:300}
+.hero-block .btn-caq{align-self:flex-start;margin-top:4px}
+.hero-search{background:rgba(255,255,255,.9);border:1.5px solid rgba(154,72,53,.3);border-radius:50px;display:flex;align-items:center;padding:7px 7px 7px 22px;width:100%;margin-top:4px;transition:all .3s}
 .hero-search:focus-within{border-color:var(--gold5);box-shadow:0 0 0 4px rgba(154,72,53,.12)}
-.hero-search input{flex:1;border:none;outline:none;font-size:15px;color:var(--gold5);background:transparent;font-family:'Inter',sans-serif}
+.hero-search input{flex:1;border:none;outline:none;font-size:15px;color:var(--gold5);background:transparent;font-family:'Inter',sans-serif;min-width:0}
 .hero-search input::placeholder{color:#C97A5F}
-.h-sbtn{background:linear-gradient(135deg,#9A4835,#E8907A,#F0AA90,#FFD5C5);color:#fff;border:none;border-radius:40px;padding:11px 28px;font-size:14px;font-weight:700;transition:all .2s;cursor:pointer}
+.h-sbtn{background:linear-gradient(135deg,#9A4835,#E8907A,#F0AA90,#FFD5C5);color:#fff;border:none;border-radius:40px;padding:11px 24px;font-size:14px;font-weight:700;transition:all .2s;cursor:pointer;flex-shrink:0}
 .h-sbtn:hover{transform:translateY(-1px);box-shadow:0 4px 16px rgba(232,144,122,.5)}
-.htags{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:32px}
+.htags{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
 .htag-l{font-size:12px;color:#C97A5F}
 .htag{background:rgba(154,72,53,.06);border:1px solid rgba(154,72,53,.18);border-radius:20px;padding:5px 14px;font-size:12px;color:var(--gold5);cursor:pointer;transition:all .2s}
 .htag:hover{border-color:var(--gold2);color:var(--gold3)}
@@ -85,10 +92,10 @@ nav{background:rgba(255,255,255,0.97);border-bottom:1px solid var(--marble3);pos
 .btn-caq:hover::before{transform:translateX(100%)}
 .btn-caq:hover{transform:translateY(-3px);box-shadow:0 12px 40px rgba(200,146,42,.6)}
 .btn-caq .ico{width:36px;height:36px;background:rgba(30,45,61,.25);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px}
-.btn-sec{display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,.1);color:var(--marble);border:1.5px solid rgba(255,255,255,.28);border-radius:26px;padding:12px 26px;font-size:14px;font-weight:600;cursor:pointer;transition:all .25s;backdrop-filter:blur(8px);margin-left:14px}
+.btn-sec{display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,.1);color:var(--marble);border:1.5px solid rgba(255,255,255,.28);border-radius:26px;padding:12px 26px;font-size:14px;font-weight:600;cursor:pointer;transition:all .25s;backdrop-filter:blur(8px)}
 .btn-sec:hover{border-color:var(--gold2);color:var(--gold3)}
-.cta-row{margin-top:12px;display:flex;flex-wrap:wrap;align-items:center;gap:4px}
-.hero-right{display:flex;flex-direction:column;gap:14px;align-items:flex-end}
+.cta-row{margin-top:4px;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:20px}
+.hero-stats{display:flex;flex-wrap:wrap;gap:14px}
 .stat-card{background:rgba(255,255,255,.7);border:1px solid rgba(154,72,53,.22);border-radius:16px;padding:20px 26px;backdrop-filter:blur(14px);text-align:center;min-width:165px}
 .stat-num{font-family:Cormorant Garamond,serif;font-size:2.4rem;font-weight:600;color:var(--gold5);display:block;line-height:1}
 .stat-lbl{font-size:10px;color:#C97A5F;letter-spacing:1.5px;text-transform:uppercase;font-weight:600;margin-top:4px}
@@ -377,8 +384,10 @@ textarea.form-inp{resize:vertical;min-height:140px}
 .toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--night);color:var(--gold3);border:1px solid rgba(200,146,42,.3);border-radius:30px;padding:10px 28px;font-size:12px;font-weight:700;z-index:500;opacity:0;transition:all .3s;pointer-events:none;white-space:nowrap;box-shadow:0 6px 24px rgba(18,10,4,.35)}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 @media(max-width:900px){
-  .hero-in,.ben-in{grid-template-columns:1fr}
-  .hero-right{display:none}
+  .ben-in{grid-template-columns:1fr}
+  .hero-split{grid-template-columns:1fr}
+  .hero-stats{display:none}
+  .cta-row{justify-content:flex-start}
   .cats-grid,.prods-grid{grid-template-columns:1fr 1fr}
   .nav-links{display:none}
   .foot-grid{grid-template-columns:1fr 1fr}
@@ -675,29 +684,41 @@ textarea.form-inp{resize:vertical;min-height:140px}
   <div class="particles"><span></span><span></span><span></span><span></span><span></span><span></span></div>
   <div class="shimmer"></div>
   <div class="hero-in">
-    <div>
+    <div class="hero-intro">
       <div class="hero-eye">✦ <span id="heroEye">Comparador de Beleza Nº1</span></div>
       <h1 class="hero-h1"><span id="heroH1a">Compare. Decida.</span><span class="shine" id="heroH1b">Escolha melhor.</span></h1>
       <p class="hero-desc" id="heroDesc">Encontre os melhores produtos de beleza comparando preços em várias lojas, num só lugar.</p>
-      <div class="hero-search">
-        <input type="text" id="heroSearch" placeholder="O que você procura hoje?">
-        <button class="h-sbtn" onclick="doHeroSearch()" id="btnBuscar">Buscar</button>
-      </div>
-      <div class="htags">
-        <span class="htag-l" id="exLbl">Exemplos:</span>
-        <button class="htag" onclick="document.getElementById('heroSearch').value='hidratante pele oleosa'" id="ex1">hidratante pele oleosa</button>
-        <button class="htag" onclick="document.getElementById('heroSearch').value='base matte'" id="ex2">base matte</button>
-        <button class="htag" onclick="document.getElementById('heroSearch').value='shampoo sem sulfato'" id="ex3">shampoo sem sulfato</button>
-      </div>
-      <div class="cta-row">
+    </div>
+    <div class="hero-split">
+      <div class="hero-block hero-block-quiz">
+        <div class="hb-icon">✦</div>
+        <h3 id="hbQuizH">Não sabe por onde começar? A gente te ajuda a escolher certo</h3>
+        <p id="hbQuizP">Responda um quiz rápido e receba recomendações sob medida para o seu perfil.</p>
         <button class="btn-caq" onclick="startQuiz()"><span class="ico">✦</span><span id="ctaCompare">Compare Aqui — É Gratuito</span></button>
-        <button class="btn-sec" onclick="showPage('compare')" id="ctaAll">Ver todos os produtos</button>
+      </div>
+      <div class="hero-block hero-block-search">
+        <div class="hb-icon">🔍</div>
+        <h3 id="hbSearchH">Já escolheu o produto? A gente acha o melhor preço</h3>
+        <p id="hbSearchP">Busque o produto exato e veja o preço lado a lado em várias lojas.</p>
+        <div class="hero-search">
+          <input type="text" id="heroSearch" placeholder="O que você procura hoje?">
+          <button class="h-sbtn" onclick="doHeroSearch()" id="btnBuscar">Buscar</button>
+        </div>
+        <div class="htags">
+          <span class="htag-l" id="exLbl">Exemplos:</span>
+          <button class="htag" onclick="document.getElementById('heroSearch').value='hidratante pele oleosa'" id="ex1">hidratante pele oleosa</button>
+          <button class="htag" onclick="document.getElementById('heroSearch').value='base matte'" id="ex2">base matte</button>
+          <button class="htag" onclick="document.getElementById('heroSearch').value='shampoo sem sulfato'" id="ex3">shampoo sem sulfato</button>
+        </div>
       </div>
     </div>
-    <div class="hero-right">
-      <div class="stat-card"><span class="stat-num">+1000</span><span class="stat-lbl" id="stat1">Produtos</span></div>
-      <div class="stat-card"><span class="stat-num">🔄</span><span class="stat-lbl" id="stat2">Comparação em Tempo Real</span></div>
-      <div class="stat-card"><span class="stat-num">100%</span><span class="stat-lbl" id="stat3">Gratuito</span></div>
+    <div class="cta-row">
+      <button class="btn-sec" onclick="showPage('compare')" id="ctaAll">Ver todos os produtos</button>
+      <div class="hero-stats">
+        <div class="stat-card"><span class="stat-num">+1000</span><span class="stat-lbl" id="stat1">Produtos</span></div>
+        <div class="stat-card"><span class="stat-num">🔄</span><span class="stat-lbl" id="stat2">Comparação em Tempo Real</span></div>
+        <div class="stat-card"><span class="stat-num">100%</span><span class="stat-lbl" id="stat3">Gratuito</span></div>
+      </div>
     </div>
   </div>
   <div class="hero-wave"><svg viewBox="0 0 1440 90" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg"><path d="M0,45 C240,85 480,5 720,45 C960,85 1200,5 1440,45 L1440,90 L0,90 Z" fill="#FAFAF8" opacity=".55"/><path d="M0,58 C360,22 720,72 1080,32 C1260,16 1380,54 1440,58 L1440,90 L0,90 Z" fill="#FAFAF8" opacity=".78"/><path d="M0,70 C300,48 600,80 900,60 C1100,46 1280,68 1440,70 L1440,90 L0,90 Z" fill="#FAFAF8"/></svg></div>
@@ -1101,6 +1122,10 @@ var TX={
     btnBuscar:'Buscar',exLbl:'Exemplos:',ex1:'hidratante pele oleosa',ex2:'base matte',ex3:'shampoo sem sulfato',
     ctaCompare:'Compare Aqui — É Gratuito',ctaAll:'Ver todos os produtos',
     stat1:'Produtos',stat2:'Comparação em Tempo Real',stat3:'Gratuito',
+    hbQuizH:'Não sabe por onde começar? A gente te ajuda a escolher certo',
+    hbQuizP:'Responda um quiz rápido e receba recomendações sob medida para o seu perfil.',
+    hbSearchH:'Já escolheu o produto? A gente acha o melhor preço',
+    hbSearchP:'Busque o produto exato e veja o preço lado a lado em várias lojas.',
     caqBadge:'O coração do VERAORIS',
     caqTitle:'Compare Aqui — personalizado para si',
     caqDesc:'Diga-nos o que procura e encontramos e comparamos os melhores produtos em todas as lojas parceiras.',
@@ -1171,6 +1196,10 @@ var TX={
     btnBuscar:'Search',exLbl:'Examples:',ex1:'oily skin moisturiser',ex2:'matte foundation',ex3:'sulfate-free shampoo',
     ctaCompare:'Compare Here — Free',ctaAll:'See all products',
     stat1:'Products',stat2:'Real-Time Comparison',stat3:'Free',
+    hbQuizH:"Not sure where to start? We'll help you choose right",
+    hbQuizP:'Answer a quick quiz and get recommendations tailored to your profile.',
+    hbSearchH:"Already picked the product? We'll find the best price",
+    hbSearchP:'Search for the exact product and see the price side by side across stores.',
     caqBadge:"VERAORIS's heart",
     caqTitle:'Compare Here — personalised for you',
     caqDesc:'Tell us what you are looking for and we find and compare the best products across all partner stores.',
