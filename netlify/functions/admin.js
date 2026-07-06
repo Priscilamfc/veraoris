@@ -6,7 +6,8 @@ const ALLOWED = {
   cliques: ['select', 'deleteAll'],
   quiz_completados: ['select', 'deleteAll'],
   mensagens: ['select', 'delete', 'deleteAll'],
-  dicas: ['insert', 'delete']
+  dicas: ['insert', 'delete'],
+  promos: ['select', 'insert', 'update', 'delete']
 };
 
 exports.handler = async (event) => {
@@ -69,6 +70,18 @@ exports.handler = async (event) => {
     if (action === 'insert') {
       const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}`, {
         method: 'POST',
+        headers: { ...sbHeaders, Prefer: 'return=minimal' },
+        body: JSON.stringify(data || {})
+      });
+      return { statusCode: 200, headers, body: JSON.stringify({ ok: res.ok }) };
+    }
+
+    if (action === 'update') {
+      if (id === undefined || id === null) {
+        return { statusCode: 400, headers, body: JSON.stringify({ ok: false, error: 'id em falta' }) };
+      }
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}?id=eq.${encodeURIComponent(id)}`, {
+        method: 'PATCH',
         headers: { ...sbHeaders, Prefer: 'return=minimal' },
         body: JSON.stringify(data || {})
       });
