@@ -833,7 +833,7 @@ textarea.form-inp{resize:vertical;min-height:140px}
     <div class="qstep" id="qs4"><p class="qsl" id="qhl4">PASSO 4 DE 8</p><h3 class="quiz-q" id="qq4">Que função procura?</h3><p class="quiz-sub" id="qs4sub">Seja específica.</p><div class="quiz-opts" id="q4opts"></div><div class="quiz-nav"><button class="qback" onclick="qBack(3)">← Voltar</button><span class="qsl">4 / 8</span><button class="qnext" onclick="qNext()">Avançar →</button></div></div>
     <div class="qstep" id="qs5"><p class="qsl">PASSO 5 DE 8</p><h3 class="quiz-q" id="qq5">Produto específico</h3><p class="quiz-sub" id="qs5sub">Qual produto exato procura?</p><div class="quiz-opts" id="q5opts"></div><div class="quiz-nav"><button class="qback" onclick="qBack(4)">← Voltar</button><span class="qsl">5 / 8</span><button class="qnext" onclick="qNext()">Avançar →</button></div></div>
     <div class="qstep" id="qs6"><p class="qsl">PASSO 6 DE 8</p><h3 class="quiz-q" id="qq6">Tem alergias?</h3><p class="quiz-sub" id="qs6sub">Evitamos ingredientes problemáticos.</p>
-      <div class="quiz-opts"><button class="qopt" id="qa1" onclick="qSel(this,'allergy','nao')">✅ Sem alergias</button><button class="qopt" id="qa2" onclick="qSel(this,'allergy','fragrancias')">🌸 Fragrâncias</button><button class="qopt" id="qa3" onclick="qSel(this,'allergy','parabenos')">🧪 Parabenos</button><button class="qopt" id="qa4" onclick="qSel(this,'allergy','alcool')">🚫 Álcool</button><button class="qopt" id="qa5" onclick="qSel(this,'allergy','nao_sei')">❓ Não sei</button></div>
+      <div class="quiz-opts"><button class="qopt" id="qa1" onclick="qSelMulti(this,'allergy','nao')">✅ Sem alergias</button><button class="qopt" id="qa2" onclick="qSelMulti(this,'allergy','fragrancias')">🌸 Fragrâncias</button><button class="qopt" id="qa3" onclick="qSelMulti(this,'allergy','parabenos')">🧪 Parabenos</button><button class="qopt" id="qa4" onclick="qSelMulti(this,'allergy','alcool')">🚫 Álcool</button><button class="qopt" id="qa5" onclick="qSelMulti(this,'allergy','nao_sei')">❓ Não sei</button></div>
       <div class="quiz-nav"><button class="qback" onclick="qBack(5)">← Voltar</button><span class="qsl">6 / 8</span><button class="qnext" onclick="qNext()">Avançar →</button></div>
     </div>
     <div class="qstep" id="qs7"><p class="qsl">PASSO 7 DE 8</p><h3 class="quiz-q" id="qq7">Qual é o seu orçamento?</h3><p class="quiz-sub" id="qs7sub">Melhores opções para o seu bolso.</p><div class="quiz-opts" id="q7opts"></div><div class="quiz-nav"><button class="qback" onclick="qBack(6)">← Voltar</button><span class="qsl">7 / 8</span><button class="qnext" onclick="qNext()">Avançar →</button></div></div>
@@ -2028,6 +2028,13 @@ function qSel(btn,key,val){
   btn.closest('.quiz-opts').querySelectorAll('.qopt[onclick*="\''+key+'\'"]').forEach(function(b){b.classList.remove('sel');});
   btn.classList.add('sel');qD[key]=val;
   if(key==='cat'){renderQ2();renderQ3();renderQ4();renderQ5();}
+}
+function qSelMulti(btn,key,val){
+  var arr=(qD[key]||[]).slice();
+  var i=arr.indexOf(val);
+  if(i>=0){ arr.splice(i,1); btn.classList.remove('sel'); }
+  else{ arr.push(val); btn.classList.add('sel'); }
+  qD[key]=arr;
   if(key==='maq_area')renderQ4();
 }
 function qNext(){
@@ -2050,7 +2057,7 @@ function clearQuiz(){
   renderQ2();renderQ3();renderQ4();renderQ5();renderBudget();
   showToast(lang==='pt'?'Quiz limpo ✓':'Quiz cleared ✓');
 }
-function opts(arr,key){return arr.map(function(o){return '<button class="qopt'+(qD[key]===o[0]?' sel':'')+'" onclick="qSel(this,\''+key+'\',\''+o[0]+'\')">'+o[1]+'</button>';}).join('');}
+function opts(arr,key){return arr.map(function(o){return '<button class="qopt'+((qD[key]||[]).indexOf(o[0])>=0?' sel':'')+'" onclick="qSelMulti(this,\''+key+'\',\''+o[0]+'\')">'+o[1]+'</button>';}).join('');}
 function renderQ2(){
   var el=document.getElementById('q2opts'),qq=document.getElementById('qq2'),qs=document.getElementById('qs2sub'),hl=document.getElementById('qhl2');
   var pt=lang==='pt';
@@ -2101,12 +2108,17 @@ function renderQ4(){
   }else if(qD.cat==='maquiagem'){
     if(qq)qq.textContent=pt?'Que produto específico?':'Which specific product?';
     if(qs)qs.textContent=pt?'Selecione o produto.':'Select the product.';
-    var a=qD.maq_area;
+    var areas=qD.maq_area||[];
     var MR=pt?MAQ_R:[['base_liq','Liquid Foundation'],['base_po','Powder Foundation'],['bb_cream','BB Cream'],['primer','Primer'],['corretivo','Concealer'],['po_compacto','Compact Powder'],['bronzer','Bronzer'],['blush','Blush'],['iluminador','Highlighter']];
     var MO=pt?MAQ_O:[['sombra','Eyeshadow/Palette'],['rimel','Mascara'],['delineador','Eyeliner'],['lapis_olho','Eye Pencil'],['primer_olho','Eye Primer']];
     var ML=pt?MAQ_L:[['batom','Lipstick'],['gloss','Lip Gloss'],['lip_liner','Lip Liner'],['lip_balm','Lip Balm']];
     var MS=pt?MAQ_S:[['lapis_sb','Eyebrow Pencil'],['pomada_sb','Eyebrow Pomade'],['gel_sb','Eyebrow Gel'],['henna','Henna']];
-    var arr=a==='rosto'?MR:a==='olhos'?MO:a==='labios'?ML:a==='sobrancelhas'?MS:MR;
+    var arr=[];
+    if(areas.indexOf('rosto')>=0)arr=arr.concat(MR);
+    if(areas.indexOf('olhos')>=0)arr=arr.concat(MO);
+    if(areas.indexOf('labios')>=0)arr=arr.concat(ML);
+    if(areas.indexOf('sobrancelhas')>=0)arr=arr.concat(MS);
+    if(!arr.length)arr=MR;
     el.innerHTML=opts(arr,'maq_prod');
   }else{
     if(qq)qq.textContent=pt?'Que produto de skincare procura?':'What skincare product are you looking for?';
@@ -2136,17 +2148,21 @@ function renderBudget(){
 function buildSumm(){
   var lines=[];
   function fo(arr,val){var o=arr.find(function(x){return x[0]===val;});return o?o[1]:null;}
+  function foMulti(arr,vals){return (vals||[]).map(function(v){return fo(arr,v);}).filter(Boolean).join(', ');}
   var cl={skincare:'Skincare',maquiagem:'Maquilhagem',cabelo:'Cabelo',todos:'Tudo'};
   if(qD.cat)lines.push({i:'🌟',v:cl[qD.cat]||qD.cat});
-  if(qD.skin){var v=fo(SKIN_T,qD.skin);if(v)lines.push({i:'👤',v:v});}
-  if(qD.hair_type){var v=fo(HAIR_T,qD.hair_type);if(v)lines.push({i:'✨',v:v});}
-  if(qD.concern){var v=fo(SKIN_C,qD.concern);if(v)lines.push({i:'🎯',v:v});}
-  if(qD.hair_concern){var v=fo(HAIR_C,qD.hair_concern);if(v)lines.push({i:'🎯',v:v});}
-  if(qD.maq_area){var v=fo(MAQ_A,qD.maq_area);if(v)lines.push({i:'💄',v:v});}
-  if(qD.maq_prod){var all=MAQ_R.concat(MAQ_O,MAQ_L,MAQ_S);var v=fo(all,qD.maq_prod);if(v)lines.push({i:'💅',v:v});}
-  if(qD.hair_prod){var v=fo(HAIR_P,qD.hair_prod);if(v)lines.push({i:'🧴',v:v});}
-  if(qD.skin_prod){var v=fo(SKIN_P,qD.skin_prod);if(v)lines.push({i:'🌸',v:v});}
-  if(qD.budget){var bo=(region==='BR'?BUD_BR:BUD_PT).find(function(o){return o[0]===qD.budget;});if(bo)lines.push({i:'💰',v:bo[1].split('—')[0].replace(/[💚💛💎]/g,'').trim()});}
+  if(qD.skin&&qD.skin.length){var v=foMulti(SKIN_T,qD.skin);if(v)lines.push({i:'👤',v:v});}
+  if(qD.hair_type&&qD.hair_type.length){var v=foMulti(HAIR_T,qD.hair_type);if(v)lines.push({i:'✨',v:v});}
+  if(qD.concern&&qD.concern.length){var v=foMulti(SKIN_C,qD.concern);if(v)lines.push({i:'🎯',v:v});}
+  if(qD.hair_concern&&qD.hair_concern.length){var v=foMulti(HAIR_C,qD.hair_concern);if(v)lines.push({i:'🎯',v:v});}
+  if(qD.maq_area&&qD.maq_area.length){var v=foMulti(MAQ_A,qD.maq_area);if(v)lines.push({i:'💄',v:v});}
+  if(qD.maq_prod&&qD.maq_prod.length){var all=MAQ_R.concat(MAQ_O,MAQ_L,MAQ_S);var v=foMulti(all,qD.maq_prod);if(v)lines.push({i:'💅',v:v});}
+  if(qD.hair_prod&&qD.hair_prod.length){var v=foMulti(HAIR_P,qD.hair_prod);if(v)lines.push({i:'🧴',v:v});}
+  if(qD.skin_prod&&qD.skin_prod.length){var v=foMulti(SKIN_P,qD.skin_prod);if(v)lines.push({i:'🌸',v:v});}
+  if(qD.budget&&qD.budget.length){
+    var bLabels=qD.budget.map(function(b){var bo=(region==='BR'?BUD_BR:BUD_PT).find(function(o){return o[0]===b;});return bo?bo[1].split('—')[0].replace(/[💚💛💎]/g,'').trim():null;}).filter(Boolean);
+    if(bLabels.length)lines.push({i:'💰',v:bLabels.join(', ')});
+  }
   document.getElementById('quizSumm').innerHTML=lines.length?lines.map(function(l){return '<div><span>'+l.i+'</span> '+l.v+'</div>';}).join(''):'<div style="color:var(--muted)">Complete os passos anteriores</div>';
 }
 function showResults(){
@@ -5273,31 +5289,32 @@ function amzDirectLink(productUrl){
 function matchScore(p){
   var score=0;
   if(qD.cat && p.cat===qD.cat) score+=10;
+  var skinProd=qD.skin_prod||[], concern=qD.concern||[], hairProd=qD.hair_prod||[], hairConcern=qD.hair_concern||[], maqProd=qD.maq_prod||[], maqArea=qD.maq_area||[];
   if(qD.cat==='skincare'){
-    if(qD.skin_prod && p.sub===qD.skin_prod) score+=20;
-    if(qD.concern==='hidratacao' && p.sub==='hidratante') score+=15;
-    if(qD.concern==='acne' && (p.sub==='limpeza'||p.sub==='serum')) score+=15;
-    if(qD.concern==='antiidade' && p.sub==='serum') score+=15;
-    if(qD.concern==='manchas' && p.sub==='serum') score+=10;
-    if(qD.concern==='solar' && p.sub==='solar') score+=20;
-    if(qD.concern==='limpeza' && p.sub==='limpeza') score+=20;
-    if(qD.concern==='olheiras' && p.sub==='olhos') score+=20;
+    if(skinProd.indexOf(p.sub)>=0) score+=20;
+    if(concern.indexOf('hidratacao')>=0 && p.sub==='hidratante') score+=15;
+    if(concern.indexOf('acne')>=0 && (p.sub==='limpeza'||p.sub==='serum')) score+=15;
+    if(concern.indexOf('antiidade')>=0 && p.sub==='serum') score+=15;
+    if(concern.indexOf('manchas')>=0 && p.sub==='serum') score+=10;
+    if(concern.indexOf('solar')>=0 && p.sub==='solar') score+=20;
+    if(concern.indexOf('limpeza')>=0 && p.sub==='limpeza') score+=20;
+    if(concern.indexOf('olheiras')>=0 && p.sub==='olhos') score+=20;
   }
   if(qD.cat==='cabelo'){
-    if(qD.hair_prod && p.sub===qD.hair_prod) score+=20;
-    if(qD.hair_concern==='antiqueda' && (p.sub==='shampoo'||p.sub==='tonico'||p.sub==='ampola')) score+=15;
-    if(qD.hair_concern==='anticaspa' && p.sub==='shampoo') score+=15;
-    if(qD.hair_concern==='hidratacao' && (p.sub==='mascara'||p.sub==='condicionador'||p.sub==='leave_in')) score+=15;
-    if(qD.hair_concern==='reconstrucao' && (p.sub==='mascara'||p.sub==='ampola'||p.sub==='reconstrucao')) score+=15;
-    if(qD.hair_concern==='brilho' && (p.sub==='oleo'||p.sub==='leave_in')) score+=15;
-    if(qD.hair_concern==='definicao' && p.sub==='definicao') score+=20;
+    if(hairProd.indexOf(p.sub)>=0) score+=20;
+    if(hairConcern.indexOf('antiqueda')>=0 && (p.sub==='shampoo'||p.sub==='tonico'||p.sub==='ampola')) score+=15;
+    if(hairConcern.indexOf('anticaspa')>=0 && p.sub==='shampoo') score+=15;
+    if(hairConcern.indexOf('hidratacao')>=0 && (p.sub==='mascara'||p.sub==='condicionador'||p.sub==='leave_in')) score+=15;
+    if(hairConcern.indexOf('reconstrucao')>=0 && (p.sub==='mascara'||p.sub==='ampola'||p.sub==='reconstrucao')) score+=15;
+    if(hairConcern.indexOf('brilho')>=0 && (p.sub==='oleo'||p.sub==='leave_in')) score+=15;
+    if(hairConcern.indexOf('definicao')>=0 && p.sub==='definicao') score+=20;
   }
   if(qD.cat==='maquiagem'){
-    if(qD.maq_prod && p.sub===qD.maq_prod) score+=20;
-    if(qD.maq_area==='rosto' && ['base','bb_cream','primer','corretivo','po_compacto','po_solto','bronzer','blush','iluminador','contorno'].indexOf(p.sub)>=0) score+=12;
-    if(qD.maq_area==='olhos' && ['sombra','rimel','delineador','lapis_olho','primer_olho'].indexOf(p.sub)>=0) score+=12;
-    if(qD.maq_area==='labios' && ['batom','gloss','lip_liner','lip_balm'].indexOf(p.sub)>=0) score+=12;
-    if(qD.maq_area==='sobrancelhas' && ['lapis_sb','gel_sb','pomada_sb','sombra_sb','henna'].indexOf(p.sub)>=0) score+=12;
+    if(maqProd.indexOf(p.sub)>=0) score+=20;
+    if(maqArea.indexOf('rosto')>=0 && ['base','bb_cream','primer','corretivo','po_compacto','po_solto','bronzer','blush','iluminador','contorno'].indexOf(p.sub)>=0) score+=12;
+    if(maqArea.indexOf('olhos')>=0 && ['sombra','rimel','delineador','lapis_olho','primer_olho'].indexOf(p.sub)>=0) score+=12;
+    if(maqArea.indexOf('labios')>=0 && ['batom','gloss','lip_liner','lip_balm'].indexOf(p.sub)>=0) score+=12;
+    if(maqArea.indexOf('sobrancelhas')>=0 && ['lapis_sb','gel_sb','pomada_sb','sombra_sb','henna'].indexOf(p.sub)>=0) score+=12;
   }
   return score;
 }
@@ -5324,7 +5341,10 @@ function renderAmazonResults(){
     var tags=[];
     var cl={skincare:'Skincare',maquiagem:'Maquilhagem',cabelo:'Cabelo'};
     if(qD.cat&&qD.cat!=='todos')tags.push(cl[qD.cat]||qD.cat);
-    if(qD.budget){var bo=(region==='BR'?BUD_BR:BUD_PT).find(function(o){return o[0]===qD.budget;});if(bo)tags.push(bo[1].split('—')[0].replace(/[💚💛💎]/g,'').trim());}
+    if(qD.budget&&qD.budget.length){
+      var bLabels=qD.budget.map(function(b){var bo=(region==='BR'?BUD_BR:BUD_PT).find(function(o){return o[0]===b;});return bo?bo[1].split('—')[0].replace(/[💚💛💎]/g,'').trim():null;}).filter(Boolean);
+      tags=tags.concat(bLabels);
+    }
     pb.innerHTML=tags.map(function(t){return '<span class="prof-tag">'+t+'</span>';}).join('');
   }
 
