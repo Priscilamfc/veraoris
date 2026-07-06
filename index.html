@@ -944,6 +944,20 @@ function scrappaSearchPrices(query, callback){
   });
 }
 
+// ── AWIN (feeds de anunciantes com dados de produto reais, ex: Eudora) ──
+function awinSearchPrices(query, callback){
+  var url = '/.netlify/functions/awin-search?query='+encodeURIComponent(query);
+  fetch(url)
+  .then(function(r){ return r.json(); })
+  .then(function(data){
+    callback(data.results || []);
+  })
+  .catch(function(err){
+    console.log('Awin search failed:', err);
+    callback([]);
+  });
+}
+
 function supabaseInsert(table, data, callback){
   fetch(SUPABASE_URL + '/rest/v1/' + table, {
     method: 'POST',
@@ -5410,19 +5424,24 @@ function storeGoLink(storeName, searchTerm){
 }
 
 function loadComparison(cardId, searchTerm, p, fallbackLink){
-  scrappaSearchPrices(searchTerm, function(results){
+  var combined=[];
+  var pending = region==='BR' ? 2 : 1;
+  function onSource(results){
+    combined = combined.concat(results||[]);
+    pending--;
+    if(pending>0) return;
     var el=document.getElementById(cardId);
     if(!el) return; // card may no longer be on screen
 
     var html='';
-    if(results.length){
+    if(combined.length){
       // Sort by price, show up to 3 cheapest
-      results.sort(function(a,b){return a.price-b.price;});
-      var top=results.slice(0,3);
+      combined.sort(function(a,b){return a.price-b.price;});
+      var top=combined.slice(0,3);
       var cur = region==='PT' ? '€ ' : 'R$ ';
       top.forEach(function(r,i){
         var isBest = i===0;
-        var goLink = storeGoLink(r.store, searchTerm);
+        var goLink = r.link || storeGoLink(r.store, searchTerm);
         var safeBrand = p.brand.replace(/'/g,"");
         var safeName = p.name.replace(/'/g,"");
         html += '<div class="price-row" style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;'+(isBest?'font-weight:700':'')+'">'
@@ -5442,7 +5461,9 @@ function loadComparison(cardId, searchTerm, p, fallbackLink){
       +'<button class="cpc-buy">'+(lang==='pt'?'Comprar':'Buy')+'</button>'
       +'</a>';
     el.innerHTML = html;
-  });
+  }
+  scrappaSearchPrices(searchTerm, onSource);
+  if(region==='BR') awinSearchPrices(searchTerm, onSource);
 }
 
 function renderFAQ(){
