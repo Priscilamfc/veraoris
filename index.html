@@ -966,6 +966,16 @@ function awinSearchPrices(query, callback){
     callback([]);
   });
 }
+// Preload a real product photo from the free Eudora feed (no Scrappa credits used)
+function preloadEudoraImage(imgId, searchTerm){
+  awinSearchPrices(searchTerm, function(results){
+    var withPhoto=(results||[]).find(function(r){ return r.image; });
+    if(withPhoto){
+      var imgEl=document.getElementById(imgId);
+      if(imgEl){ imgEl.src=withPhoto.image; imgEl.style.padding='0'; }
+    }
+  });
+}
 
 function supabaseInsert(table, data, callback){
   fetch(SUPABASE_URL + '/rest/v1/' + table, {
@@ -6863,6 +6873,9 @@ function amzCard(p){
   var safeSearch=searchTerm.replace(/'/g,"");
 
   setTimeout(function(){ loadTrendingBadge(badgeId, p); }, 50);
+  if(region==='BR'){
+    setTimeout(function(){ preloadEudoraImage(cardId+'_img', searchTerm); }, 50);
+  }
 
   return '<div class="cpc">'
     +'<div class="cpc-img" style="background:var(--gold4)">'
