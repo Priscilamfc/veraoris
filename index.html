@@ -560,12 +560,11 @@ textarea.form-inp{resize:vertical;min-height:140px}
     <!-- PROMOTIONS -->
     <div class="admin-section" id="admin-promos">
       <div class="admin-export-box">
-        ℹ️ Adiciona aqui os produtos que estão em promoção hoje. Eles aparecem automaticamente na secção "🔥 Promoções de Hoje" da página inicial, para todos os visitantes neste navegador. Quando publicares o site, exporta e envia o código para integrar.
+        ℹ️ Adiciona aqui os produtos que estão em promoção hoje. Eles aparecem automaticamente na secção "🔥 Promoções de Hoje" da página inicial, para todos os visitantes do site, assim que guardares.
       </div>
       <div class="admin-toolbar">
         <h3 style="font-family:Cormorant Garamond,serif;font-size:1.3rem">Promoções activas</h3>
         <button class="admin-btn" onclick="openPromoForm()">+ Adicionar promoção</button>
-        <button class="admin-btn secondary" onclick="exportPromosCode()">📤 Exportar código</button>
       </div>
 
       <div id="promoFormWrap" style="display:none;background:var(--white);border:1px solid var(--marble3);border-radius:var(--r2);padding:20px;margin-bottom:20px">
@@ -1526,27 +1525,25 @@ function adminTab(tab){
 }
 
 // ── PROMOTIONS ──
-function getPromos(){
-  try{ return JSON.parse(localStorage.getItem('veraoris_promos')||'[]'); }catch(e){ return []; }
-}
-function savePromos(arr){
-  try{ localStorage.setItem('veraoris_promos', JSON.stringify(arr)); }catch(e){}
-}
+var _promosCache = [];
 function renderAdminPromos(){
-  var promos=getPromos();
   var tbody=document.getElementById('adPromosTable');
-  if(!promos.length){
-    tbody.innerHTML='<tr><td colspan="7" class="admin-empty">Nenhuma promoção activa. Clica em "+ Adicionar promoção" para criar a primeira.</td></tr>';
-    return;
-  }
-  tbody.innerHTML=promos.map(function(p,i){
-    var disc=Math.round((1-(p.priceNew/p.priceOld))*100);
-    var r=p.region||'BR';
-    var cur=r==='PT'?'€':'R$';
-    var flag=r==='PT'?'🇵🇹':'🇧🇷';
-    return '<tr><td>'+flag+' '+r+'</td><td>'+p.brand+'</td><td>'+p.name+'</td><td>'+cur+p.priceOld.toFixed(2)+'</td><td>'+cur+p.priceNew.toFixed(2)+'</td><td>-'+disc+'%</td>'
-      +'<td><button class="admin-btn secondary" onclick="editPromo('+i+')">✏️</button> <button class="admin-btn danger" onclick="deletePromo('+i+')">🗑</button></td></tr>';
-  }).join('');
+  tbody.innerHTML='<tr><td colspan="7" class="admin-empty">A carregar promoções do servidor...</td></tr>';
+  adminApi('select', 'promos', {}, function(ok, rows){
+    _promosCache = rows || [];
+    if(!_promosCache.length){
+      tbody.innerHTML='<tr><td colspan="7" class="admin-empty">Nenhuma promoção activa. Clica em "+ Adicionar promoção" para criar a primeira.</td></tr>';
+      return;
+    }
+    tbody.innerHTML=_promosCache.map(function(p,i){
+      var disc=Math.round((1-(p.price_new/p.price_old))*100);
+      var r=p.region||'BR';
+      var cur=r==='PT'?'€':'R$';
+      var flag=r==='PT'?'🇵🇹':'🇧🇷';
+      return '<tr><td>'+flag+' '+r+'</td><td>'+p.brand+'</td><td>'+p.name+'</td><td>'+cur+p.price_old.toFixed(2)+'</td><td>'+cur+p.price_new.toFixed(2)+'</td><td>-'+disc+'%</td>'
+        +'<td><button class="admin-btn secondary" onclick="editPromo('+i+')">✏️</button> <button class="admin-btn danger" onclick="deletePromo('+i+')">🗑</button></td></tr>';
+    }).join('');
+  });
 }
 function openPromoForm(){
   document.getElementById('promoFormWrap').style.display='block';
@@ -1573,31 +1570,30 @@ function closePromoForm(){
   document.getElementById('promoFormWrap').style.display='none';
 }
 function editPromo(idx){
-  var promos=getPromos();
-  var p=promos[idx];
+  var p=_promosCache[idx];
   if(!p)return;
   document.getElementById('promoFormWrap').style.display='block';
-  document.getElementById('promoEditIdx').value=idx;
+  document.getElementById('promoEditIdx').value=p.id;
   document.getElementById('promoRegion').value=p.region||'BR';
   document.getElementById('promoBrand').value=p.brand;
   document.getElementById('promoName').value=p.name;
-  document.getElementById('promoOld').value=p.priceOld;
-  document.getElementById('promoNew').value=p.priceNew;
+  document.getElementById('promoOld').value=p.price_old;
+  document.getElementById('promoNew').value=p.price_new;
   document.getElementById('promoCat').value=p.cat;
   document.getElementById('promoSrch').value=p.srch;
   updatePromoFormLabels();
 }
 function deletePromo(idx){
+  var p=_promosCache[idx];
+  if(!p)return;
   if(!confirm('Remover esta promoção?'))return;
-  var promos=getPromos();
-  promos.splice(idx,1);
-  savePromos(promos);
-  renderAdminPromos();
-  renderPromosHome();
-  showToast('Promoção removida ✓');
+  adminApi('delete', 'promos', {id:p.id}, function(ok){
+    if(ok){ renderAdminPromos(); renderPromosHome(); showToast('Promoção removida ✓'); }
+    else { showToast('Erro ao remover — verifica a ligação'); }
+  });
 }
 function savePromo(){
-  var idx=parseInt(document.getElementById('promoEditIdx').value);
+  var editId=parseInt(document.getElementById('promoEditIdx').value);
   var promoRegion=document.getElementById('promoRegion').value;
   var priceOld=parseFloat(document.getElementById('promoOld').value);
   var priceNew=parseFloat(document.getElementById('promoNew').value);
@@ -1606,8 +1602,8 @@ function savePromo(){
     region:promoRegion,
     brand:document.getElementById('promoBrand').value.trim(),
     name:document.getElementById('promoName').value.trim(),
-    priceOld:priceOld,
-    priceNew:priceNew,
+    price_old:priceOld,
+    price_new:priceNew,
     cat:document.getElementById('promoCat').value,
     srch:urlInput
   };
@@ -1616,13 +1612,12 @@ function savePromo(){
   var expectedDomain=promoRegion==='PT'?'amazon.es':'amazon.com.br';
   if(urlInput.indexOf(expectedDomain)===-1){ showToast('Para a região '+promoRegion+', o link deve ser do '+expectedDomain); return; }
   if(priceNew>=priceOld){ showToast('O preço promocional deve ser menor que o original'); return; }
-  var promos=getPromos();
-  if(idx>=0){ promos[idx]=p; } else { promos.push(p); }
-  savePromos(promos);
-  closePromoForm();
-  renderAdminPromos();
-  renderPromosHome();
-  showToast('Promoção guardada ✓');
+  var action = editId>=0 ? 'update' : 'insert';
+  var extra = editId>=0 ? {id:editId, data:p} : {data:p};
+  adminApi(action, 'promos', extra, function(ok){
+    if(ok){ closePromoForm(); renderAdminPromos(); renderPromosHome(); showToast('Promoção guardada ✓'); }
+    else { showToast('Erro ao guardar — verifica a ligação'); }
+  });
 }
 
 // ── DICAS DA SEMANA ──
@@ -1717,40 +1712,30 @@ function toggleDicaHistory(){
   list.style.display=showing?'none':'block';
   toggle.textContent=showing?(lang==='pt'?'Ver dicas anteriores →':'See previous tips →'):(lang==='pt'?'← Esconder dicas anteriores':'← Hide previous tips');
 }
-function exportPromosCode(){
-  var promos=getPromos();
-  if(!promos.length){ showToast('Nenhuma promoção para exportar'); return; }
-  var code='// PROMOÇÕES DO DIA — envia isto ao assistente para integrar no site publicado\n'+JSON.stringify(promos,null,2);
-  var blob=new Blob([code],{type:'text/plain'});
-  var a=document.createElement('a');
-  a.href=URL.createObjectURL(blob);
-  a.download='veraoris_promocoes.txt';
-  a.click();
-  showToast('Ficheiro exportado ✓');
-}
 function renderPromosHome(){
-  var allPromos=getPromos();
-  var promos=allPromos.filter(function(p){ return (p.region||'BR')===region; });
   var grid=document.getElementById('promoGrid');
   if(!grid)return;
-  if(!promos.length){
-    grid.innerHTML='<p class="promo-empty">'+(lang==='pt'?'Sem promoções activas neste momento. Volta em breve!':'No active promotions right now. Check back soon!')+'</p>';
-    return;
-  }
-  var cur=region==='PT'?'€':'R$';
-  grid.innerHTML=promos.map(function(p){
-    var disc=Math.round((1-(p.priceNew/p.priceOld))*100);
-    var link=amzDirectLink(p.srch);
-    var img=getIco(p);
-    return '<div class="promo-card">'
-      +'<span class="promo-badge">-'+disc+'%</span>'
-      +'<div class="promo-img"><img src="'+img+'" alt="'+p.name+'"></div>'
-      +'<div class="promo-brand">'+p.brand+'</div>'
-      +'<div class="promo-name">'+p.name+'</div>'
-      +'<div class="promo-prices"><span class="promo-old">'+cur+p.priceOld.toFixed(2)+'</span><span class="promo-new">'+cur+p.priceNew.toFixed(2)+'</span></div>'
-      +'<a href="'+link+'" target="_blank" rel="noopener" onclick="trackClick(\'Amazon\',\''+p.brand+' '+p.name.replace(/'/g,"")+'\',0,\''+p.brand.replace(/'/g,"")+'\',\''+p.name.replace(/'/g,"")+'\')"><button class="promo-buy">'+(lang==='pt'?'Ver oferta':'See offer')+'</button></a>'
-      +'</div>';
-  }).join('');
+  supabaseSelect('promos', function(allPromos){
+    var promos=(allPromos||[]).filter(function(p){ return (p.region||'BR')===region; });
+    if(!promos.length){
+      grid.innerHTML='<p class="promo-empty">'+(lang==='pt'?'Sem promoções activas neste momento. Volta em breve!':'No active promotions right now. Check back soon!')+'</p>';
+      return;
+    }
+    var cur=region==='PT'?'€':'R$';
+    grid.innerHTML=promos.map(function(p){
+      var disc=Math.round((1-(p.price_new/p.price_old))*100);
+      var link=amzDirectLink(p.srch);
+      var img=getIco(p);
+      return '<div class="promo-card">'
+        +'<span class="promo-badge">-'+disc+'%</span>'
+        +'<div class="promo-img"><img src="'+img+'" alt="'+p.name+'"></div>'
+        +'<div class="promo-brand">'+p.brand+'</div>'
+        +'<div class="promo-name">'+p.name+'</div>'
+        +'<div class="promo-prices"><span class="promo-old">'+cur+p.price_old.toFixed(2)+'</span><span class="promo-new">'+cur+p.price_new.toFixed(2)+'</span></div>'
+        +'<a href="'+link+'" target="_blank" rel="noopener" onclick="trackClick(\'Amazon\',\''+p.brand+' '+p.name.replace(/'/g,"")+'\',0,\''+p.brand.replace(/'/g,"")+'\',\''+p.name.replace(/'/g,"")+'\')"><button class="promo-buy">'+(lang==='pt'?'Ver oferta':'See offer')+'</button></a>'
+        +'</div>';
+    }).join('');
+  });
 }
 
 // ── STATS TAB ──
