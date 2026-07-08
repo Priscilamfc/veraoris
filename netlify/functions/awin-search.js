@@ -43,6 +43,8 @@ async function fetchFeed() {
   const header = parseCsvLine(lines[0]).map((h) => h.trim());
   const idx = {};
   header.forEach((h, i) => { idx[h] = i; });
+  console.log('AWIN feed header columns:', JSON.stringify(header));
+  console.log('AWIN image column indexes -> aw_image_url:', idx.aw_image_url, 'merchant_image_url:', idx.merchant_image_url);
 
   const products = [];
   for (let i = 1; i < lines.length; i++) {
@@ -59,6 +61,8 @@ async function fetchFeed() {
     });
   }
   cache = { data: products, fetchedAt: now };
+  console.log('AWIN sample product:', JSON.stringify(products[0]));
+  console.log('AWIN products with image:', products.filter((p) => p.image).length, '/', products.length);
   return products;
 }
 
@@ -100,7 +104,8 @@ exports.handler = async (event) => {
         title: m.p.name,
         price: m.p.price,
         store: m.p.merchant || 'Eudora',
-        link: m.p.link
+        link: m.p.link,
+        image: m.p.image || null
       }));
 
     return { statusCode: 200, headers, body: JSON.stringify({ results: matches }) };
