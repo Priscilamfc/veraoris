@@ -100,7 +100,8 @@ exports.handler = async (event) => {
         title: m.p.name,
         price: m.p.price,
         store: m.p.merchant || 'Eudora',
-        link: m.p.link
+        link: m.p.link,
+        image: m.p.image || null
       }));
 
     return { statusCode: 200, headers, body: JSON.stringify({ results: matches }) };

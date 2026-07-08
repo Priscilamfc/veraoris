@@ -5405,7 +5405,7 @@ function amzCard(p){
     +'<div class="cpc-img" style="background:var(--gold4)">'
     +'<div class="cpc-cat">'+(catLbl||p.cat)+'</div>'
     +'<span id="'+badgeId+'"></span>'
-    +'<img src="'+img+'" alt="'+p.name+'" style="width:100%;height:100%;object-fit:contain;padding:18px">'
+    +'<img id="'+cardId+'_img" src="'+img+'" alt="'+p.name+'" style="width:100%;height:100%;object-fit:contain;padding:18px">'
     +'</div>'
     +'<div class="cpc-body">'
     +'<div class="cpc-brand">'+p.brand+'</div>'
@@ -5492,6 +5492,12 @@ function loadComparison(cardId, searchTerm, brand, name, fallbackLink){
           +'</span>'
           +'</div>';
       });
+      // If any matched result has a real product photo, swap it into the card image (Amazon has none yet, Eudora often does)
+      var withPhoto=combined.find(function(r){return r.image;});
+      if(withPhoto){
+        var imgEl=document.getElementById(cardId+'_img');
+        if(imgEl){ imgEl.src=withPhoto.image; imgEl.style.padding='0'; }
+      }
     }
     // Always include the Amazon affiliate button as the guaranteed purchase option
     html += amazonBtnHtml(fallbackLink, brand, name);
