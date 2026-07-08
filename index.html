@@ -250,6 +250,8 @@ footer{background:linear-gradient(135deg,#FFF5F0,#FFE8F0);padding:40px 40px 24px
 .cpc-amt{font-family:Cormorant Garamond,serif;font-size:16px;font-weight:600;color:var(--text)}
 .cpc-pr.best .cpc-amt{color:var(--ok)}
 .cpc-buy{background:var(--night);color:var(--gold3);border:none;border-radius:8px;padding:5px 12px;font-size:10px;font-weight:700;cursor:pointer}
+.cpc-compare-btn{width:100%;background:var(--gold4);border:1.5px dashed var(--border);color:var(--gold5);border-radius:8px;padding:9px 12px;font-size:12px;font-weight:700;cursor:pointer;transition:all .2s}
+.cpc-compare-btn:hover{background:var(--gold3);border-color:var(--gold)}
 .cpc-pr.best .cpc-buy{background:var(--ok);color:white}
 .cpc-save{background:var(--okbg);color:var(--ok);font-size:11px;font-weight:700;padding:6px 12px;border-radius:8px;margin-bottom:10px;border:1px solid rgba(42,107,10,.15)}
 .btn-add{width:100%;background:none;border:1.5px solid var(--marble3);border-radius:20px;padding:9px;font-size:11px;font-weight:700;color:var(--muted);cursor:pointer;transition:all .2s}
@@ -5393,8 +5395,10 @@ function amzCard(p){
   var cardId='cmp_'+p.brand.replace(/[^a-zA-Z0-9]/g,'')+'_'+p.name.replace(/[^a-zA-Z0-9]/g,'').substring(0,20)+'_'+Math.floor(Math.random()*100000);
   var badgeId=cardId+'_badge';
   var searchTerm=p.brand+' '+p.name;
+  var safeBrand=p.brand.replace(/'/g,"");
+  var safeName=p.name.replace(/'/g,"");
+  var safeSearch=searchTerm.replace(/'/g,"");
 
-  setTimeout(function(){ loadComparison(cardId, searchTerm, p, link); }, 50);
   setTimeout(function(){ loadTrendingBadge(badgeId, p); }, 50);
 
   return '<div class="cpc">'
@@ -5407,9 +5411,20 @@ function amzCard(p){
     +'<div class="cpc-brand">'+p.brand+'</div>'
     +'<div class="cpc-name">'+p.name+'</div>'
     +'<div class="cpc-prices" id="'+cardId+'">'
-    +'<div style="text-align:center;padding:10px;font-size:12px;color:var(--muted)">'+(lang==='pt'?'A comparar preços...':'Comparing prices...')+'</div>'
+    +'<button class="cpc-compare-btn" onclick="triggerComparison(this,\''+cardId+'\',\''+safeSearch+'\',\''+safeBrand+'\',\''+safeName+'\',\''+link+'\')">'+(lang==='pt'?'🔍 Comparar preços em outras lojas':'🔍 Compare prices elsewhere')+'</button>'
+    +amazonBtnHtml(link, safeBrand, safeName)
     +'</div>'
     +'</div></div>';
+}
+function amazonBtnHtml(link, brand, name){
+  return '<a class="cpc-pr best" style="margin-top:8px" href="'+link+'" target="_blank" rel="noopener" onclick="trackClick(\'Amazon\',\''+brand+' '+name+'\',0,\''+brand+'\',\''+name+'\')">'
+    +'<div><span class="cpc-store">Amazon</span><span class="cpc-bl">'+(lang==='pt'?'Ver na loja ✓':'View in store ✓')+'</span></div>'
+    +'<button class="cpc-buy">'+(lang==='pt'?'Comprar':'Buy')+'</button>'
+    +'</a>';
+}
+function triggerComparison(btn, cardId, searchTerm, brand, name, fallbackLink){
+  btn.outerHTML='<div style="text-align:center;padding:10px;font-size:12px;color:var(--muted)">'+(lang==='pt'?'A comparar preços...':'Comparing prices...')+'</div>';
+  loadComparison(cardId, searchTerm, brand, name, fallbackLink);
 }
 function loadTrendingBadge(badgeId, p){
   getTrendingProducts(function(trendingMap){
@@ -5450,7 +5465,7 @@ function storeGoLink(storeName, searchTerm){
   return 'https://www.google.com/search?q='+encodeURIComponent(storeName+' '+searchTerm);
 }
 
-function loadComparison(cardId, searchTerm, p, fallbackLink){
+function loadComparison(cardId, searchTerm, brand, name, fallbackLink){
   var combined=[];
   var pending = region==='BR' ? 2 : 1;
   function onSource(results){
@@ -5469,24 +5484,17 @@ function loadComparison(cardId, searchTerm, p, fallbackLink){
       top.forEach(function(r,i){
         var isBest = i===0;
         var goLink = r.link || storeGoLink(r.store, searchTerm);
-        var safeBrand = p.brand.replace(/'/g,"");
-        var safeName = p.name.replace(/'/g,"");
         html += '<div class="price-row" style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;'+(isBest?'font-weight:700':'')+'">'
           +'<span style="font-size:12px;color:'+(isBest?'var(--gold5)':'var(--muted)')+'">'+(isBest?'🏆 ':'')+r.store+'</span>'
           +'<span style="display:flex;align-items:center;gap:8px">'
           +'<span style="font-size:13px;'+(isBest?'color:var(--gold5)':'')+'">'+cur+r.price.toFixed(2)+'</span>'
-          +'<a href="'+goLink+'" target="_blank" rel="noopener" style="font-size:11px;background:var(--gold4);color:var(--gold5);padding:4px 10px;border-radius:10px;text-decoration:none;font-weight:600" onclick="trackClick(\''+r.store.replace(/'/g,"")+'\',\''+safeBrand+' '+safeName+'\','+r.price+',\''+safeBrand+'\',\''+safeName+'\')">'+(lang==='pt'?'Ir →':'Go →')+'</a>'
+          +'<a href="'+goLink+'" target="_blank" rel="noopener" style="font-size:11px;background:var(--gold4);color:var(--gold5);padding:4px 10px;border-radius:10px;text-decoration:none;font-weight:600" onclick="trackClick(\''+r.store.replace(/'/g,"")+'\',\''+brand+' '+name+'\','+r.price+',\''+brand+'\',\''+name+'\')">'+(lang==='pt'?'Ir →':'Go →')+'</a>'
           +'</span>'
           +'</div>';
       });
     }
     // Always include the Amazon affiliate button as the guaranteed purchase option
-    var safeBrandFinal = p.brand.replace(/'/g,"");
-    var safeNameFinal = p.name.replace(/'/g,"");
-    html += '<a class="cpc-pr best" style="margin-top:8px" href="'+fallbackLink+'" target="_blank" rel="noopener" onclick="trackClick(\'Amazon\',\''+safeBrandFinal+' '+safeNameFinal+'\',0,\''+safeBrandFinal+'\',\''+safeNameFinal+'\')">'
-      +'<div><span class="cpc-store">Amazon</span><span class="cpc-bl">'+(lang==='pt'?'Ver na loja ✓':'View in store ✓')+'</span></div>'
-      +'<button class="cpc-buy">'+(lang==='pt'?'Comprar':'Buy')+'</button>'
-      +'</a>';
+    html += amazonBtnHtml(fallbackLink, brand, name);
     el.innerHTML = html;
   }
   scrappaSearchPrices(searchTerm, onSource);
