@@ -211,6 +211,9 @@ footer{background:linear-gradient(135deg,#FFF5F0,#FFE8F0);padding:40px 40px 24px
 .foot-lbl{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--gold5);font-weight:700;margin-bottom:14px;display:block}
 .foot-bar{border-top:1px solid rgba(154,72,53,.14);padding-top:20px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px}
 .foot-bar p{font-size:11px;color:#C97A5F}
+.foot-social{display:flex;gap:12px;margin-top:16px}
+.foot-social a{color:var(--gold5);opacity:.75;transition:opacity .2s,transform .2s;display:flex;align-items:center;justify-content:center}
+.foot-social a:hover{opacity:1;transform:translateY(-2px)}
 /* COMPARE PAGE */
 .cmp-sec{padding:44px 40px;background:var(--marble)}
 .cmp-in{max-width:1320px;margin:0 auto}
@@ -801,7 +804,11 @@ textarea.form-inp{resize:vertical;min-height:140px}
 <!-- FOOTER -->
 <footer><div class="foot-in">
   <div class="foot-grid">
-    <div><img id="footLogo" alt="VERAORIS" style="height:32px;margin-bottom:14px;opacity:.9"><p style="font-size:12px;color:#B05C42;line-height:1.75;max-width:280px" id="footDesc">O Comparador de Beleza Nº1 para Skincare, Maquilhagem e Cabelo.</p></div>
+    <div><img id="footLogo" alt="VERAORIS" style="height:32px;margin-bottom:14px;opacity:.9"><p style="font-size:12px;color:#B05C42;line-height:1.75;max-width:280px" id="footDesc">O Comparador de Beleza Nº1 para Skincare, Maquilhagem e Cabelo.</p>
+    <div class="foot-social">
+      <a href="https://www.instagram.com/veraoris.oficial/" target="_blank" rel="noopener" aria-label="Instagram"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1"/></svg></a>
+      <a href="https://www.tiktok.com/@veraoris.oficial" target="_blank" rel="noopener" aria-label="TikTok"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M16.5 2c.3 2.4 1.8 4 4.5 4.2v3.1c-1.6 0-3-.5-4.2-1.4v6.6c0 3.4-2.7 6.1-6.1 6.1S4.6 17.9 4.6 14.5c0-3.3 2.6-6 5.9-6.1v3.2a2.9 2.9 0 1 0 2.9 2.9V2h3.1z"/></svg></a>
+    </div></div>
     <div><span class="foot-lbl" id="footCatLbl">Categorias</span><a class="foot-link" onclick="goCat('skincare')">Skincare</a><a class="foot-link" onclick="goCat('maquiagem')" id="fcat2">Maquilhagem</a><a class="foot-link" onclick="goCat('cabelo')">Cabelo</a></div>
     <div><span class="foot-lbl" id="footNavLbl">Navegação</span><a class="foot-link" onclick="showPage('howit')" id="fnav1">Como Funciona</a><a class="foot-link" onclick="showPage('faq')">FAQ</a><a class="foot-link" onclick="showPage('about')" id="fnav3">Sobre</a><a class="foot-link" onclick="showPage('contact')" id="fnav4">Contacto</a></div>
     <div><span class="foot-lbl" id="footLegLbl">Legal</span><a class="foot-link" onclick="showPage('privacy')" id="fleg1">Privacidade</a><a class="foot-link" onclick="showPage('terms')" id="fleg2">Termos de Uso</a></div>
