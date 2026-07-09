@@ -1765,19 +1765,23 @@ function renderPromosHome(){
       return;
     }
     var cur=region==='PT'?'€':'R$';
-    grid.innerHTML=promos.map(function(p){
+    var promoImgIds=promos.map(function(p,i){ return 'promoImg_'+i+'_'+Math.floor(Math.random()*100000); });
+    grid.innerHTML=promos.map(function(p,i){
       var disc=Math.round((1-(p.price_new/p.price_old))*100);
       var link=promoDirectLink(p.srch);
       var img=getIco(p);
       return '<div class="promo-card">'
         +'<span class="promo-badge">-'+disc+'%</span>'
-        +'<div class="promo-img"><img src="'+img+'" alt="'+p.name+'"></div>'
+        +'<div class="promo-img"><img id="'+promoImgIds[i]+'" src="'+img+'" alt="'+p.name+'"></div>'
         +'<div class="promo-brand">'+p.brand+'</div>'
         +'<div class="promo-name">'+p.name+'</div>'
         +'<div class="promo-prices"><span class="promo-old">'+cur+p.price_old.toFixed(2)+'</span><span class="promo-new">'+cur+p.price_new.toFixed(2)+'</span></div>'
         +'<a href="'+link+'" target="_blank" rel="noopener" onclick="trackClick(\'Amazon\',\''+p.brand+' '+p.name.replace(/'/g,"")+'\',0,\''+p.brand.replace(/'/g,"")+'\',\''+p.name.replace(/'/g,"")+'\')"><button class="promo-buy">'+(lang==='pt'?'Ver oferta':'See offer')+'</button></a>'
         +'</div>';
     }).join('');
+    if(region==='BR'){
+      promos.forEach(function(p,i){ preloadEudoraImage(promoImgIds[i], p.brand+' '+p.name); });
+    }
   });
 }
 
