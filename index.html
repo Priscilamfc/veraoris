@@ -1600,11 +1600,12 @@ function openPromoForm(){
 function updatePromoFormLabels(){
   var r=document.getElementById('promoRegion').value;
   var cur=r==='PT'?'€':'R$';
-  var domain=r==='PT'?'amazon.es':'amazon.com.br';
+  var domainLbl=r==='PT'?'amazon.es':'amazon.com.br ou eudora.com.br';
+  var domainEx=r==='PT'?'amazon.es':'amazon.com.br';
   document.getElementById('promoOldLabel').textContent='Preço original ('+cur+')';
   document.getElementById('promoNewLabel').textContent='Preço promocional ('+cur+')';
-  document.getElementById('promoSrchLabel').textContent='Link do produto na '+domain;
-  document.getElementById('promoSrch').placeholder='ex: https://www.'+domain+'/dp/B0XXXXXXX';
+  document.getElementById('promoSrchLabel').textContent='Link do produto na '+domainLbl;
+  document.getElementById('promoSrch').placeholder='ex: https://www.'+domainEx+'/dp/B0XXXXXXX';
 }
 function closePromoForm(){
   document.getElementById('promoFormWrap').style.display='none';
@@ -1648,9 +1649,11 @@ function savePromo(){
     srch:urlInput
   };
   if(!p.brand||!p.name||!urlInput||isNaN(priceOld)||isNaN(priceNew)){ showToast('Preenche todos os campos correctamente'); return; }
-  if(urlInput.indexOf('amazon.')===-1){ showToast('Cola o link completo do produto na Amazon (deve conter "amazon.")'); return; }
-  var expectedDomain=promoRegion==='PT'?'amazon.es':'amazon.com.br';
-  if(urlInput.indexOf(expectedDomain)===-1){ showToast('Para a região '+promoRegion+', o link deve ser do '+expectedDomain); return; }
+  // BR aceita Amazon ou Eudora (afiliados activos); PT por agora só Amazon
+  var allowedDomains = promoRegion==='PT' ? ['amazon.es'] : ['amazon.com.br','eudora.com.br','awin1.com','zenaps.com'];
+  var urlLower = urlInput.toLowerCase();
+  var domainOk = allowedDomains.some(function(d){ return urlLower.indexOf(d)!==-1; });
+  if(!domainOk){ showToast('Para a região '+promoRegion+', o link deve ser da '+allowedDomains.join(' / ')); return; }
   if(priceNew>=priceOld){ showToast('O preço promocional deve ser menor que o original'); return; }
   var action = editId>=0 ? 'update' : 'insert';
   var extra = editId>=0 ? {id:editId, data:p} : {data:p};
@@ -1764,7 +1767,7 @@ function renderPromosHome(){
     var cur=region==='PT'?'€':'R$';
     grid.innerHTML=promos.map(function(p){
       var disc=Math.round((1-(p.price_new/p.price_old))*100);
-      var link=amzDirectLink(p.srch);
+      var link=promoDirectLink(p.srch);
       var img=getIco(p);
       return '<div class="promo-card">'
         +'<span class="promo-badge">-'+disc+'%</span>'
@@ -6773,6 +6776,14 @@ function amzDirectLink(productUrl){
   var hasQuery2 = cleanUrl.indexOf('?') !== -1;
   var sep2 = hasQuery2 ? '&' : '?';
   return cleanUrl + sep2 + 'tag=' + tag;
+}
+// Promoções podem vir da Amazon (precisa da tag de afiliado inserida) ou de
+// outra loja com link de afiliado próprio (ex: Eudora via Awin) — nesse caso
+// o link já vem rastreado e não deve ser alterado.
+function promoDirectLink(productUrl){
+  if(!productUrl) return '#';
+  if(productUrl.indexOf('amazon.') !== -1) return amzDirectLink(productUrl);
+  return productUrl;
 }
 
 function matchScore(p){
