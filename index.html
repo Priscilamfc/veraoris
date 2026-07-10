@@ -685,7 +685,7 @@ textarea.form-inp{resize:vertical;min-height:140px}
     <a onclick="showPage('howit')" id="nl5">Como Funciona</a>
     <a onclick="showPage('about')" id="nl6">Sobre</a>
   </div>
-  <button class="nav-cta" onclick="startQuiz()" id="navCta">✦ Compare Aqui</button>
+  <button class="nav-cta" onclick="startQuiz()" id="navCta">✦ Faça o Quiz e Compare Aqui</button>
 </div></nav>
 <!-- HOME -->
 <div class="page active" id="page-home">
@@ -705,7 +705,7 @@ textarea.form-inp{resize:vertical;min-height:140px}
         <div class="hb-icon">✦</div>
         <h3 id="hbQuizH">Não sabe por onde começar? A gente te ajuda a escolher certo</h3>
         <p id="hbQuizP">Responda um quiz rápido e receba recomendações sob medida para o seu perfil.</p>
-        <button class="btn-caq" onclick="startQuiz()"><span class="ico">✦</span><span id="ctaCompare">Compare Aqui — É Gratuito</span></button>
+        <button class="btn-caq" onclick="startQuiz()"><span class="ico">✦</span><span id="ctaCompare">Faça o Quiz e Compare Aqui — É Gratuito</span></button>
       </div>
       <div class="hero-block hero-block-search">
         <div class="hb-icon">🔍</div>
@@ -759,7 +759,7 @@ textarea.form-inp{resize:vertical;min-height:140px}
       <div class="c-step"><div class="c-step-n">02</div><h4 id="cs2h">Encontramos</h4><p id="cs2p">Selecionamos os melhores produtos para o seu perfil.</p></div>
       <div class="c-step"><div class="c-step-n">03</div><h4 id="cs3h">Comparamos</h4><p id="cs3p">Preços lado a lado em todas as lojas parceiras.</p></div>
     </div>
-    <button class="btn-big" onclick="startQuiz()"><span class="ico">✦</span><span id="btnBigCompare">Compare Aqui Agora — Grátis</span></button>
+    <button class="btn-big" onclick="startQuiz()"><span class="ico">✦</span><span id="btnBigCompare">Faça o Quiz e Compare Aqui Agora — Grátis</span></button>
     <p class="caq-note" id="caqNote">✓ Sem cadastro &nbsp;·&nbsp; ✓ Sem custo &nbsp;·&nbsp; ✓ Resultado imediato</p>
   </div>
 </div>
@@ -1155,11 +1155,11 @@ function getIco(p){return p.cat==='skincare'?ISKIN:p.cat==='maquiagem'?IMAQ:ICAB
 var TX={
   pt:{
     nl:['Comparar','Skincare','Maquilhagem','Cabelo','Como Funciona','Sobre'],
-    navCta:'✦ Compare Aqui',
+    navCta:'✦ Faça o Quiz e Compare Aqui',
     heroEye:'Comparador de Beleza Nº1',heroH1a:'Compare. Decida.',heroH1b:'Escolha melhor.',
     heroDesc:'Encontre os melhores produtos de beleza comparando preços em várias lojas, num só lugar.',
     btnBuscar:'Buscar',exLbl:'Exemplos:',ex1:'hidratante pele oleosa',ex2:'base matte',ex3:'shampoo sem sulfato',
-    ctaCompare:'Compare Aqui — É Gratuito',ctaAll:'Ver todos os produtos',
+    ctaCompare:'Faça o Quiz e Compare Aqui — É Gratuito',ctaAll:'Ver todos os produtos',
     stat1:'Produtos',stat2:'Comparação em Tempo Real',stat3:'Gratuito',
     hbQuizH:'Não sabe por onde começar? A gente te ajuda a escolher certo',
     hbQuizP:'Responda um quiz rápido e receba recomendações sob medida para o seu perfil.',
@@ -1171,7 +1171,7 @@ var TX={
     cs1h:'Responda o Quiz',cs1p:'Diga o seu tipo de pele, cabelo e o que procura.',
     cs2h:'Encontramos',cs2p:'Selecionamos os melhores produtos para o seu perfil.',
     cs3h:'Comparamos',cs3p:'Preços lado a lado em todas as lojas parceiras.',
-    btnBigCompare:'Compare Aqui Agora — Grátis',caqNote:'✓ Sem cadastro · ✓ Sem custo · ✓ Resultado imediato',
+    btnBigCompare:'Faça o Quiz e Compare Aqui Agora — Grátis',caqNote:'✓ Sem cadastro · ✓ Sem custo · ✓ Resultado imediato',
     catsEye:'Categorias',catsTitle:'Explore por categoria',
     catSkinT:'Skincare',catSkinD:'Cuide da sua pele com os melhores produtos.',
     catMaqT:'Maquilhagem',catMaqD:'Descubra maquiagens que realçam você.',
@@ -1229,11 +1229,11 @@ var TX={
   },
   en:{
     nl:['Compare','Skincare','Makeup','Hair','How it Works','About'],
-    navCta:'✦ Compare Here',
+    navCta:'✦ Take the Quiz and Compare Here',
     heroEye:'#1 Beauty Comparator',heroH1a:'Compare. Decide.',heroH1b:'Choose better.',
     heroDesc:'Find the best beauty products by comparing prices across multiple stores, all in one place.',
     btnBuscar:'Search',exLbl:'Examples:',ex1:'oily skin moisturiser',ex2:'matte foundation',ex3:'sulfate-free shampoo',
-    ctaCompare:'Compare Here — Free',ctaAll:'See all products',
+    ctaCompare:'Take the Quiz and Compare Here — Free',ctaAll:'See all products',
     stat1:'Products',stat2:'Real-Time Comparison',stat3:'Free',
     hbQuizH:"Not sure where to start? We'll help you choose right",
     hbQuizP:'Answer a quick quiz and get recommendations tailored to your profile.',
@@ -1245,7 +1245,7 @@ var TX={
     cs1h:'Take the Quiz',cs1p:'Tell us your skin type, hair type and what you need.',
     cs2h:'We Find',cs2p:'We select the best products for your profile.',
     cs3h:'We Compare',cs3p:'Prices side by side across all partner stores.',
-    btnBigCompare:'Compare Here Now — Free',caqNote:'✓ No sign-up · ✓ No cost · ✓ Instant result',
+    btnBigCompare:'Take the Quiz and Compare Here Now — Free',caqNote:'✓ No sign-up · ✓ No cost · ✓ Instant result',
     catsEye:'Categories',catsTitle:'Explore by category',
     catSkinT:'Skincare',catSkinD:'Take care of your skin with the best products.',
     catMaqT:'Makeup',catMaqD:'Discover makeup that enhances you.',
@@ -1372,7 +1372,7 @@ function renderFeatured(){
   var g=document.getElementById('featuredGrid');if(!g)return;
   var title=lang==='pt'?'✦ Produtos reais, comparados para si':'✦ Real products, compared for you';
   var desc=lang==='pt'?'Responda ao nosso quiz e veja produtos reais da Amazon, comparados especialmente para o seu perfil.':'Take our quiz and see real Amazon products, compared especially for your profile.';
-  var btn=lang==='pt'?'Compare Aqui Agora':'Compare Here Now';
+  var btn=lang==='pt'?'Faça o Quiz e Compare Aqui Agora':'Take the Quiz and Compare Here Now';
   g.innerHTML='<div style="grid-column:1/-1;text-align:center;padding:48px 24px;background:var(--white);border-radius:var(--r2);border:1px solid var(--marble3)">'
     +'<p style="font-family:Cormorant Garamond,serif;font-size:1.5rem;color:var(--text);margin-bottom:10px">'+title+'</p>'
     +'<p style="font-size:13px;color:var(--muted);margin-bottom:24px;max-width:420px;margin-left:auto;margin-right:auto">'+desc+'</p>'
@@ -1388,10 +1388,14 @@ function renderProds(){
     pool=pool.filter(function(p){return p.cat===cat;});
   }
   if(srch){
-    var term=srch.toLowerCase();
-    pool=pool.filter(function(p){
-      return (p.brand+' '+p.name).toLowerCase().indexOf(term)>=0;
-    });
+    var terms=srch.toLowerCase().split(/\s+/).filter(Boolean);
+    pool=pool.map(function(p){
+      var hay=(p.brand+' '+p.name+' '+(p.sub||'')+' '+p.cat).toLowerCase();
+      var score=terms.reduce(function(acc,t){return acc+(hay.indexOf(t)>=0?1:0);},0);
+      return {p:p,score:score};
+    }).filter(function(x){return x.score>0;})
+      .sort(function(a,b){return b.score-a.score;})
+      .map(function(x){return x.p;});
   }
 
   prodResultsAll=pool;
@@ -6868,7 +6872,7 @@ function renderAmzPage(){
   var shown=amzResultsAll.slice(0,amzPage*amzPS);
   var hasMore=amzResultsAll.length>shown.length;
 
-  if(grid)grid.innerHTML=shown.map(function(p){return amzCard(p);}).join('');
+  if(grid)grid.innerHTML=shown.map(function(p){return amzCard(p,true);}).join('');
 
   if(wrap){
     if(hasMore){
@@ -6883,7 +6887,7 @@ function renderAmzPage(){
 
 function verMais(){amzPage++;renderAmzPage();}
 
-function amzCard(p){
+function amzCard(p, auto){
   var link=amzLink(p.srch);
   var catLbl=lang==='pt'?{skincare:'Skincare',maquiagem:'Maquilhagem',cabelo:'Cabelo'}[p.cat]:{skincare:'Skincare',maquiagem:'Makeup',cabelo:'Hair'}[p.cat];
   var img=getIco(p);
@@ -6895,7 +6899,9 @@ function amzCard(p){
   var safeSearch=searchTerm.replace(/'/g,"");
 
   setTimeout(function(){ loadTrendingBadge(badgeId, p); }, 50);
-  if(region==='BR'){
+  if(auto){
+    setTimeout(function(){ loadComparison(cardId, searchTerm, safeBrand, safeName, link); }, 50);
+  } else if(region==='BR'){
     setTimeout(function(){ preloadEudoraImage(cardId+'_img', searchTerm); }, 50);
   }
 
@@ -6909,8 +6915,10 @@ function amzCard(p){
     +'<div class="cpc-brand">'+p.brand+'</div>'
     +'<div class="cpc-name">'+p.name+'</div>'
     +'<div class="cpc-prices" id="'+cardId+'">'
-    +'<button class="cpc-compare-btn" onclick="triggerComparison(this,\''+cardId+'\',\''+safeSearch+'\',\''+safeBrand+'\',\''+safeName+'\',\''+link+'\')">'+(lang==='pt'?'🔍 Comparar preços em outras lojas':'🔍 Compare prices elsewhere')+'</button>'
-    +amazonBtnHtml(link, safeBrand, safeName)
+    +(auto
+      ? '<div style="text-align:center;padding:10px;font-size:12px;color:var(--muted)">'+(lang==='pt'?'A comparar preços...':'Comparing prices...')+'</div>'
+      : '<button class="cpc-compare-btn" onclick="triggerComparison(this,\''+cardId+'\',\''+safeSearch+'\',\''+safeBrand+'\',\''+safeName+'\',\''+link+'\')">'+(lang==='pt'?'🔍 Comparar preços em outras lojas':'🔍 Compare prices elsewhere')+'</button>'
+        +amazonBtnHtml(link, safeBrand, safeName))
     +'</div>'
     +'</div></div>';
 }
