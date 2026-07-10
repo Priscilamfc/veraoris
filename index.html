@@ -973,15 +973,54 @@ function awinSearchPrices(query, callback){
     callback([]);
   });
 }
+// Maps our internal product subcategory codes to real-world PT keywords, so we can require
+// a matched Eudora product to actually be the SAME TYPE of item (ex: hidratante) — any brand
+// is fine, but a brush must never be accepted as a photo for a moisturizer.
+var SUB_KEYWORDS={
+  limpeza:['limpeza','sabonete','micelar'],hidratante:['hidratante'],serum:['sérum','serum'],
+  solar:['solar','fps'],esfoliante:['esfoliante'],mascara_facial:['máscara facial','máscara de argila'],
+  olhos:['olheiras','área dos olhos'],labios:['labial'],base:['base'],bb_cream:['bb cream'],
+  primer:['primer'],corretivo:['corretivo'],po_compacto:['pó compacto'],po_solto:['pó solto'],
+  bronzer:['bronzer','bronzeador'],blush:['blush'],iluminador:['iluminador'],contorno:['contorno'],
+  sombra:['sombra'],rimel:['rímel','máscara de cílios'],delineador:['delineador'],
+  lapis_olho:['lápis de olho'],primer_olho:['primer de olhos'],batom:['batom'],gloss:['gloss'],
+  lip_liner:['lápis labial'],lip_balm:['balm labial','protetor labial'],
+  lapis_sb:['lápis de sobrancelha'],gel_sb:['gel de sobrancelha'],pomada_sb:['pomada de sobrancelha'],
+  sombra_sb:['sombra de sobrancelha'],henna:['henna'],henna_cab:['henna'],shampoo:['shampoo'],
+  condicionador:['condicionador'],acondicionador:['condicionador'],
+  mascara:['máscara capilar','máscara de tratamento'],leave_in:['leave-in','leave in'],
+  oleo:['óleo capilar','óleo'],oleo_dem:['óleo demaquilante'],tonico:['tônico capilar'],
+  ampola:['ampola'],definicao:['creme de pentear','gel capilar','definição'],
+  reconstrucao:['reconstrução'],perfume:['perfume','eau de'],desodorante:['desodorante'],
+  sabonete:['sabonete'],kit:['kit'],paleta_completa:['paleta'],pincel:['pincel'],
+  esponja:['esponja de maquiagem'],removedor:['removedor'],fixador:['fixador'],
+  tintura:['tintura','coloração'],descolorante:['descolorante'],matizador:['matizador'],
+  oxidante:['água oxigenada','oxidante'],chapinha:['chapinha','prancha'],secador:['secador'],
+  escova_secadora:['escova secadora'],babyliss:['babyliss'],curvex:['curvex'],difusor:['difusor'],
+  pente:['pente'],espelho:['espelho'],lenco_demaq:['lenço demaquilante'],protetor:['protetor'],
+  protetor_term:['protetor térmico'],barba_balm:['balm de barba'],barba_oleo:['óleo de barba'],
+  barba_shampoo:['shampoo de barba'],cilios_post:['cílios postiços'],apontador:['apontador'],
+  acido:['ácido'],creme_pent:['creme de pentear'],rolinho:['rolinho']
+};
+function subKeywords(sub){ return SUB_KEYWORDS[sub] || [(sub||'').replace(/_/g,' ')].filter(Boolean); }
+// Generic fallback when we don't know the product's subcategory (ex: manually-entered promos):
+// require overlap on a meaningful (non-generic-length) word instead of trusting any word match.
+function looseTypeMatch(searchTerm, title){
+  var t=(title||'').toLowerCase();
+  return (searchTerm||'').toLowerCase().split(/\s+/).filter(function(w){return w.length>=5;}).some(function(w){return t.indexOf(w)>=0;});
+}
 // Preload a real product photo from the free Eudora feed (no Scrappa credits used).
-// Only trusts a match whose own product title actually contains the brand we searched for —
+// Only trusts a match that is actually the same TYPE of product (any brand is fine) — plain
 // word-overlap scoring alone can match an unrelated product (ex: a brush) that happens to
 // share a short/generic word with the search term, which would show a completely wrong photo.
-function preloadEudoraImage(imgId, searchTerm, brand){
+function preloadEudoraImage(imgId, searchTerm, sub){
   awinSearchPrices(searchTerm, function(results){
-    var brandLower=(brand||'').toLowerCase();
+    var kws=subKeywords(sub);
     var withPhoto=(results||[]).find(function(r){
-      return r.image && (!brandLower || (r.title||'').toLowerCase().indexOf(brandLower)>=0);
+      if(!r.image) return false;
+      var t=(r.title||'').toLowerCase();
+      if(sub) return kws.some(function(k){return t.indexOf(k.toLowerCase())>=0;});
+      return looseTypeMatch(searchTerm, r.title);
     });
     if(withPhoto){
       var imgEl=document.getElementById(imgId);
@@ -1790,7 +1829,7 @@ function renderPromosHome(){
         +'</div>';
     }).join('');
     if(region==='BR'){
-      promos.forEach(function(p,i){ preloadEudoraImage(promoImgIds[i], p.brand+' '+p.name, p.brand); });
+      promos.forEach(function(p,i){ preloadEudoraImage(promoImgIds[i], p.brand+' '+p.name); });
     }
   });
 }
@@ -6906,9 +6945,9 @@ function amzCard(p, auto){
 
   setTimeout(function(){ loadTrendingBadge(badgeId, p); }, 50);
   if(auto){
-    setTimeout(function(){ loadComparison(cardId, searchTerm, safeBrand, safeName, link); }, 50);
+    setTimeout(function(){ loadComparison(cardId, searchTerm, safeBrand, safeName, link, p.sub); }, 50);
   } else if(region==='BR'){
-    setTimeout(function(){ preloadEudoraImage(cardId+'_img', searchTerm, safeBrand); }, 50);
+    setTimeout(function(){ preloadEudoraImage(cardId+'_img', searchTerm, p.sub); }, 50);
   }
 
   return '<div class="cpc">'
@@ -6992,7 +7031,7 @@ function isWrongRegionStore(storeName){
   }
   return false;
 }
-function loadComparison(cardId, searchTerm, brand, name, fallbackLink){
+function loadComparison(cardId, searchTerm, brand, name, fallbackLink, sub){
   var combined=[];
   var pending = region==='BR' ? 2 : 1;
   function onSource(results, source){
@@ -7034,12 +7073,15 @@ function loadComparison(cardId, searchTerm, brand, name, fallbackLink){
       });
       // Only swap in a photo from the Eudora feed (our own structured product data), shown
       // to the user, and never from Scrappa/Google Shopping thumbnails (frequently mismatched).
-      // Also require the matched Eudora product's own title to contain the brand we searched
-      // for — otherwise a loose word-overlap match (ex: a brush matching "hidratante") can
+      // Also require the matched Eudora product to be the same TYPE of item (any brand is
+      // fine) — otherwise a loose word-overlap match (ex: a brush matching "hidratante") can
       // surface a completely unrelated photo.
-      var brandLower=(brand||'').toLowerCase();
+      var kws=subKeywords(sub);
       var withPhoto=top.find(function(r){
-        return r.image && r._source==='awin' && (r.title||'').toLowerCase().indexOf(brandLower)>=0;
+        if(!r.image || r._source!=='awin') return false;
+        var t=(r.title||'').toLowerCase();
+        if(sub) return kws.some(function(k){return t.indexOf(k.toLowerCase())>=0;});
+        return looseTypeMatch(searchTerm, r.title);
       });
       if(withPhoto){
         var imgEl=document.getElementById(cardId+'_img');
