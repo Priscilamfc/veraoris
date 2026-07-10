@@ -973,10 +973,16 @@ function awinSearchPrices(query, callback){
     callback([]);
   });
 }
-// Preload a real product photo from the free Eudora feed (no Scrappa credits used)
-function preloadEudoraImage(imgId, searchTerm){
+// Preload a real product photo from the free Eudora feed (no Scrappa credits used).
+// Only trusts a match whose own product title actually contains the brand we searched for —
+// word-overlap scoring alone can match an unrelated product (ex: a brush) that happens to
+// share a short/generic word with the search term, which would show a completely wrong photo.
+function preloadEudoraImage(imgId, searchTerm, brand){
   awinSearchPrices(searchTerm, function(results){
-    var withPhoto=(results||[]).find(function(r){ return r.image; });
+    var brandLower=(brand||'').toLowerCase();
+    var withPhoto=(results||[]).find(function(r){
+      return r.image && (!brandLower || (r.title||'').toLowerCase().indexOf(brandLower)>=0);
+    });
     if(withPhoto){
       var imgEl=document.getElementById(imgId);
       if(imgEl){ imgEl.src=withPhoto.image; imgEl.style.padding='0'; }
@@ -1784,7 +1790,7 @@ function renderPromosHome(){
         +'</div>';
     }).join('');
     if(region==='BR'){
-      promos.forEach(function(p,i){ preloadEudoraImage(promoImgIds[i], p.brand+' '+p.name); });
+      promos.forEach(function(p,i){ preloadEudoraImage(promoImgIds[i], p.brand+' '+p.name, p.brand); });
     }
   });
 }
@@ -6902,7 +6908,7 @@ function amzCard(p, auto){
   if(auto){
     setTimeout(function(){ loadComparison(cardId, searchTerm, safeBrand, safeName, link); }, 50);
   } else if(region==='BR'){
-    setTimeout(function(){ preloadEudoraImage(cardId+'_img', searchTerm); }, 50);
+    setTimeout(function(){ preloadEudoraImage(cardId+'_img', searchTerm, safeBrand); }, 50);
   }
 
   return '<div class="cpc">'
@@ -7027,9 +7033,14 @@ function loadComparison(cardId, searchTerm, brand, name, fallbackLink){
           +'</div>';
       });
       // Only swap in a photo from the Eudora feed (our own structured product data), shown
-      // to the user, and never from Scrappa/Google Shopping thumbnails, which are frequently
-      // mismatched to the wrong product
-      var withPhoto=top.find(function(r){return r.image && r._source==='awin';});
+      // to the user, and never from Scrappa/Google Shopping thumbnails (frequently mismatched).
+      // Also require the matched Eudora product's own title to contain the brand we searched
+      // for — otherwise a loose word-overlap match (ex: a brush matching "hidratante") can
+      // surface a completely unrelated photo.
+      var brandLower=(brand||'').toLowerCase();
+      var withPhoto=top.find(function(r){
+        return r.image && r._source==='awin' && (r.title||'').toLowerCase().indexOf(brandLower)>=0;
+      });
       if(withPhoto){
         var imgEl=document.getElementById(cardId+'_img');
         if(imgEl){ imgEl.src=withPhoto.image; imgEl.style.padding='0'; }
