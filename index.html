@@ -6989,7 +6989,8 @@ function isWrongRegionStore(storeName){
 function loadComparison(cardId, searchTerm, brand, name, fallbackLink){
   var combined=[];
   var pending = region==='BR' ? 2 : 1;
-  function onSource(results){
+  function onSource(results, source){
+    (results||[]).forEach(function(r){ r._source = source; });
     combined = combined.concat(results||[]);
     pending--;
     if(pending>0) return;
@@ -7025,9 +7026,10 @@ function loadComparison(cardId, searchTerm, brand, name, fallbackLink){
           +'</span>'
           +'</div>';
       });
-      // Only swap in a photo from a result that's actually shown to the user (top 3),
-      // never from an unrelated/filtered-out match elsewhere in combined
-      var withPhoto=top.find(function(r){return r.image;});
+      // Only swap in a photo from the Eudora feed (our own structured product data), shown
+      // to the user, and never from Scrappa/Google Shopping thumbnails, which are frequently
+      // mismatched to the wrong product
+      var withPhoto=top.find(function(r){return r.image && r._source==='awin';});
       if(withPhoto){
         var imgEl=document.getElementById(cardId+'_img');
         if(imgEl){ imgEl.src=withPhoto.image; imgEl.style.padding='0'; }
@@ -7037,8 +7039,8 @@ function loadComparison(cardId, searchTerm, brand, name, fallbackLink){
     html += amazonBtnHtml(fallbackLink, brand, name);
     el.innerHTML = html;
   }
-  scrappaSearchPrices(searchTerm, onSource);
-  if(region==='BR') awinSearchPrices(searchTerm, onSource);
+  scrappaSearchPrices(searchTerm, function(results){ onSource(results, 'scrappa'); });
+  if(region==='BR') awinSearchPrices(searchTerm, function(results){ onSource(results, 'awin'); });
 }
 
 function renderFAQ(){
