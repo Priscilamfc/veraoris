@@ -6971,6 +6971,21 @@ function storeGoLink(storeName, searchTerm){
   return 'https://www.google.com/search?q='+encodeURIComponent(storeName+' '+searchTerm);
 }
 
+// Filters out stores that belong to the wrong country for the current region
+// (ex: Portuguese/Spanish stores like Sweetcare showing up for Brazil, or vice-versa)
+function isWrongRegionStore(storeName){
+  var s=(storeName||'').toLowerCase();
+  if(region==='BR'){
+    var blockedBR=['sweetcare','soin et nature','pharmoperation','wells','continente','el corte inglés','el corte ingles'];
+    if(blockedBR.some(function(b){return s.indexOf(b)>=0;})) return true;
+    if(/\blda\b|\bunipessoal\b|\.pt\b|portugal/.test(s)) return true;
+  } else {
+    var blockedPT=['drogaria','droga raia','eudora','ultrafarma'];
+    if(blockedPT.some(function(b){return s.indexOf(b)>=0;})) return true;
+    if(/\bltda\b|\.com\.br\b|brasil/.test(s)) return true;
+  }
+  return false;
+}
 function loadComparison(cardId, searchTerm, brand, name, fallbackLink){
   var combined=[];
   var pending = region==='BR' ? 2 : 1;
@@ -6982,6 +6997,8 @@ function loadComparison(cardId, searchTerm, brand, name, fallbackLink){
     if(!el) return; // card may no longer be on screen
 
     var html='';
+    // Drop results from stores that don't belong to this region before doing anything else
+    combined = combined.filter(function(r){ return !isWrongRegionStore(r.store); });
     if(combined.length){
       // Sort by price, then keep only the cheapest result per store, so the top 3
       // show diversified stores instead of repeating the same store 3x
@@ -7008,8 +7025,9 @@ function loadComparison(cardId, searchTerm, brand, name, fallbackLink){
           +'</span>'
           +'</div>';
       });
-      // If any matched result has a real product photo, swap it into the card image (Amazon has none yet, Eudora often does)
-      var withPhoto=combined.find(function(r){return r.image;});
+      // Only swap in a photo from a result that's actually shown to the user (top 3),
+      // never from an unrelated/filtered-out match elsewhere in combined
+      var withPhoto=top.find(function(r){return r.image;});
       if(withPhoto){
         var imgEl=document.getElementById(cardId+'_img');
         if(imgEl){ imgEl.src=withPhoto.image; imgEl.style.padding='0'; }
