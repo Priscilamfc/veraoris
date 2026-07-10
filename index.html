@@ -1051,6 +1051,8 @@ function preloadEudoraImage(imgId, searchTerm, sub, cat){
     if(withPhoto){
       var imgEl=document.getElementById(imgId);
       if(imgEl){ imgEl.src=withPhoto.image; imgEl.style.padding='0'; }
+      var lblEl=document.getElementById(imgId+'_lbl');
+      if(lblEl){ lblEl.style.display='none'; }
     }
   });
 }
@@ -1847,7 +1849,7 @@ function renderPromosHome(){
       var img=getIco(p);
       return '<div class="promo-card">'
         +'<span class="promo-badge">-'+disc+'%</span>'
-        +'<div class="promo-img"><img id="'+promoImgIds[i]+'" src="'+img+'" alt="'+p.name+'"></div>'
+        +'<div class="promo-img" style="position:relative"><img id="'+promoImgIds[i]+'" src="'+img+'" alt="'+p.name+'"><span id="'+promoImgIds[i]+'_lbl" style="position:absolute;bottom:6px;left:6px;background:rgba(0,0,0,.55);color:#fff;font-size:9px;font-weight:600;padding:3px 9px;border-radius:8px;letter-spacing:.03em">'+(lang==='pt'?'Foto ilustrativa':'Illustrative photo')+'</span></div>'
         +'<div class="promo-brand">'+p.brand+'</div>'
         +'<div class="promo-name">'+p.name+'</div>'
         +'<div class="promo-prices"><span class="promo-old">'+cur+p.price_old.toFixed(2)+'</span><span class="promo-new">'+cur+p.price_new.toFixed(2)+'</span></div>'
@@ -6981,6 +6983,7 @@ function amzCard(p, auto){
     +'<div class="cpc-cat">'+(catLbl||p.cat)+'</div>'
     +'<span id="'+badgeId+'"></span>'
     +'<img id="'+cardId+'_img" src="'+img+'" alt="'+p.name+'" style="width:100%;height:100%;object-fit:contain;padding:18px">'
+    +'<span id="'+cardId+'_img_lbl" style="position:absolute;bottom:6px;left:6px;background:rgba(0,0,0,.55);color:#fff;font-size:9px;font-weight:600;padding:3px 9px;border-radius:8px;letter-spacing:.03em">'+(lang==='pt'?'Foto ilustrativa':'Illustrative photo')+'</span>'
     +'</div>'
     +'<div class="cpc-body">'
     +'<div class="cpc-brand">'+p.brand+'</div>'
@@ -7114,6 +7117,8 @@ function loadComparison(cardId, searchTerm, brand, name, fallbackLink, sub, cat)
       if(withPhoto){
         var imgEl=document.getElementById(cardId+'_img');
         if(imgEl){ imgEl.src=withPhoto.image; imgEl.style.padding='0'; }
+        var lblEl=document.getElementById(cardId+'_img_lbl');
+        if(lblEl){ lblEl.style.display='none'; }
       }
     }
     // Always include the Amazon affiliate button as the guaranteed purchase option
