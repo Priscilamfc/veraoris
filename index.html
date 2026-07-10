@@ -1053,8 +1053,8 @@ var MAQ_L=[['batom','Batom'],['gloss','Gloss'],['lip_liner','Lápis de Boca'],['
 var MAQ_S=[['lapis_sb','Lápis de Sobrancelha'],['pomada_sb','Pomada'],['gel_sb','Gel'],['henna','Henna']];
 var HAIR_P=[['shampoo','🧴 Shampoo'],['condicionador','💆 Condicionador'],['mascara','✨ Máscara Capilar'],['leave_in','💧 Leave-in'],['oleo','🌿 Óleo Capilar'],['serum_cap','💊 Sérum Capilar'],['protetor_term','🔥 Protetor Térmico'],['tonico','🌱 Tônico'],['creme_pent','💫 Creme de Pentear'],['ampola','⚡ Ampola']];
 var SKIN_P=[['sabonete','🫧 Limpeza/Sabonete'],['agua_mic','💧 Água Micelar'],['hidratante','🌸 Hidratante'],['serum','✨ Sérum'],['protetor','☀️ Protetor Solar'],['esfoliante','🔮 Esfoliante'],['mascara_f','🎭 Máscara Facial'],['acido','🔬 Ácidos (AHA/BHA)'],['creme_olhos','👁️ Creme para Olhos']];
-var BUD_BR=[['economico','💚 Económico — até R$ 50'],['medio','💛 Intermediário — R$ 50 a 200'],['premium','💎 Premium — acima de R$ 200']];
-var BUD_PT=[['economico','💚 Económico — até €15'],['medio','💛 Intermediário — €15 a 50'],['premium','💎 Premium — acima de €50']];
+var BUD_BR=[['economico','💚 Económico — até R$ 50'],['medio','💛 Intermediário — R$ 50 a 200'],['premium','💎 Premium — acima de R$ 200'],['todos','🌟 Todos']];
+var BUD_PT=[['economico','💚 Económico — até €15'],['medio','💛 Intermediário — €15 a 50'],['premium','💎 Premium — acima de €50'],['todos','🌟 Todos']];
 var FAQS=[
   {q:"A VERAORIS vende produtos?",a:"Não. Somos uma plataforma de comparação. Redirecionamos para lojas parceiras onde pode comprar os produtos."},
   {q:"O quiz é gratuito?",a:"Sim, completamente gratuito. Não precisa de conta nem de dados pessoais."},
@@ -1420,7 +1420,7 @@ function renderProdsPage(){
   var shown=prodResultsAll.slice(0,prodPage*prodPS);
   var hasMore=prodResultsAll.length>shown.length;
 
-  g.innerHTML=shown.map(function(p){return amzCard(p);}).join('');
+  g.innerHTML=shown.map(function(p){return amzCard(p,true);}).join('');
 
   var cnt=document.getElementById('resultCount');
   if(cnt)cnt.textContent=(lang==='pt'?shown.length+' de '+prodResultsAll.length+' produtos':shown.length+' of '+prodResultsAll.length+' products');
@@ -2178,8 +2178,8 @@ function renderQ5(){
 function renderBudget(){
   var el=document.getElementById('q7opts');if(!el)return;
   var pt=lang==='pt';
-  var BUD_BR_L=pt?BUD_BR:[['economico','💚 Budget — up to R$50'],['medio','💛 Mid-range — R$50–200'],['premium','💎 Premium — above R$200']];
-  var BUD_PT_L=pt?BUD_PT:[['economico','💚 Budget — up to €15'],['medio','💛 Mid-range — €15–50'],['premium','💎 Premium — above €50']];
+  var BUD_BR_L=pt?BUD_BR:[['economico','💚 Budget — up to R$50'],['medio','💛 Mid-range — R$50–200'],['premium','💎 Premium — above R$200'],['todos','🌟 All']];
+  var BUD_PT_L=pt?BUD_PT:[['economico','💚 Budget — up to €15'],['medio','💛 Mid-range — €15–50'],['premium','💎 Premium — above €50'],['todos','🌟 All']];
   el.innerHTML=opts(region==='BR'?BUD_BR_L:BUD_PT_L,'budget');
 }
 function buildSumm(){
@@ -6971,6 +6971,21 @@ function storeGoLink(storeName, searchTerm){
   return 'https://www.google.com/search?q='+encodeURIComponent(storeName+' '+searchTerm);
 }
 
+// Filters out stores that belong to the wrong country for the current region
+// (ex: Portuguese/Spanish stores like Sweetcare showing up for Brazil, or vice-versa)
+function isWrongRegionStore(storeName){
+  var s=(storeName||'').toLowerCase();
+  if(region==='BR'){
+    var blockedBR=['sweetcare','soin et nature','pharmoperation','wells','continente','el corte inglés','el corte ingles'];
+    if(blockedBR.some(function(b){return s.indexOf(b)>=0;})) return true;
+    if(/\blda\b|\bunipessoal\b|\.pt\b|portugal/.test(s)) return true;
+  } else {
+    var blockedPT=['drogaria','droga raia','eudora','ultrafarma'];
+    if(blockedPT.some(function(b){return s.indexOf(b)>=0;})) return true;
+    if(/\bltda\b|\.com\.br\b|brasil/.test(s)) return true;
+  }
+  return false;
+}
 function loadComparison(cardId, searchTerm, brand, name, fallbackLink){
   var combined=[];
   var pending = region==='BR' ? 2 : 1;
@@ -6982,6 +6997,8 @@ function loadComparison(cardId, searchTerm, brand, name, fallbackLink){
     if(!el) return; // card may no longer be on screen
 
     var html='';
+    // Drop results from stores that don't belong to this region before doing anything else
+    combined = combined.filter(function(r){ return !isWrongRegionStore(r.store); });
     if(combined.length){
       // Sort by price, then keep only the cheapest result per store, so the top 3
       // show diversified stores instead of repeating the same store 3x
@@ -7008,8 +7025,9 @@ function loadComparison(cardId, searchTerm, brand, name, fallbackLink){
           +'</span>'
           +'</div>';
       });
-      // If any matched result has a real product photo, swap it into the card image (Amazon has none yet, Eudora often does)
-      var withPhoto=combined.find(function(r){return r.image;});
+      // Only swap in a photo from a result that's actually shown to the user (top 3),
+      // never from an unrelated/filtered-out match elsewhere in combined
+      var withPhoto=top.find(function(r){return r.image;});
       if(withPhoto){
         var imgEl=document.getElementById(cardId+'_img');
         if(imgEl){ imgEl.src=withPhoto.image; imgEl.style.padding='0'; }
