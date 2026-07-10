@@ -1420,7 +1420,7 @@ function renderProdsPage(){
   var shown=prodResultsAll.slice(0,prodPage*prodPS);
   var hasMore=prodResultsAll.length>shown.length;
 
-  g.innerHTML=shown.map(function(p){return amzCard(p);}).join('');
+  g.innerHTML=shown.map(function(p){return amzCard(p,true);}).join('');
 
   var cnt=document.getElementById('resultCount');
   if(cnt)cnt.textContent=(lang==='pt'?shown.length+' de '+prodResultsAll.length+' produtos':shown.length+' of '+prodResultsAll.length+' products');
