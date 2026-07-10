@@ -1009,15 +1009,41 @@ function looseTypeMatch(searchTerm, title){
   var t=(title||'').toLowerCase();
   return (searchTerm||'').toLowerCase().split(/\s+/).filter(function(w){return w.length>=5;}).some(function(w){return t.indexOf(w)>=0;});
 }
+// Words like "hidratante" are reused as a marketing adjective across totally different product
+// types ("batom hidratante", "sabonete hidratante", "shampoo hidratante"...), so keyword overlap
+// alone is not enough — a lipstick can legitimately contain the word "hidratante". These lists
+// let us hard-reject a match whenever it clearly belongs to a different category than the one
+// we're searching in, no matter which adjectives it also shares with the search term.
+var MAKEUP_ONLY_NOUNS=['batom','gloss','sombra','delineador','rímel','rimel','base líquida','base liquida','corretivo','pó compacto','po compacto','pó solto','po solto','blush','bronzer','iluminador','contorno','bb cream','paleta','lápis de olho','lapis de olho','máscara de cílios','mascara de cilios','esmalte'];
+var SKINCARE_ONLY_NOUNS=['hidratante facial','hidratante corporal','sérum','serum','protetor solar','esfoliante facial','água micelar','agua micelar','sabonete facial'];
+var HAIR_ONLY_NOUNS=['shampoo','condicionador','leave-in','leave in','óleo capilar','oleo capilar','máscara capilar','mascara capilar','tônico capilar','tonico capilar','ampola capilar'];
+function conflictsWithCategory(cat, title){
+  var t=(title||'').toLowerCase();
+  var has=function(list){ return list.some(function(w){ return t.indexOf(w)>=0; }); };
+  if(cat==='skincare') return has(MAKEUP_ONLY_NOUNS) || has(HAIR_ONLY_NOUNS);
+  if(cat==='maquiagem') return has(SKINCARE_ONLY_NOUNS) || has(HAIR_ONLY_NOUNS);
+  if(cat==='cabelo') return has(MAKEUP_ONLY_NOUNS) || has(SKINCARE_ONLY_NOUNS);
+  return false;
+}
+// Best-effort category guess from free text, used when we don't have a structured cat (ex: promos)
+function inferCat(text){
+  var t=(text||'').toLowerCase();
+  if(MAKEUP_ONLY_NOUNS.some(function(w){return t.indexOf(w)>=0;})) return 'maquiagem';
+  if(HAIR_ONLY_NOUNS.some(function(w){return t.indexOf(w)>=0;})) return 'cabelo';
+  if(SKINCARE_ONLY_NOUNS.some(function(w){return t.indexOf(w)>=0;})) return 'skincare';
+  return null;
+}
 // Preload a real product photo from the free Eudora feed (no Scrappa credits used).
 // Only trusts a match that is actually the same TYPE of product (any brand is fine) — plain
-// word-overlap scoring alone can match an unrelated product (ex: a brush) that happens to
-// share a short/generic word with the search term, which would show a completely wrong photo.
-function preloadEudoraImage(imgId, searchTerm, sub){
+// word-overlap scoring alone can match an unrelated product (ex: a brush, or a lipstick that
+// also happens to say "hidratante") which would show a completely wrong photo.
+function preloadEudoraImage(imgId, searchTerm, sub, cat){
   awinSearchPrices(searchTerm, function(results){
     var kws=subKeywords(sub);
+    var effCat=cat||inferCat(searchTerm);
     var withPhoto=(results||[]).find(function(r){
       if(!r.image) return false;
+      if(effCat && conflictsWithCategory(effCat, r.title)) return false;
       var t=(r.title||'').toLowerCase();
       if(sub) return kws.some(function(k){return t.indexOf(k.toLowerCase())>=0;});
       return looseTypeMatch(searchTerm, r.title);
@@ -6945,9 +6971,9 @@ function amzCard(p, auto){
 
   setTimeout(function(){ loadTrendingBadge(badgeId, p); }, 50);
   if(auto){
-    setTimeout(function(){ loadComparison(cardId, searchTerm, safeBrand, safeName, link, p.sub); }, 50);
+    setTimeout(function(){ loadComparison(cardId, searchTerm, safeBrand, safeName, link, p.sub, p.cat); }, 50);
   } else if(region==='BR'){
-    setTimeout(function(){ preloadEudoraImage(cardId+'_img', searchTerm, p.sub); }, 50);
+    setTimeout(function(){ preloadEudoraImage(cardId+'_img', searchTerm, p.sub, p.cat); }, 50);
   }
 
   return '<div class="cpc">'
@@ -7031,7 +7057,7 @@ function isWrongRegionStore(storeName){
   }
   return false;
 }
-function loadComparison(cardId, searchTerm, brand, name, fallbackLink, sub){
+function loadComparison(cardId, searchTerm, brand, name, fallbackLink, sub, cat){
   var combined=[];
   var pending = region==='BR' ? 2 : 1;
   function onSource(results, source){
@@ -7074,11 +7100,13 @@ function loadComparison(cardId, searchTerm, brand, name, fallbackLink, sub){
       // Only swap in a photo from the Eudora feed (our own structured product data), shown
       // to the user, and never from Scrappa/Google Shopping thumbnails (frequently mismatched).
       // Also require the matched Eudora product to be the same TYPE of item (any brand is
-      // fine) — otherwise a loose word-overlap match (ex: a brush matching "hidratante") can
-      // surface a completely unrelated photo.
+      // fine) — otherwise a loose word-overlap match (ex: a lipstick that also says
+      // "hidratante") can surface a completely unrelated photo.
       var kws=subKeywords(sub);
+      var effCat=cat||inferCat(searchTerm);
       var withPhoto=top.find(function(r){
         if(!r.image || r._source!=='awin') return false;
+        if(effCat && conflictsWithCategory(effCat, r.title)) return false;
         var t=(r.title||'').toLowerCase();
         if(sub) return kws.some(function(k){return t.indexOf(k.toLowerCase())>=0;});
         return looseTypeMatch(searchTerm, r.title);
