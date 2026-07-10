@@ -6983,9 +6983,19 @@ function loadComparison(cardId, searchTerm, brand, name, fallbackLink){
 
     var html='';
     if(combined.length){
-      // Sort by price, show up to 3 cheapest
+      // Sort by price, then keep only the cheapest result per store, so the top 3
+      // show diversified stores instead of repeating the same store 3x
       combined.sort(function(a,b){return a.price-b.price;});
-      var top=combined.slice(0,3);
+      var seenStores={};
+      var diversified=[];
+      combined.forEach(function(r){
+        var storeKey=(r.store||'').toLowerCase().trim();
+        if(!seenStores[storeKey]){
+          seenStores[storeKey]=true;
+          diversified.push(r);
+        }
+      });
+      var top=diversified.slice(0,3);
       var cur = region==='PT' ? '€ ' : 'R$ ';
       top.forEach(function(r,i){
         var isBest = i===0;
