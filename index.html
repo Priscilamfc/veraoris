@@ -675,7 +675,7 @@ textarea.form-inp{resize:vertical;min-height:140px}
   <button class="tbtn" id="len" onclick="setLang('en')">EN</button>
   <span class="tdiv" style="margin:0 6px">·</span>
   <button class="rbtn active" id="rbr" onclick="setRegion('BR')">🇧🇷 Brasil</button>
-  <button class="rbtn" id="rpt" onclick="setRegion('PT')">🇵🇹 Portugal</button>
+  <button class="rbtn" id="rpt" onclick="setRegion('PT')" style="display:none">🇵🇹 Portugal</button>
 </div></div>
 <!-- NAV -->
 <nav><div class="nav-in">
@@ -801,7 +801,7 @@ textarea.form-inp{resize:vertical;min-height:140px}
 </div></div>
 <!-- PARTNERS -->
 <div class="part-sec"><div class="part-in">
-  <div class="part-txt"><p id="partnersText">Comparamos preços na Amazon e lojas parceiras de Portugal.</p></div>
+  <div class="part-txt"><p id="partnersText">Comparamos preços em tempo real em centenas de lojas online.</p></div>
   <div class="part-logos"></div>
 </div></div>
 <!-- FOOTER -->
@@ -930,7 +930,6 @@ textarea.form-inp{resize:vertical;min-height:140px}
   <button class="back-btn" onclick="showPage('home')" id="aboutBack">← Voltar</button>
   <div class="inst-hero"><h1 id="aboutH1">O que é a VERAORIS?</h1><p id="aboutP">O Comparador de Beleza Nº1 para Skincare, Maquilhagem e Cabelo — comparamos preços em tempo real e redirecionamos para as melhores ofertas.</p></div>
   <div class="inst-section"><h2><span>🇧🇷</span> Brasil</h2><p id="aboutBR">Preços apresentados em Real (R$), com produtos pesquisados nas principais lojas online brasileiras.</p></div>
-  <div class="inst-section"><h2><span>🇵🇹</span> Portugal</h2><p id="aboutPT">Preços apresentados em Euro (€), com produtos pesquisados nas principais lojas online de Portugal e Espanha.</p></div>
   <div style="background:var(--gold4);border-radius:14px;padding:20px 24px;border:1px solid var(--border)"><h4 style="font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--gold5);margin-bottom:8px;font-weight:800" id="aboutLegalTitle">Aviso Legal</h4><p style="font-size:12px;color:var(--muted);line-height:1.8" id="aboutLegalP">A VERAORIS não fabrica nem vende os produtos. Não nos responsabilizamos por alergias, reações, entrega ou qualquer problema com lojas parceiras. Links de afiliados podem gerar comissão sem custo para o utilizador. LGPD/RGPD.</p></div>
 </div></div></div>
 <!-- FLOAT BAR -->
@@ -1136,7 +1135,7 @@ var FAQS=[
   {q:"O quiz é gratuito?",a:"Sim, completamente gratuito. Não precisa de conta nem de dados pessoais."},
   {q:"Os preços são actualizados em tempo real?",a:"Fazemos a melhor gestão possível. Recomendamos confirmar o preço final na loja antes de comprar."},
   {q:"Os links de afiliado têm custo extra?",a:"Não. Paga exactamente o mesmo preço. A VERAORIS pode receber uma comissão da loja, sem custo para si."},
-  {q:"O site funciona para o Brasil e Portugal?",a:"Sim. Disponível em Português e Inglês, com preços em R$ e €. Pode alterar a região manualmente."},
+  {q:"O site funciona em todo o Brasil?",a:"Sim. Comparamos preços nas principais lojas online brasileiras, com preços em Real (R$)."},
   {q:"Posso voltar atrás no quiz?",a:"Sim. Em cada passo existe um botão 'Voltar' para rever as suas respostas."},
   {q:"Posso ver mais produtos além dos primeiros resultados?",a:"Sim. Na página de resultados existe um botão 'Ver mais opções' que carrega mais produtos."},
   {q:"Como reporto um problema?",a:"Use a página de Contacto. Respondemos em até 48 horas úteis."}
@@ -7194,7 +7193,7 @@ function renderFAQ(){
     {q:"Is the quiz free?",a:"Yes, completely free. No account or personal data needed."},
     {q:"Are prices updated in real time?",a:"We manage prices as best we can. Always confirm the final price at the partner store before buying."},
     {q:"Do affiliate links cost me extra?",a:"No. You pay exactly the same price. VERAORIS may receive a commission from the store at no extra cost to you."},
-    {q:"Does the site work for Brazil and Portugal?",a:"Yes. Available in Portuguese and English, with prices in R$ and €. You can change the region manually."},
+    {q:"Does the site work across Brazil?",a:"Yes. We compare prices across major Brazilian online stores, with prices in Brazilian Real (R$)."},
     {q:"Can I go back in the quiz?",a:"Yes. Each quiz step has a 'Back' button to review your previous answers."},
     {q:"Can I see more products beyond the first results?",a:"Yes. On the results page there is a 'See more options' button that loads more products."},
     {q:"How do I report a problem?",a:"Use the Contact page to send us a message. We respond within 48 business hours."}
@@ -7238,14 +7237,8 @@ function submitContact(){
 }
 function showToast(msg){var el=document.getElementById('toast');el.textContent=msg;el.classList.add('show');setTimeout(function(){el.classList.remove('show');},2200);}
 function initGeo(){
-  fetch('https://ipapi.co/json/').then(function(r){return r.json();}).then(function(d){
-    var cc=d.country||'';
-    if(cc==='BR'&&region!=='BR'){setRegion('BR');}
-    else if(cc!=='BR'&&cc!==''&&region!=='PT'){
-      var g=document.getElementById('geoCountry');if(g)g.textContent=d.country_name||cc;
-      var b=document.getElementById('geoBanner');if(b)b.classList.add('show');
-    }
-  }).catch(function(){});
+  // Região Portugal desativada por enquanto — o site fica só em modo Brasil,
+  // então não faz sentido sugerir trocar de região a visitantes de fora do BR.
 }
 function applyGeo(){setRegion('PT');dismissGeo();}
 function dismissGeo(){var b=document.getElementById('geoBanner');if(b)b.classList.remove('show');}
