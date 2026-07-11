@@ -26,8 +26,8 @@
   --gg:linear-gradient(135deg,#9A4835,#E8907A,#F0AA90,#FFD5C5);
   --gn:linear-gradient(135deg,#1E2D3D,#253545);
 }
-html{scroll-behavior:smooth}
-body{font-family:'Inter',sans-serif;background:var(--marble);color:var(--text)}
+html{scroll-behavior:smooth;overflow-x:hidden}
+body{font-family:'Inter',sans-serif;background:var(--marble);color:var(--text);overflow-x:hidden}
 img{display:block;max-width:100%}
 button{cursor:pointer;font-family:'Inter',sans-serif}
 a{text-decoration:none;color:inherit}
@@ -402,6 +402,9 @@ textarea.form-inp{resize:vertical;min-height:140px}
   .cta-row{justify-content:flex-start}
   .cats-grid,.prods-grid{grid-template-columns:1fr 1fr}
   .nav-links{display:none}
+  .nav-in{height:auto;min-height:66px;padding:10px 0}
+  .nav-logo img{height:48px}
+  .nav-cta{font-size:12px;padding:10px 16px;text-align:center;line-height:1.3}
   .foot-grid{grid-template-columns:1fr 1fr}
   nav,.cmp-sec,.quiz-page,.res-sec,.cats-sec,.ben-sec,.prods-sec,.part-sec,.inst-page,.sec{padding-left:20px;padding-right:20px}
   .top-bar,.float-bar,.geo-banner{padding-left:20px;padding-right:20px}
