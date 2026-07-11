@@ -31,7 +31,8 @@ exports.handler = async (event) => {
       const pr = prices[i];
       const src = products[i] ? products[i].source : null;
       if (pr.extracted_price) {
-        merged.push({ title: pr.title, price: pr.extracted_price, store: src || 'Loja online' });
+        var img = pr.thumbnail || (products[i] && products[i].thumbnail) || null;
+        merged.push({ title: pr.title, price: pr.extracted_price, store: src || 'Loja online', image: img });
       }
     }
 
