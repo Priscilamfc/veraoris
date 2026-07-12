@@ -7138,9 +7138,15 @@ function loadComparison(cardId, searchTerm, brand, name, fallbackLink, sub, cat)
     // Drop results from stores that don't belong to this region before doing anything else
     combined = combined.filter(function(r){ return !isWrongRegionStore(r.store); });
     if(combined.length){
-      // Sort by price, then keep only the cheapest result per store, so the top 3
-      // show diversified stores instead of repeating the same store 3x
-      combined.sort(function(a,b){return a.price-b.price;});
+      // Sort so results with a real direct link always win over ones without (ex: a Scrappa
+      // "Mercado Livre" result with no link vs. the dedicated Mercado Livre source that has
+      // one) — then by price. Then keep only one result per store, so the top 3 show
+      // diversified stores instead of repeating the same store 3x.
+      combined.sort(function(a,b){
+        var al=a.link?1:0, bl=b.link?1:0;
+        if(al!==bl) return bl-al;
+        return a.price-b.price;
+      });
       var seenStores={};
       var diversified=[];
       combined.forEach(function(r){
@@ -7150,6 +7156,7 @@ function loadComparison(cardId, searchTerm, brand, name, fallbackLink, sub, cat)
           diversified.push(r);
         }
       });
+      diversified.sort(function(a,b){return a.price-b.price;});
       var top=diversified.slice(0,3);
       var cur = region==='PT' ? '€ ' : 'R$ ';
       top.forEach(function(r,i){
