@@ -30,7 +30,7 @@ async function runActor(input) {
   // Memória reduzida (o padrão do actor é 2GB) — como várias buscas podem rodar ao mesmo
   // tempo (uma por produto na tela), pedir menos memória por execução evita estourar o
   // limite total da conta gratuita da Apify.
-  const url = `https://api.apify.com/v2/acts/${ACTOR_ID}/run-sync-get-dataset-items?token=${APIFY_TOKEN}&timeout=${RUN_TIMEOUT_SECS}&memory=512`;
+  const url = `https://api.apify.com/v2/acts/${ACTOR_ID}/run-sync-get-dataset-items?token=${APIFY_TOKEN}&timeout=${RUN_TIMEOUT_SECS}&memory=1024`;
   const res = await fetch(url, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },

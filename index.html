@@ -979,7 +979,7 @@ function awinSearchPrices(query, callback){
 // A conta gratuita da Apify tem um limite de memória compartilhado entre execuções
 // simultâneas — como vários cards podem carregar ao mesmo tempo, colocamos as buscas
 // numa fila com no máximo N rodando ao mesmo tempo, em vez de disparar tudo de uma vez.
-var ML_MAX_CONCURRENT=3, ML_ACTIVE=0, ML_QUEUE=[];
+var ML_MAX_CONCURRENT=2, ML_ACTIVE=0, ML_QUEUE=[];
 function mercadoLivreSearchPrices(query, callback){
   ML_QUEUE.push({query:query, callback:callback});
   mlProcessQueue();
