@@ -16,20 +16,20 @@ Correções no site que não dependem de cadastro, CNPJ nem decisão externa. O 
 4. **[código] Nunca cachear resposta vazia** (ML e Scrappa) e registrar no log quando uma fonte devolver zero. → Fonte morta deixa de ficar invisível por 30 min.
 5. **[código] Botão honesto**: onde não há link direto do produto, trocar "Ir →" por "Buscar na loja" (ou exibir como preço de referência — ver decisão D1 abaixo). → Ninguém mais clica esperando o produto e cai numa listagem.
 6. **[Pri] Diagnóstico do Apify**: entrar em console.apify.com e ver o erro real das últimas execuções (crédito? memória? timeout?) — ou passar o token pro Luciano diagnosticar. Sem isso o Mercado Livre segue fora do ar.
-7. **[ambos] Definir a "identidade fiscal" do projeto no Brasil** (CORRIGIDO em 12/07: a Priscila mora em Portugal e **não-residente não pode abrir MEI** — o MEI/Simples exige residência fiscal no Brasil). As opções reais:
-   - **(a) Recomendada — usar um CNPJ do Luciano** para os programas que exigem PJ/NF brasileira (Boticário, Natura, Época, Minha BLZ) e para uma conta de publisher Awin BRASIL. Além de destravar tudo, evita a mordida de publisher estrangeiro da Awin (ver Etapa 2).
-   - (b) Priscila operar tudo de Portugal como publisher internacional: funciona na Awin (conta é global), MAS comissões de programas brasileiros pagam **25% de taxa operacional + 5% de desconto cambial e são pagas em EUR** (~30% de perda), e Natura/Minha BLZ ficam inviáveis (exigem CNPJ + emissão de NF no Brasil).
-   - (c) Abrir empresa no Brasil sendo não-residente: possível, mas sem Simples/MEI (só Lucro Presumido/Real, com procurador) — caro e desproporcional para o estágio atual.
-   - Bônus da opção (a)+(b) combinadas: a conta PT da Priscila fica PERFEITA para o lado Portugal/Europa do site (o Veraoris já é bi-regional) — Awin/Rakuten têm os anunciantes europeus (Sephora ES/PT, Sweetcare etc.).
+7. **[DECIDIDO em 12/07 pelo Luciano e pela Priscila] Identidade fiscal: TUDO por Portugal, pela conta Awin existente da Priscila.** Sem CNPJ brasileiro, sem misturar com as empresas do Luciano. A taxa de publisher internacional em programas do Brasil (25% operacional + 5% câmbio, pagamento em EUR) é aceita como custo de operação. Consequências assumidas:
+   - Programas que exigem CNPJ + nota fiscal brasileira ficam FORA: **Natura/Avon, Minha BLZ**. Programas que exigem CPF/conta bancária no Brasil ficam fora: **Mercado Livre Afiliados, Shopee BR** (o ML continua no site como fonte de COMPARAÇÃO de preço, só não gera comissão).
+   - Boticário e Época exigem PJ: candidatar com o registro fiscal português dela — a aceitação é decisão de cada anunciante; tentar custa zero.
+   - Comissão líquida dos programas BR ≈ 70% do valor nominal (ex.: Boticário 10% → ~7% líquido). Continua valendo a pena.
+   - O lado Portugal/Europa do site vira prioridade estratégica natural: nos anunciantes europeus a conta dela opera SEM taxa internacional.
 
 **Resultado da Etapa 1**: preço confiável, foto confiável, clique honesto. O site para de gerar desconfiança enquanto construímos o resto.
 
 ## ETAPA 2 — Religar o Mercado Livre + abrir as portas das lojas (semana que vem)
 
 8. **[código] Consertar o Apify** conforme o diagnóstico do passo 6 (crédito/memória/timeout) e subir o cache para reduzir custo. → Mercado Livre volta aos cards com link direto de produto.
-9. **[Pri] Cadastro de publisher na Awin** (pode iniciar antes do CNPJ sair, mas as âncoras exigem PJ): candidatar na ordem — **Beleza na Web** (prioridade nº 1: multimarca, 250+ marcas num feed só), O Boticário, Vult, Época, Pague Menos.
-10. **[Pri] Cadastro na Rakuten**: candidatar **Sephora** e **Drogasil/Droga Raia**.
-11. **[Pri] Cadastro no Mercado Livre Afiliados** (aprovação ~2 dias, aceita CPF) e no **Shopee Affiliate** (aceita site). → Comissões de ~16% (ML beleza) ficam disponíveis para os links que já vamos gerar na Etapa 3.
+9. **[Pri] Na conta Awin dela (Portugal), candidatar-se aos anunciantes brasileiros**, na ordem: **Beleza na Web** (prioridade nº 1: multimarca, 250+ marcas num feed só — mesmo com a taxa internacional, é o maior salto de fidelidade e cobertura), Vult, Pague Menos, Época e Boticário (estes dois exigem PJ — tentar com o registro fiscal PT dela; a decisão é do anunciante).
+10. **[Pri] Na mesma leva, candidatar-se aos anunciantes EUROPEUS na Awin** para o lado Portugal do site (Sephora ES, Douglas, Sweetcare e afins — sem taxa internacional; a residência dela é vantagem aqui).
+11. **[Pri] Cadastro na Rakuten Advertising** (rede global, aceita publisher internacional): candidatar **Sephora Brasil** e **Drogasil/Droga Raia**. Complemento opcional: **AliExpress Portals** (internacional, beleza 7-9%). Mercado Livre Afiliados e Shopee BR ficam de fora (exigem CPF/conta no Brasil — decisão do passo 7).
 
 **Resultado da Etapa 2**: ML de volta + candidaturas andando (aprovação de anunciante leva dias/semanas — por isso começa agora).
 
@@ -38,10 +38,10 @@ Correções no site que não dependem de cadastro, CNPJ nem decisão externa. O 
 Pré-requisito técnico: passos 1-5 no ar. Pré-requisito de decisão: D2 abaixo.
 
 12. **[código] Migrar o catálogo para o Supabase**: os ~1.470 produtos saem do código e viram tabela editável pelo painel admin. É a fundação de tudo que segue.
-13. **[código+Pri] Enriquecer os top 100-200 produtos** (os mais clicados primeiro — o tracking de cliques já diz quais): para cada um, salvar ASIN da Amazon (link direto `/dp/ASIN?tag=pmfc-20`), ID do item no Mercado Livre + link afiliado ML gerado no painel, tamanho/apresentação e foto oficial. Testar se o endpoint `/items/{id}` da API oficial do ML responde (se sim, preço em tempo real sem scraper).
+13. **[código+Pri] Enriquecer os top 100-200 produtos** (os mais clicados primeiro — o tracking de cliques já diz quais): para cada um, salvar ASIN da Amazon (link direto `/dp/ASIN?tag=pmfc-20`), ID do item no Mercado Livre (para link direto de produto — sem comissão, só comparação, conforme decisão do passo 7), tamanho/apresentação e foto oficial. Testar se o endpoint `/items/{id}` da API oficial do ML responde (se sim, preço em tempo real sem scraper).
 14. **[código] Validador de identidade**: toda fonte passa a ser conferida contra o produto canônico (marca + tipo + tamanho) antes de virar linha de preço.
 15. **[código] Plugar o feed da Beleza na Web** assim que a Awin aprovar (passo 9) — mesmo pipeline da Eudora, catálogo gigante com nome+preço+foto+deep link fiéis.
-16. **[código] Integrar a Shopee Open API** (busca + geração de link programática).
+16. **[código] Plugar os feeds europeus aprovados** (Sephora ES, Douglas, Sweetcare...) no lado Portugal do site — mesmo pipeline, sem taxa internacional. (A Shopee Open API sai do plano enquanto valer a decisão do passo 7.)
 
 **Resultado da Etapa 3**: comparação por produto de verdade — nome, preço, foto e clique caem no item exato. É o "resolver de uma vez por todas".
 
@@ -59,7 +59,7 @@ Pré-requisito técnico: passos 1-5 no ar. Pré-requisito de decisão: D2 abaixo
 - **D1 (trava o passo 5)**: preços sem link direto (Scrappa) viram "preço de referência" sem botão, ou botão sincero "Buscar na loja"? Recomendação: referência com botão sincero.
 - **D2 (trava o passo 12)**: autorizar a migração do catálogo para o Supabase (muda o fluxo dela: de colar no código para editar no painel admin).
 - **D3 (já embutida nos passos 2-3)**: confirmar que foto e preço só aparecem quando são do próprio produto (reverte a regra "qualquer marca do mesmo tipo").
-- **D4 (trava o passo 7→9)**: definir a identidade fiscal BR do projeto — recomendação: CNPJ do Luciano para os programas brasileiros + conta PT da Priscila para os programas europeus. Validar o arranjo (repasse entre os dois, CNAE da empresa do Luciano) com o contador do Luciano antes dos cadastros.
+- **D4 — DECIDIDA (12/07)**: tudo pela conta Awin de Portugal da Priscila, aceitando a taxa internacional (~30%) nos programas BR. Sem CNPJ brasileiro, sem usar empresa do Luciano. Natura, Minha BLZ, ML Afiliados e Shopee BR ficam fora do plano enquanto essa decisão valer.
 
 ## Regra de ouro da execução
 

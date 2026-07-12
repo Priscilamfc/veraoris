@@ -9,7 +9,7 @@ Complementa a `AUDITORIA_COMPARADOR_2026-07-12.md`: aqui está DE ONDE podem vir
 
 ## O recado mais importante primeiro
 
-**A maioria das lojas âncora exige CNPJ** (Grupo Boticário, Natura/Avon, Época, Minha BLZ...). ATUALIZAÇÃO 12/07: como a Priscila mora em Portugal, **ela não pode abrir MEI** (exige residência fiscal no Brasil). E operar programas brasileiros como publisher estrangeira na Awin custa caro: **25% de taxa operacional sobre a comissão + 5% de desconto cambial, com pagamento em EUR**. A solução recomendada é híbrida: **um CNPJ do Luciano assume os programas do Brasil** (Awin BR, Natura, Boticário...) e **a conta de Portugal da Priscila assume os programas europeus** para o lado PT/Europa do site (Sephora ES/PT, Sweetcare etc. — a residência dela vira vantagem). Detalhes no `PLANO_ACAO_2026-07.md`, decisão D4.
+**DECISÃO TOMADA (12/07, Luciano + Priscila): toda a operação fica na conta Awin de PORTUGAL da Priscila.** Sem CNPJ brasileiro, sem envolver as empresas do Luciano. Custo aceito: programas brasileiros pagam a publisher internacional com **25% de taxa operacional + 5% de desconto cambial, em EUR** (comissão líquida ≈ 70% do nominal). Consequências: **Natura/Avon e Minha BLZ ficam FORA** (exigem CNPJ + NF brasileira); **Mercado Livre Afiliados e Shopee BR ficam FORA** (exigem CPF/conta no Brasil) — o ML segue no site apenas como fonte de comparação, sem comissão. Boticário e Época (exigem PJ): candidatar com o registro fiscal português — decisão do anunciante. Lado positivo: nos **anunciantes europeus** (lado PT do site) a conta dela opera sem nenhuma taxa internacional — prioridade estratégica.
 
 E o segundo recado: **o formato ideal para o comparador é FEED DE PRODUTOS** (nome + preço + foto + link direto do produto, igual ao que já usamos da Eudora). As redes Awin e Rakuten entregam exatamente isso. Cada loja nova por feed resolve, de uma vez, os três problemas da auditoria (nome fiel, preço fiel, link direto).
 
@@ -58,15 +58,15 @@ E o segundo recado: **o formato ideal para o comparador é FEED DE PRODUTOS** (n
 
 ---
 
-## Plano de ação sugerido (ordem prática)
+## Plano de ação (ordem prática — já alinhado à decisão "tudo por Portugal")
 
-1. **CNPJ da Priscila** (MEI resolve?) — destrava Boticário, Natura, Época, Minha BLZ.
-2. **Cadastro de publisher na Awin** (1 conta destrava: Beleza na Web, Boticário, Vult, Época, Pague Menos, Drogal, Osang + a Eudora que já existe). Candidatar o site a cada anunciante explicando o modelo comparador.
-3. **Cadastro na Rakuten** → candidatar a Sephora e Drogasil/Raia.
-4. **Shopee Affiliate + Open API** → primeira integração automatizada nova (barata e com documentação).
-5. **Mercado Livre Afiliados** → gerar links afiliados dos produtos curados na Onda 2.
-6. **Natura**: cadastro no afiliadosnatura.com.br quando o CNPJ existir.
-7. Conforme os feeds forem sendo aprovados, plugar cada um no pipeline da Onda 2 (identidade canônica) — cada feed novo = uma coluna de preço fiel no comparador.
+1. **Na conta Awin PT da Priscila**: candidatar-se aos anunciantes BR — Beleza na Web (prioridade nº 1), Vult, Pague Menos, Drogal, Osang; Boticário e Época por tentativa (exigem PJ — usar o registro fiscal português dela). Explicar o modelo comparador na candidatura.
+2. **Na mesma conta Awin**: candidatar-se aos anunciantes EUROPEUS para o lado PT do site (Sephora ES, Douglas, Sweetcare e afins) — sem taxa internacional.
+3. **Cadastro na Rakuten Advertising** (aceita publisher internacional) → candidatar Sephora Brasil e Drogasil/Droga Raia.
+4. **AliExpress Portals** (opcional, internacional) → beleza 7-9% com API.
+5. Conforme os feeds forem sendo aprovados, plugar cada um no pipeline da Onda 2 (identidade canônica) — cada feed novo = uma coluna de preço fiel no comparador.
+
+Fora do plano enquanto valer a decisão de não ter presença fiscal no Brasil: Natura/Avon, Minha BLZ, Mercado Livre Afiliados, Shopee BR (o ML permanece no site como comparação sem comissão).
 
 ## Fontes principais
 
