@@ -975,6 +975,19 @@ function awinSearchPrices(query, callback){
     callback([]);
   });
 }
+// ── MERCADO LIVRE (via Apify, teste em paralelo com o Scrappa) ──
+function mercadoLivreSearchPrices(query, callback){
+  var url = '/.netlify/functions/mercadolivre-search?query='+encodeURIComponent(query);
+  fetch(url)
+  .then(function(r){ return r.json(); })
+  .then(function(data){
+    callback(data.results || []);
+  })
+  .catch(function(err){
+    console.log('Mercado Livre search failed:', err);
+    callback([]);
+  });
+}
 // Maps our internal product subcategory codes to real-world PT keywords, so we can require
 // a matched Eudora product to actually be the SAME TYPE of item (ex: hidratante) — any brand
 // is fine, but a brush must never be accepted as a photo for a moisturizer.
@@ -7112,7 +7125,7 @@ function isWrongRegionStore(storeName){
 }
 function loadComparison(cardId, searchTerm, brand, name, fallbackLink, sub, cat){
   var combined=[];
-  var pending = region==='BR' ? 2 : 1;
+  var pending = region==='BR' ? 3 : 1;
   function onSource(results, source){
     (results||[]).forEach(function(r){ r._source = source; });
     combined = combined.concat(results||[]);
@@ -7184,6 +7197,7 @@ function loadComparison(cardId, searchTerm, brand, name, fallbackLink, sub, cat)
   }
   scrappaSearchPrices(searchTerm, function(results){ onSource(results, 'scrappa'); });
   if(region==='BR') awinSearchPrices(searchTerm, function(results){ onSource(results, 'awin'); });
+  if(region==='BR') mercadoLivreSearchPrices(searchTerm, function(results){ onSource(results, 'mercadolivre'); });
 }
 
 function renderFAQ(){
