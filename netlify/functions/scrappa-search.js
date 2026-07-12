@@ -26,15 +26,22 @@ exports.handler = async (event) => {
 
     const products = data.popular_products || [];
     const prices = data.immersive_products || [];
+    console.log('SCRAPPA sample immersive_products[0] keys:', JSON.stringify(Object.keys(prices[0] || {})));
+    console.log('SCRAPPA sample popular_products[0] keys:', JSON.stringify(Object.keys(products[0] || {})));
     const merged = [];
     for (let i = 0; i < prices.length; i++) {
       const pr = prices[i];
-      const src = products[i] ? products[i].source : null;
+      const match = products[i] || null;
+      const src = match ? match.source : null;
       if (pr.extracted_price) {
-        var img = pr.thumbnail || (products[i] && products[i].thumbnail) || null;
-        merged.push({ title: pr.title, price: pr.extracted_price, store: src || 'Loja online', image: img });
+        var img = pr.thumbnail || (match && match.thumbnail) || null;
+        // Try every field name Google Shopping / Scrappa might use for the direct product
+        // link, so the "Ir →" button lands on the exact product, not the store's homepage.
+        var link = (match && (match.link || match.product_link)) || pr.link || pr.product_link || null;
+        merged.push({ title: pr.title, price: pr.extracted_price, store: src || 'Loja online', image: img, link: link });
       }
     }
+    console.log('SCRAPPA products with direct link:', merged.filter(function(m){return m.link;}).length, '/', merged.length);
 
     return { statusCode: 200, headers, body: JSON.stringify({ merged }) };
   } catch (error) {
