@@ -32,6 +32,26 @@ sempre explicar passo a passo, sem jargão técnico sem explicação).
   Eudora via Awin (feed próprio, imagens incluídas). Beleza na Web **não** tem
   afiliação real ainda — só aparece via busca no Google, sem comissão.
 
+## Colaboração: Luciano (irmão da Priscila) também trabalha neste repositório
+
+Desde 12/07/2026 o Luciano (usuário GitHub `luciano-lcn`) é colaborador com
+permissão de escrita, trabalhando com o Claude dele a partir da máquina dele.
+Ou seja: **duas pessoas (cada uma com seu Claude) podem mexer neste código**.
+Para nunca dar conflito, as regras são:
+
+1. **Antes de editar qualquer coisa**: `git pull origin main` (trazer o que o
+   outro lado já enviou). Sempre. Sem exceção.
+2. **Depois de terminar um bloco de trabalho**: commit + `git push` logo em
+   seguida — não deixar mudança pronta parada na máquina, porque o outro lado
+   pode começar a mexer sem ver.
+3. **Commits pequenos e descritivos**, um assunto por commit.
+4. **Os dois lados atualizam este CLAUDE.md** ao final de cada sessão de
+   trabalho (seção "Histórico cronológico"), dizendo o que foi feito. É assim
+   que o Claude da Priscila e o Claude do Luciano ficam sabendo um do outro.
+5. **Lembrete importante**: push no `main` publica o site na hora (Netlify).
+   Mudança grande ou arriscada → avisar o outro lado antes (Priscila ↔ Luciano
+   por WhatsApp) ou usar um branch.
+
 ## Fluxo de trabalho com o GitHub
 
 **Histórico do problema**: `git push` falhava sempre com erro 403 nesta sessão,
@@ -114,6 +134,25 @@ manualmente, a não ser que a escrita volte a falhar por algum motivo.
      nos cards de produto quanto nos de promoção.
   8. Passo "Qual é o seu orçamento?" do quiz ganhou opção "🌟 Todos".
 - Descoberta e resolução do bloqueio de escrita no GitHub (ver secção acima).
+
+### Sessão 12/07/2026 — lado do Luciano (Claude do Luciano)
+- Luciano entrou como colaborador (`luciano-lcn`, permissão Write) e clonou o repo.
+- **Auditoria de ponta a ponta do comparador de preços** feita a pedido do
+  Luciano, com testes reais nas funções de produção. Resultado completo em
+  `AUDITORIA_COMPARADOR_2026-07-12.md` (na raiz do repo). Resumo dos achados:
+  1. `scrappa-search.js` pareia `immersive_products` com `popular_products`
+     por índice — mistura produto, loja e preço (explica preço "diferente na loja").
+  2. Nos testes, 0 de 12 resultados Scrappa tinham link direto → todo "Ir →"
+     cai em busca do Google (explica cair em página cheia de produtos).
+  3. Resultados Eudora entram como preço de QUALQUER produto pesquisado
+     (creme de mãos Eudora aparecendo como melhor preço de CeraVe facial).
+  4. Foto valida "mesmo tipo", não "mesmo produto" → foto errada nos cards.
+  5. Mercado Livre via Apify está retornando vazio em produção; a API oficial
+     do ML (`search.js`, com link direto de produto) existe no repo mas não é
+     chamada por ninguém.
+- Nada de código do site foi alterado nesta sessão — só documentação
+  (este arquivo + o relatório de auditoria). Correções começam depois que a
+  Priscila e o Luciano combinarem as prioridades (seção 5 do relatório).
 
 ## Pendências conhecidas
 - Beleza na Web sem afiliação real — não habilitar promoção de lá até ter link
