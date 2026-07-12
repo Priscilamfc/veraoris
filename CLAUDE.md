@@ -153,6 +153,13 @@ manualmente, a não ser que a escrita volte a falhar por algum motivo.
 - Nada de código do site foi alterado nesta sessão — só documentação
   (este arquivo + o relatório de auditoria). Correções começam depois que a
   Priscila e o Luciano combinarem as prioridades (seção 5 do relatório).
+- **Pesquisa de lojas parceiras** feita na sequência (pedido do Luciano):
+  mapa completo de programas de afiliados de beleza que entregam no Brasil em
+  `MAPA_LOJAS_AFILIADOS_2026-07.md`. Destaques: Sephora dá (via Rakuten);
+  Beleza na Web tem afiliação via Awin (resolve pendência antiga); a Natura
+  ABRIU programa de afiliados (afiliadosnatura.com.br); Shopee tem a melhor
+  API de afiliados do mercado; a maioria das lojas âncora exige CNPJ; e a
+  PA-API da Amazon agora exige 10 vendas/30 dias CORRENTES (regra nov/2025).
 
 ## Pendências conhecidas
 - Beleza na Web sem afiliação real — não habilitar promoção de lá até ter link
