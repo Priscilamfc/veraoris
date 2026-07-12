@@ -976,17 +976,33 @@ function awinSearchPrices(query, callback){
   });
 }
 // ── MERCADO LIVRE (via Apify, teste em paralelo com o Scrappa) ──
+// A conta gratuita da Apify tem um limite de memória compartilhado entre execuções
+// simultâneas — como vários cards podem carregar ao mesmo tempo, colocamos as buscas
+// numa fila com no máximo N rodando ao mesmo tempo, em vez de disparar tudo de uma vez.
+var ML_MAX_CONCURRENT=3, ML_ACTIVE=0, ML_QUEUE=[];
 function mercadoLivreSearchPrices(query, callback){
-  var url = '/.netlify/functions/mercadolivre-search?query='+encodeURIComponent(query);
-  fetch(url)
-  .then(function(r){ return r.json(); })
-  .then(function(data){
-    callback(data.results || []);
-  })
-  .catch(function(err){
-    console.log('Mercado Livre search failed:', err);
-    callback([]);
-  });
+  ML_QUEUE.push({query:query, callback:callback});
+  mlProcessQueue();
+}
+function mlProcessQueue(){
+  while(ML_ACTIVE<ML_MAX_CONCURRENT && ML_QUEUE.length){
+    var job=ML_QUEUE.shift();
+    ML_ACTIVE++;
+    var url = '/.netlify/functions/mercadolivre-search?query='+encodeURIComponent(job.query);
+    fetch(url)
+    .then(function(r){ return r.json(); })
+    .then(function(data){
+      job.callback(data.results || []);
+    })
+    .catch(function(err){
+      console.log('Mercado Livre search failed:', err);
+      job.callback([]);
+    })
+    .finally(function(){
+      ML_ACTIVE--;
+      mlProcessQueue();
+    });
+  }
 }
 // Maps our internal product subcategory codes to real-world PT keywords, so we can require
 // a matched Eudora product to actually be the SAME TYPE of item (ex: hidratante) — any brand
