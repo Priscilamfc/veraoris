@@ -34,7 +34,14 @@ async function runActor(input) {
     body: JSON.stringify(input)
   });
   const items = await res.json();
-  return Array.isArray(items) ? items : [];
+  if (!Array.isArray(items)) {
+    // A Apify não devolveu uma lista de produtos — provavelmente um erro (crédito,
+    // permissão, actor pago). Registra o status e o corpo cru pra sabermos o motivo real.
+    console.log('MERCADOLIVRE resposta não é uma lista — status HTTP:', res.status);
+    console.log('MERCADOLIVRE corpo da resposta:', JSON.stringify(items));
+    return [];
+  }
+  return items;
 }
 
 async function fetchFeed(query) {
