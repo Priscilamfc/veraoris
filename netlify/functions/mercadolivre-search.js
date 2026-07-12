@@ -44,20 +44,12 @@ async function fetchFeed(query) {
     return cached.data;
   }
 
-  // Não sabemos com 100% de certeza o formato de entrada exato deste actor, então
-  // tentamos as duas variações mais comuns entre scrapers da Apify. Os logs abaixo
-  // mostram qual delas trouxe resultado, pra ajustar depois se necessário.
-  let raw = await runActor({ searchTerms: [query], maxItems: 15 });
-  console.log('MERCADOLIVRE tentativa 1 (searchTerms):', raw.length, 'itens brutos');
-
-  if (!raw.length) {
-    const searchUrl = 'https://lista.mercadolivre.com.br/' + encodeURIComponent(query).replace(/%20/g, '-');
-    raw = await runActor({ startUrls: [{ url: searchUrl }], maxItems: 15 });
-    console.log('MERCADOLIVRE tentativa 2 (startUrls):', raw.length, 'itens brutos');
-  }
-
+  // Formato confirmado direto no Apify Console (aba "JSON" do Input do actor)
+  const raw = await runActor({ keyword: query, maxPages: 1, maxPagesOfertas: 1, promoted: false, scrapeOfertas: false });
+  console.log('MERCADOLIVRE itens brutos:', raw.length);
   if (raw.length) {
     console.log('MERCADOLIVRE amostra de campos do 1º item:', JSON.stringify(Object.keys(raw[0])));
+    console.log('MERCADOLIVRE 1º item completo:', JSON.stringify(raw[0]));
   }
 
   const products = normalizeItems(raw);
