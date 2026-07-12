@@ -16,7 +16,11 @@ Correções no site que não dependem de cadastro, CNPJ nem decisão externa. O 
 4. **[código] Nunca cachear resposta vazia** (ML e Scrappa) e registrar no log quando uma fonte devolver zero. → Fonte morta deixa de ficar invisível por 30 min.
 5. **[código] Botão honesto**: onde não há link direto do produto, trocar "Ir →" por "Buscar na loja" (ou exibir como preço de referência — ver decisão D1 abaixo). → Ninguém mais clica esperando o produto e cai numa listagem.
 6. **[Pri] Diagnóstico do Apify**: entrar em console.apify.com e ver o erro real das últimas execuções (crédito? memória? timeout?) — ou passar o token pro Luciano diagnosticar. Sem isso o Mercado Livre segue fora do ar.
-7. **[Pri] Abrir CNPJ (MEI)**: processo burocrático que destrava Boticário, Natura, Época e Minha BLZ. Começar JÁ porque roda em paralelo com tudo.
+7. **[ambos] Definir a "identidade fiscal" do projeto no Brasil** (CORRIGIDO em 12/07: a Priscila mora em Portugal e **não-residente não pode abrir MEI** — o MEI/Simples exige residência fiscal no Brasil). As opções reais:
+   - **(a) Recomendada — usar um CNPJ do Luciano** para os programas que exigem PJ/NF brasileira (Boticário, Natura, Época, Minha BLZ) e para uma conta de publisher Awin BRASIL. Além de destravar tudo, evita a mordida de publisher estrangeiro da Awin (ver Etapa 2).
+   - (b) Priscila operar tudo de Portugal como publisher internacional: funciona na Awin (conta é global), MAS comissões de programas brasileiros pagam **25% de taxa operacional + 5% de desconto cambial e são pagas em EUR** (~30% de perda), e Natura/Minha BLZ ficam inviáveis (exigem CNPJ + emissão de NF no Brasil).
+   - (c) Abrir empresa no Brasil sendo não-residente: possível, mas sem Simples/MEI (só Lucro Presumido/Real, com procurador) — caro e desproporcional para o estágio atual.
+   - Bônus da opção (a)+(b) combinadas: a conta PT da Priscila fica PERFEITA para o lado Portugal/Europa do site (o Veraoris já é bi-regional) — Awin/Rakuten têm os anunciantes europeus (Sephora ES/PT, Sweetcare etc.).
 
 **Resultado da Etapa 1**: preço confiável, foto confiável, clique honesto. O site para de gerar desconfiança enquanto construímos o resto.
 
@@ -55,7 +59,7 @@ Pré-requisito técnico: passos 1-5 no ar. Pré-requisito de decisão: D2 abaixo
 - **D1 (trava o passo 5)**: preços sem link direto (Scrappa) viram "preço de referência" sem botão, ou botão sincero "Buscar na loja"? Recomendação: referência com botão sincero.
 - **D2 (trava o passo 12)**: autorizar a migração do catálogo para o Supabase (muda o fluxo dela: de colar no código para editar no painel admin).
 - **D3 (já embutida nos passos 2-3)**: confirmar que foto e preço só aparecem quando são do próprio produto (reverte a regra "qualquer marca do mesmo tipo").
-- **D4 (trava o passo 7→9)**: abrir MEI/CNPJ em nome dela.
+- **D4 (trava o passo 7→9)**: definir a identidade fiscal BR do projeto — recomendação: CNPJ do Luciano para os programas brasileiros + conta PT da Priscila para os programas europeus. Validar o arranjo (repasse entre os dois, CNAE da empresa do Luciano) com o contador do Luciano antes dos cadastros.
 
 ## Regra de ouro da execução
 
