@@ -161,10 +161,84 @@ manualmente, a não ser que a escrita volte a falhar por algum motivo.
   API de afiliados do mercado; a maioria das lojas âncora exige CNPJ; e a
   PA-API da Amazon agora exige 10 vendas/30 dias CORRENTES (regra nov/2025).
 
+### Sessão 12/07/2026 — lado da Priscila (meu Claude)
+- **Ajustes de mobile/UX**: layout Android estourava a tela (nav não cabia
+  com o botão novo "Faça o Quiz e Compare Aqui") — corrigido com
+  `overflow-x:hidden` global, nav com altura flexível, botão menor no mobile
+  e logo maior no mobile. Confirmado resolvido pela Priscila.
+- **Região Portugal escondida do público** (site fica só Brasil por
+  enquanto): botão 🇵🇹 oculto, aviso de geo-detecção desativado, secção
+  Portugal da página "Sobre" removida, FAQ ajustado. Painel admin continua
+  com as opções de Portugal (uso interno).
+- **Ordenação de produtos** (Menor/Maior preço, Mais vendidos, Nome A-Z) —
+  o selector existia mas não fazia nada; corrigido. Preço é reordenado ao
+  vivo conforme os cards carregam (sem custo extra de busca), Mais Vendidos
+  usa cliques reais do Supabase.
+- **Tentativas de corrigir foto/link errados** (mesmo problema que a
+  auditoria do Luciano descreve, atacado antes de ver o relatório dele):
+  validação de marca → depois validação de tipo (`SUB_KEYWORDS`) → listas
+  de exclusão por categoria (`MAKEUP_ONLY_NOUNS` etc). **A auditoria do
+  Luciano recomenda reverter pra "só mesma marca" — decisão pendente da
+  Priscila, ver secção de tensões abaixo.**
+- **`scrappa-search.js`**: tentativa de capturar link direto do produto
+  (campos `link`/`product_link`) — a auditoria do Luciano confirmou que
+  isso não resolve de raiz porque o problema real é mais grave: o
+  pareamento por índice entre `immersive_products` e `popular_products`
+  (ver achado F1 da auditoria).
+- **Mercado Livre via Apify**: criada a function `mercadolivre-search.js`
+  do zero (actor `karamelo/mercadolivre-scraper-brasil-portugues`).
+  Processo de depuração ao vivo com a Priscila:
+  1. Input errado (`searchTerms`/`startUrls` chutados) → confirmado o
+     formato certo (`keyword`) direto no console da Apify.
+  2. Erro 402 `actor-memory-limit-exceeded` (2GB padrão × várias buscas
+     simultâneas estourava a conta grátis) → memória reduzida e fila de
+     concorrência (`ML_MAX_CONCURRENT`) implementada.
+  3. Com memória baixa demais (512MB) o actor voltava a dar 0 resultados →
+     ajustado pra 1024MB.
+  4. Resultados passaram a aparecer, mas o dedupe por nome de loja estava
+     escolhendo a versão do Scrappa (sem link, cai no Google) em vez da
+     versão da Apify (com link) quando ambos se chamam "Mercado Livre" →
+     corrigido priorizando resultado com link real no dedupe.
+  5. **Ainda em aberto**: mesmo com link, o clique ainda cai numa página do
+     Google Shopping — investigação não concluída (ver linha abaixo).
+- **GitHub**: guiada a instalação do app "Claude" no GitHub da Priscila
+  (estava autorizado mas não instalado — resolvido) e adicionado o Luciano
+  (`luciano-lcn`) como colaborador com permissão de escrita.
+- **Estratégia de afiliados**: pesquisadas redes alternativas (Lomadee,
+  Rakuten, Admitad — mesma pesquisa que alimentou o mapa do Luciano depois).
+  Descoberto que a Beleza na Web tem programa próprio "Minha BLZ" além da
+  Awin. Redigidos textos de candidatura pra novas lojas (framing "quiz
+  inteligente com IA", evitando a expressão "comparador de preços" a
+  pedido da Priscila). Ajuda com formulário fiscal da Rakuten (W-8BEN,
+  NIF/IVA de Portugal — ela é residente lá).
+
+## Tensão em aberto entre as duas sessões (resolver antes de mexer de novo na foto/preço)
+A Priscila pediu explicitamente (nesta sessão) pra foto aceitar **qualquer
+marca, mesmo tipo de produto** (ex: qualquer hidratante, não só a marca
+pesquisada) — implementado em camadas ao longo do dia. A auditoria do
+Luciano recomenda o oposto: só mostrar foto/preço quando é **mesma marca E
+mesmo tipo** (senão fica ícone genérico), porque "mesmo tipo" ainda deixa
+passar produto errado (ex: creme de mão em vez de creme facial, mesma
+categoria mas item diferente). As duas sessões não devem mexer nessa regra
+até a Priscila e o Luciano decidirem juntos qual caminho seguir — está
+listado como **D3** no `PLANO_ACAO_2026-07.md`.
+
 ## Pendências conhecidas
-- Beleza na Web sem afiliação real — não habilitar promoção de lá até ter link
-  de afiliado de verdade.
-- API de produtos da Amazon (fotos reais de qualquer marca) só libera com 10
-  vendas/30 dias — ainda não atingido.
-- Sincronizar o branch de trabalho com o `main` real (ver secção "Fluxo de
-  trabalho com o GitHub" acima) — pendente de confirmação da Priscila.
+- **API de produtos da Amazon**: exige 10 vendas nos últimos 30 dias
+  CORRENTES (regra de nov/2025, não é "uma vez só") — Priscila já bateu
+  esse número uma vez, aguardando liberação da API.
+- **Mercado Livre via Apify**: resultados aparecem mas o link ainda cai
+  numa página do Google Shopping em vez do produto — depuração em
+  andamento, ver log da sessão acima.
+- **Decisões D1, D2, D3 da Priscila** (ver `PLANO_ACAO_2026-07.md`,
+  secção final): (D1) o que fazer com preços do Scrappa sem link direto —
+  virar "preço de referência" sem botão, ou botão sincero "Buscar na
+  loja"? (D2) autorizar migrar o catálogo de dentro do `index.html` pro
+  Supabase (Onda 2 da auditoria)? (D3) reverter a regra de foto pra "só
+  mesma marca" (ver secção de tensão acima)?
+- **D4 já decidida**: toda a operação de afiliados pela conta Awin de
+  Portugal da Priscila — Natura, Minha BLZ, Mercado Livre Afiliados e
+  Shopee BR ficam fora do plano enquanto essa decisão valer.
+- Beleza na Web: aprovada na Awin mas sem feed de produtos ainda — email
+  de solicitação de feed redigido, aguardando resposta. Existe também o
+  programa próprio "Minha BLZ" (exige CNPJ) como alternativa não explorada.
