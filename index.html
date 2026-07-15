@@ -1574,7 +1574,7 @@ function renderProdsPage(){
   var shown=prodResultsAll.slice(0,prodPage*prodPS);
   var hasMore=prodResultsAll.length>shown.length;
 
-  g.innerHTML=shown.map(function(p){return amzCard(p,true);}).join('');
+  g.innerHTML=shown.map(function(p,i){return amzCard(p,i<AUTO_LOAD_COUNT);}).join('');
 
   var cnt=document.getElementById('resultCount');
   if(cnt)cnt.textContent=(lang==='pt'?shown.length+' de '+prodResultsAll.length+' produtos':shown.length+' of '+prodResultsAll.length+' products');
@@ -7026,7 +7026,7 @@ function renderAmzPage(){
   var shown=amzResultsAll.slice(0,amzPage*amzPS);
   var hasMore=amzResultsAll.length>shown.length;
 
-  if(grid)grid.innerHTML=shown.map(function(p){return amzCard(p,true);}).join('');
+  if(grid)grid.innerHTML=shown.map(function(p,i){return amzCard(p,i<AUTO_LOAD_COUNT);}).join('');
 
   if(wrap){
     if(hasMore){
@@ -7041,6 +7041,37 @@ function renderAmzPage(){
 
 function verMais(){amzPage++;renderAmzPage();}
 
+// Só os primeiros N produtos de cada tela carregam a comparação de preço sozinhos; o resto
+// espera o card entrar na tela (rolar até ele) — ver registerLazyCompare/getLazyObserver.
+var AUTO_LOAD_COUNT=6;
+var LAZY_OBSERVER=null;
+function getLazyObserver(){
+  if(LAZY_OBSERVER) return LAZY_OBSERVER;
+  if(typeof IntersectionObserver==='undefined') return null;
+  LAZY_OBSERVER=new IntersectionObserver(function(entries){
+    entries.forEach(function(entry){
+      if(entry.isIntersecting && entry.target._lazyLoad){
+        entry.target._lazyLoad();
+        entry.target._lazyLoad=null;
+        LAZY_OBSERVER.unobserve(entry.target);
+      }
+    });
+  }, {rootMargin:'300px'});
+  return LAZY_OBSERVER;
+}
+function registerLazyCompare(cardId, searchTerm, brand, name, link, sub, cat){
+  var el=document.getElementById(cardId);
+  var cardRoot=el && el.closest('.cpc');
+  if(!cardRoot) return;
+  cardRoot._lazyLoad=function(){
+    var btn=el.querySelector('.cpc-compare-btn');
+    if(btn) btn.outerHTML='<div style="text-align:center;padding:10px;font-size:12px;color:var(--muted)">'+(lang==='pt'?'A comparar preços...':'Comparing prices...')+'</div>';
+    loadComparison(cardId, searchTerm, brand, name, link, sub, cat);
+  };
+  var obs=getLazyObserver();
+  if(obs){ obs.observe(cardRoot); }
+  else { cardRoot._lazyLoad(); } // sem suporte a IntersectionObserver: carrega direto
+}
 function amzCard(p, auto){
   var link=amzLink(p.srch);
   var catLbl=lang==='pt'?{skincare:'Skincare',maquiagem:'Maquilhagem',cabelo:'Cabelo'}[p.cat]:{skincare:'Skincare',maquiagem:'Makeup',cabelo:'Hair'}[p.cat];
@@ -7055,8 +7086,14 @@ function amzCard(p, auto){
   setTimeout(function(){ loadTrendingBadge(badgeId, p); }, 50);
   if(auto){
     setTimeout(function(){ loadComparison(cardId, searchTerm, safeBrand, safeName, link, p.sub, p.cat); }, 50);
-  } else if(region==='BR'){
-    setTimeout(function(){ preloadEudoraImage(cardId+'_img', searchTerm, p.sub, p.cat, safeBrand); }, 50);
+  } else {
+    if(region==='BR'){
+      setTimeout(function(){ preloadEudoraImage(cardId+'_img', searchTerm, p.sub, p.cat, safeBrand); }, 50);
+    }
+    // Além dos primeiros AUTO_LOAD_COUNT produtos, a comparação só carrega quando o card
+    // realmente entra na tela (rolar até ele) — evita disparar dezenas de buscas de uma vez
+    // e estourar o limite de uso das funções do Netlify.
+    setTimeout(function(){ registerLazyCompare(cardId, searchTerm, safeBrand, safeName, link, p.sub, p.cat); }, 50);
   }
 
   return '<div class="cpc">'
