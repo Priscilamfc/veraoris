@@ -89,10 +89,15 @@ async function isLikelyPlaceholderImage(url) {
   }
 }
 
-// Produto removido do catálogo da loja, mas ainda presente (desatualizado) no feed da Awin —
-// o deep link cai numa página tipo "Ops! Esta página não existe mais.". Muitas lojas devolvem
-// HTTP 200 mesmo nesse caso (soft-404), então checa também o texto da página, não só o status.
-// Só roda nos poucos resultados finais de cada busca (não no feed inteiro), custo baixo.
+// DESATIVADO (15/07): a checagem abaixo buscava a página do produto pra detectar link morto/
+// fora de estoque, mas em produção estava dando falso positivo em quase todo link da Eudora e
+// da Ama Beleza — provavelmente essas lojas bloqueiam ou servem conteúdo diferente pra pedidos
+// vindos de servidor (sem cabeçalho de navegador real, sem cookies), não de uma pessoa de
+// verdade. Resultado: o site estava jogando cliques de link que FUNCIONAM pro Google por engano,
+// e ainda gastando tempo de execução (custo) da function à toa em toda busca. Até alguém
+// conseguir testar/confirmar uma correção de verdade (ex: enviar um User-Agent de navegador),
+// os links do feed voltam a ser usados diretamente, sem essa checagem.
+const LINK_CHECK_ENABLED = false;
 const DEAD_PAGE_PATTERNS = [
   'não existe mais', 'nao existe mais', 'página não encontrada', 'pagina nao encontrada',
   'produto não encontrado', 'produto nao encontrado', 'not found', 'esta página não existe',
@@ -198,7 +203,7 @@ exports.handler = async (event) => {
     await Promise.all(matches.map(async (m) => {
       const checks = [];
       if (m.image) checks.push(isLikelyPlaceholderImage(m.image).then((dead) => { if (dead) { m.image = null; placeholderCount++; } }));
-      checks.push(isDeadProductLink(m.link).then((dead) => { if (dead) { m.linkOk = false; deadLinkCount++; } }));
+      if (LINK_CHECK_ENABLED) checks.push(isDeadProductLink(m.link).then((dead) => { if (dead) { m.linkOk = false; deadLinkCount++; } }));
       await Promise.all(checks);
     }));
 
