@@ -481,3 +481,41 @@ alimentando o `groupLiveResults`, com preço/link reais dela nas linhas de
 comparação. Não precisa mudar a arquitetura quando isso acontecer, só
 plugar a Amazon como mais uma fonte no mesmo pipeline (hoje só Awin
 alimenta esse fallback ao vivo).
+
+## Sessão 15/07/2026 (continuação 6) — links mortos no feed da Awin
+Priscila testou o agrupamento e mandou prints de 3 problemas:
+1. Clique num resultado da Eudora caindo na página "Ops! Esta página não
+   existe mais." (produto removido da loja, mas ainda no feed desatualizado
+   da Awin) — o pior caso, parece link quebrado de verdade.
+2. Clique em outro resultado da Eudora caindo numa página de listagem com
+   vários produtos (não o produto específico).
+3. Amobeleza: um clique caiu em "não encontrou nada"; outro funcionou (foi
+   pro produto certo), mas o preço mostrado no card não batia com o preço
+   COM DESCONTO que aparecia na página real da loja (defasagem normal de
+   feed — a Awin não atualiza em tempo real, e promoções da loja no site
+   dela nem sempre refletem no feed. Não é bug do nosso código, é limitação
+   inerente de qualquer comparador baseado em feed; por isso o aviso "Preços
+   actualizados hoje" já existe no site, mas vale lembrar à Priscila que o
+   preço final sempre é o da loja no checkout).
+
+**Corrigido (itens 1 e 3-parcial)**: `netlify/functions/awin-search.js`
+ganhou `isDeadProductLink()` — pros poucos resultados finais de cada busca
+(≤10), faz um GET no link com timeout de 4.5s e checa: (a) status HTTP não-
+2xx, ou (b) texto da página contém frases tipo "não existe mais", "produto
+não encontrado", "página indisponível" (cobre "soft 404", loja que devolve
+200 mesmo pra produto sumido). Se detectar link morto, marca `linkOk:false`
+na resposta; erro de rede/timeout NÃO marca como morto (não penaliza por
+falha temporária). No cliente (`index.html`), tanto o card de resultado ao
+vivo (`liveResultCard`) quanto a linha de preço do catálogo
+(`loadComparison`) agora usam esse sinal: link morto → cai pro botão
+honesto "Buscar na loja" (`storeGoLink`, busca Google restrita ao domínio
+da loja) em vez de fingir que é o link direto. Commit `503746e`.
+
+**Item 2 (link caindo em listagem, não no produto específico) não tem
+correção de código possível** — é o próprio deep link da Awin apontando
+pra uma URL de categoria em vez de produto, uma característica de como
+aquele item específico foi cadastrado no feed da Eudora, fora do nosso
+controle. Se acontecer muito, o caminho seria reportar pra Awin/Eudora.
+
+**Ainda não confirmado pela Priscila se a checagem de link morto
+resolveu.**
