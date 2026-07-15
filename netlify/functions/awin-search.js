@@ -1,6 +1,12 @@
 const zlib = require('zlib');
 
-const EUDORA_FEED_URL = process.env.AWIN_EUDORA_FEED_URL;
+// Cada loja aprovada na Awin com feed de produtos entra aqui como uma variável de ambiente
+// nova no Netlify. Todas são buscadas e combinadas — não precisa mexer no resto do código
+// pra adicionar mais uma loja, só configurar a variável correspondente no Netlify.
+const FEED_URLS = [
+  process.env.AWIN_EUDORA_FEED_URL,
+  process.env.AWIN_LOCCITANE_FEED_URL
+].filter(Boolean);
 const CACHE_TTL_MS = 30 * 60 * 1000; // 30 minutos
 
 let cache = { data: null, fetchedAt: 0 };
@@ -31,20 +37,14 @@ function parseCsvLine(line) {
   return fields;
 }
 
-async function fetchFeed() {
-  const now = Date.now();
-  if (cache.data && (now - cache.fetchedAt) < CACHE_TTL_MS) {
-    return cache.data;
-  }
-  const res = await fetch(EUDORA_FEED_URL);
+async function fetchOneFeed(feedUrl) {
+  const res = await fetch(feedUrl);
   const buf = Buffer.from(await res.arrayBuffer());
   const decompressed = zlib.gunzipSync(buf).toString('utf-8');
   const lines = decompressed.split('\n').filter(Boolean);
   const header = parseCsvLine(lines[0]).map((h) => h.trim());
   const idx = {};
   header.forEach((h, i) => { idx[h] = i; });
-  console.log('AWIN feed header columns:', JSON.stringify(header));
-  console.log('AWIN image column indexes -> aw_image_url:', idx.aw_image_url, 'merchant_image_url:', idx.merchant_image_url);
 
   const products = [];
   for (let i = 1; i < lines.length; i++) {
@@ -57,12 +57,25 @@ async function fetchFeed() {
       price: price,
       link: cols[idx.aw_deep_link] || cols[idx.merchant_deep_link] || '',
       image: cols[idx.aw_image_url] || cols[idx.merchant_image_url] || '',
-      merchant: cols[idx.merchant_name] || 'Eudora'
+      merchant: cols[idx.merchant_name] || ''
     });
   }
+  console.log('AWIN feed', feedUrl.split('/fid/')[1] ? 'fid ' + feedUrl.split('/fid/')[1].split('/')[0] : '(?)', '->', products.length, 'produtos,', products.filter((p) => p.image).length, 'com foto');
+  return products;
+}
+
+async function fetchFeed() {
+  const now = Date.now();
+  if (cache.data && (now - cache.fetchedAt) < CACHE_TTL_MS) {
+    return cache.data;
+  }
+  const results = await Promise.all(FEED_URLS.map((url) => fetchOneFeed(url).catch((err) => {
+    console.log('AWIN feed falhou:', err.message);
+    return [];
+  })));
+  const products = results.flat();
   cache = { data: products, fetchedAt: now };
-  console.log('AWIN sample product:', JSON.stringify(products[0]));
-  console.log('AWIN products with image:', products.filter((p) => p.image).length, '/', products.length);
+  console.log('AWIN total combinado:', products.length, 'produtos de', FEED_URLS.length, 'loja(s)');
   return products;
 }
 
@@ -78,8 +91,8 @@ exports.handler = async (event) => {
   }
 
   try {
-    if (!EUDORA_FEED_URL) {
-      return { statusCode: 200, headers, body: JSON.stringify({ results: [], error: 'AWIN_EUDORA_FEED_URL não configurada no Netlify.' }) };
+    if (!FEED_URLS.length) {
+      return { statusCode: 200, headers, body: JSON.stringify({ results: [], error: 'Nenhum feed da Awin configurado no Netlify.' }) };
     }
 
     const params = event.queryStringParameters || {};

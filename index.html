@@ -1076,7 +1076,8 @@ function preloadEudoraImage(imgId, searchTerm, sub, cat, brand){
     var withPhoto=(results||[]).find(function(r){
       if(!r.image) return false;
       var t=(r.title||'').toLowerCase();
-      if(brandLower && t.indexOf(brandLower)<0) return false;
+      var storeLower=(r.store||'').toLowerCase();
+      if(brandLower && t.indexOf(brandLower)<0 && storeLower.indexOf(brandLower)<0) return false;
       if(effCat && conflictsWithCategory(effCat, r.title)) return false;
       if(sub) return kws.some(function(k){return t.indexOf(k.toLowerCase())>=0;});
       return !brandLower && looseTypeMatch(searchTerm, r.title);
@@ -7193,23 +7194,22 @@ function loadComparison(cardId, searchTerm, brand, name, fallbackLink, sub, cat)
     var html='';
     // Drop results from stores that don't belong to this region before doing anything else
     combined = combined.filter(function(r){ return !isWrongRegionStore(r.store); });
-    // D3 (decidida com o Luciano): a Eudora só compara/mostra foto de produtos que
-    // realmente são da MARCA pesquisada — nunca "mesmo tipo, qualquer marca". Sem isso,
-    // qualquer produto que bata uma palavra solta (ex: "hidratante") contaminava a
-    // comparação com preço/foto de um item completamente diferente (achado F3 da auditoria).
-    // Exceção: o próprio feed da Eudora já garante que TODO item nele é da Eudora/linhas dela
-    // (SOUL, Instance, etc.) — muitos títulos não repetem a palavra "Eudora", então exigir
-    // isso literalmente no texto rejeitava produtos legítimos da própria loja. Só produtos de
-    // marca externa (CeraVe, La Roche-Posay...) precisam da marca aparecer no título.
-    var EUDORA_OWN_BRANDS=['eudora','quem disse berenice?','quem disse berenice'];
+    // D3 (decidida com o Luciano): produtos vindos de feeds da Awin (Eudora, L'Occitane, e
+    // futuras lojas) só entram na comparação/foto quando são realmente da MARCA pesquisada —
+    // nunca "mesmo tipo, qualquer marca". Sem isso, qualquer produto que bata uma palavra
+    // solta (ex: "hidratante") contaminava a comparação com preço/foto de outro item
+    // (achado F3 da auditoria). A marca pode aparecer no TÍTULO do produto OU no nome da
+    // LOJA/anunciante (ex: título "Creme SOUL" não repete "Eudora", mas a loja do feed é
+    // "Eudora BR") — assim não precisa de lista fixa de exceção por marca própria, funciona
+    // igual pra qualquer loja nova que a gente adicionar no feed.
     var brandLower=(brand||'').toLowerCase();
-    var isEudoraOwnBrand = EUDORA_OWN_BRANDS.indexOf(brandLower)>=0;
     var kws0=subKeywords(sub);
     var effCat0=cat||inferCat(searchTerm);
     combined = combined.filter(function(r){
       if(r._source!=='awin') return true;
       var t=(r.title||'').toLowerCase();
-      if(brandLower && !isEudoraOwnBrand && t.indexOf(brandLower)<0) return false;
+      var storeLower=(r.store||'').toLowerCase();
+      if(brandLower && t.indexOf(brandLower)<0 && storeLower.indexOf(brandLower)<0) return false;
       if(effCat0 && conflictsWithCategory(effCat0, r.title)) return false;
       if(sub) return kws0.some(function(k){return t.indexOf(k.toLowerCase())>=0;});
       return true;
