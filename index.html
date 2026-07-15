@@ -7160,24 +7160,31 @@ function loadComparison(cardId, searchTerm, brand, name, fallbackLink, sub, cat)
     // realmente são da MARCA pesquisada — nunca "mesmo tipo, qualquer marca". Sem isso,
     // qualquer produto que bata uma palavra solta (ex: "hidratante") contaminava a
     // comparação com preço/foto de um item completamente diferente (achado F3 da auditoria).
+    // Exceção: o próprio feed da Eudora já garante que TODO item nele é da Eudora/linhas dela
+    // (SOUL, Instance, etc.) — muitos títulos não repetem a palavra "Eudora", então exigir
+    // isso literalmente no texto rejeitava produtos legítimos da própria loja. Só produtos de
+    // marca externa (CeraVe, La Roche-Posay...) precisam da marca aparecer no título.
+    var EUDORA_OWN_BRANDS=['eudora','quem disse berenice?','quem disse berenice'];
     var brandLower=(brand||'').toLowerCase();
+    var isEudoraOwnBrand = EUDORA_OWN_BRANDS.indexOf(brandLower)>=0;
     var kws0=subKeywords(sub);
     var effCat0=cat||inferCat(searchTerm);
     combined = combined.filter(function(r){
       if(r._source!=='awin') return true;
       var t=(r.title||'').toLowerCase();
-      if(brandLower && t.indexOf(brandLower)<0) return false;
+      if(brandLower && !isEudoraOwnBrand && t.indexOf(brandLower)<0) return false;
       if(effCat0 && conflictsWithCategory(effCat0, r.title)) return false;
       if(sub) return kws0.some(function(k){return t.indexOf(k.toLowerCase())>=0;});
       return true;
     });
     if(combined.length){
-      // Sort so results with a real direct link always win over ones without (ex: a Scrappa
-      // "Mercado Livre" result with no link vs. the dedicated Mercado Livre source that has
-      // one) — then by price. Then keep only one result per store, so the top 3 show
-      // diversified stores instead of repeating the same store 3x.
+      // Sort so results with a TRUSTED real direct link always win — Awin (Eudora feed) and
+      // Mercado Livre (Apify) links point straight to the product; Scrappa's "link" field, even
+      // when present, is often a Google Shopping page rather than the store itself, so it's not
+      // counted as trustworthy here (Priscila's decision: prefer Apify over Scrappa). Then by price.
+      // Then keep only one result per store, so the top 3 show diversified stores.
       combined.sort(function(a,b){
-        var al=a.link?1:0, bl=b.link?1:0;
+        var al=(a.link && a._source!=='scrappa')?1:0, bl=(b.link && b._source!=='scrappa')?1:0;
         if(al!==bl) return bl-al;
         return a.price-b.price;
       });
