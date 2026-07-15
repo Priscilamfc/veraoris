@@ -1554,38 +1554,50 @@ function finishRenderProds(pool, g){
   prodPage=1;
 
   var wrap=document.getElementById('prodVmWrap');
-  if(!pool.length){
-    var cnt0=document.getElementById('resultCount');if(cnt0)cnt0.textContent='';
+  var cnt0=document.getElementById('resultCount');
+
+  if(pool.length){
+    renderProdsPage();
+  } else {
+    if(cnt0)cnt0.textContent='';
     if(wrap)wrap.style.display='none';
-    // Catálogo fixo não achou nada — antes de desistir, tenta achar ao vivo direto nas lojas
-    // parceiras conectadas (Eudora, L'Occitane, e futuras) usando o próprio termo digitado.
-    // Assim, buscar uma marca que só existe numa loja parceira (ex: "Redken") já funciona,
-    // sem precisar que o produto esteja pré-cadastrado no catálogo fixo.
-    if(srch && region==='BR'){
-      var searchedTerm=srch;
-      g.innerHTML='<div style="grid-column:1/-1;text-align:center;padding:40px 24px;color:var(--muted);font-size:13px">'+(lang==='pt'?'Buscando nas lojas parceiras...':'Searching partner stores...')+'</div>';
-      awinSearchPrices(searchedTerm, function(results){
-        if(srch!==searchedTerm) return; // a pessoa já buscou outra coisa, descarta
-        if(results && results.length){
-          g.innerHTML=results.map(liveResultCard).join('');
+    g.innerHTML = srch
+      ? '<div style="grid-column:1/-1;text-align:center;padding:40px 24px;color:var(--muted);font-size:13px">'+(lang==='pt'?'Buscando nas lojas parceiras...':'Searching partner stores...')+'</div>'
+      : '<div style="grid-column:1/-1;text-align:center;padding:60px 24px;background:var(--white);border-radius:var(--r2);border:1px solid var(--marble3)">'
+        +'<p style="font-family:Cormorant Garamond,serif;font-size:1.6rem;color:var(--text);margin-bottom:12px">'+(lang==='pt'?'Nenhum produto encontrado':'No products found')+'</p>'
+        +'<p style="font-size:14px;color:var(--muted)">'+(lang==='pt'?'Tente outra pesquisa ou categoria.':'Try another search or category.')+'</p>'
+        +'</div>';
+  }
+
+  // Sempre complementa com resultados AO VIVO das lojas parceiras conectadas (Eudora,
+  // L'Occitane), além do catálogo fixo — não só quando o catálogo não acha nada. Assim,
+  // uma busca geral (ex: "hidratante") também mostra o que essas lojas têm de verdade,
+  // e uma marca que só existe numa loja parceira (ex: "Redken") aparece mesmo sem estar
+  // pré-cadastrada no catálogo.
+  if(srch && region==='BR'){
+    var searchedTerm=srch;
+    var hadCatalogResults=pool.length>0;
+    awinSearchPrices(searchedTerm, function(results){
+      if(srch!==searchedTerm) return; // a pessoa já buscou outra coisa, descarta
+      if(results && results.length){
+        var liveHtml=results.map(liveResultCard).join('');
+        if(hadCatalogResults){
+          g.insertAdjacentHTML('beforeend', liveHtml);
+          if(cnt0)cnt0.textContent+=(lang==='pt'?' + '+results.length+' em lojas parceiras':' + '+results.length+' from partner stores');
+        } else {
+          g.innerHTML=liveHtml;
           if(cnt0)cnt0.textContent=(lang==='pt'?results.length+' resultado(s) em lojas parceiras':results.length+' result(s) from partner stores');
-          return;
         }
+        return;
+      }
+      if(!hadCatalogResults){
         g.innerHTML='<div style="grid-column:1/-1;text-align:center;padding:60px 24px;background:var(--white);border-radius:var(--r2);border:1px solid var(--marble3)">'
           +'<p style="font-family:Cormorant Garamond,serif;font-size:1.6rem;color:var(--text);margin-bottom:12px">'+(lang==='pt'?'Nenhum produto encontrado':'No products found')+'</p>'
           +'<p style="font-size:14px;color:var(--muted)">'+(lang==='pt'?'Tente outra pesquisa ou categoria.':'Try another search or category.')+'</p>'
           +'</div>';
-      });
-      return;
-    }
-    g.innerHTML='<div style="grid-column:1/-1;text-align:center;padding:60px 24px;background:var(--white);border-radius:var(--r2);border:1px solid var(--marble3)">'
-      +'<p style="font-family:Cormorant Garamond,serif;font-size:1.6rem;color:var(--text);margin-bottom:12px">'+(lang==='pt'?'Nenhum produto encontrado':'No products found')+'</p>'
-      +'<p style="font-size:14px;color:var(--muted)">'+(lang==='pt'?'Tente outra pesquisa ou categoria.':'Try another search or category.')+'</p>'
-      +'</div>';
-    return;
+      }
+    });
   }
-
-  renderProdsPage();
 }
 // Troca de ordenação: nome/mais vendidos precisam re-render (dados já conhecidos, sem custo
 // extra); preço só reordena os cards já na tela usando o que já foi carregado, sem re-buscar.
