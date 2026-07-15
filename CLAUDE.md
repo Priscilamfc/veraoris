@@ -418,3 +418,35 @@ feed novo automaticamente. Commit `b109371`.
 direto na variável `AWIN_AMABELEZA_FEED_URL` no Netlify (nunca no chat/git —
 tem chave de API embutida). Depois de salvar, o Netlify reimplanta sozinho
 e o feed passa a valer.
+
+**Atualização**: Priscila configurou a variável e o feed passou a valer
+depois de um "Trigger deploy" manual no Netlify (mudar env var sozinho não
+redeploya as functions). Ama Beleza passou a aparecer nos resultados.
+
+## Sessão 15/07/2026 (continuação 4) — imagem placeholder da Ama Beleza + esclarecimento sobre comparação
+Depois da Ama Beleza aparecer, dois pontos novos da Priscila:
+
+1. **Pergunta conceitual (respondida, sem mudança de código)**: ela perguntou
+   se o site deveria comparar produtos "do mesmo estilo" entre lojas (ex:
+   qualquer hidratante corporal de qualquer marca) mesmo sem ser o mesmo
+   item exato. Resposta alinhada com a decisão D3 já tomada: **não** — isso
+   seria comparação enganosa (maçã com laranja). Comparação de preço só faz
+   sentido pro MESMO produto (mesma marca+fórmula+tamanho). Ela concordou.
+   Comparação real entre lojas parceiras só acontece quando uma marca
+   terceira (ex: CeraVe) é vendida por mais de uma delas — isso já funciona
+   automático via D3, sem precisar mexer em nada.
+2. **Bug real: imagem "sem foto disponível" da Ama Beleza aparecendo feia
+   no card** (print: caixa cinza com câmera e texto "No image available").
+   Não é link quebrado — é a própria Ama Beleza (via Vtex) servindo um
+   gráfico genérico quando não tem foto real do produto. A URL da imagem
+   não denuncia isso (IDs diferentes por produto, sem palavra tipo
+   "placeholder" no nome), então não dava pra filtrar só pelo endereço.
+   **Corrigido em `awin-search.js`**: checagem de tamanho do arquivo
+   (`content-length`) nos resultados finais de cada busca (só ~10 imagens,
+   não o feed inteiro de 4552) — abaixo de 8KB é tratado como "sem foto
+   real" e cai no ícone padrão do site ("Foto ilustrativa") em vez do
+   gráfico da loja. É uma heurística (tamanho, não o conteúdo visual da
+   imagem, que não dá pra inspecionar neste ambiente sem acesso à internet
+   externa) — pode precisar de ajuste fino se aparecer foto real pequena
+   sendo escondida por engano, ou algum placeholder maior que 8KB passando.
+   Commit `58b39b1`. **Ainda não confirmado pela Priscila se resolveu.**
