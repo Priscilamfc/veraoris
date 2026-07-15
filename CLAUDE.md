@@ -333,3 +333,42 @@ funcionando como fontes de dados reais (Awin), a Priscila decidiu:
 3. **Próximo passo de código**: estender esse mesmo fallback pras fontes
    da Apify (Mercado Livre quando estiver funcionando, Americanas, etc.)
    e pra região Portugal quando ela voltar a ficar pública.
+
+## Sessão 15/07/2026 (continuação) — Scrappa oculto de vez + API em primeiro lugar
+A Priscila reforçou de forma direta e repetida: parar de misturar Scrappa e
+catálogo fixo na frente dos resultados — a prioridade tem que ser 100% das
+lojas com API/feed real (Eudora, L'Occitane). Implementado:
+
+1. **Scrappa desativado** (`var SCRAPPA_ENABLED=false;` em `loadComparison`,
+   `index.html`): a chamada `scrappaSearchPrices(...)` só executa se essa
+   flag for `true`. Fácil de reativar no futuro (é só mudar a flag) se um dia
+   o achado F1 da auditoria (pareamento por índice bugado) for corrigido.
+   Código não removido, só desligado.
+2. **Live results (Eudora/L'Occitane) viram a primeira leva visual**: em
+   `finishRenderProds`, os resultados ao vivo da Awin agora entram no topo
+   da grade (`insertAdjacentHTML('afterbegin', ...)`, antes era `beforeend`)
+   — o catálogo fixo (que renderiza primeiro por ser instantâneo/local) fica
+   embaixo assim que a busca da Awin responde. Contador de resultados também
+   foi reordenado pra mostrar "N em lojas parceiras + [contagem do
+   catálogo]" nessa ordem.
+   - **Limitação técnica honesta**: como a busca da Awin é uma chamada de
+     rede (mesmo que rápida, ~alguns décimos de segundo com cache),
+     tecnicamente o catálogo aparece na tela primeiro por uma fração de
+     segundo antes dos resultados da API "pularem" pro topo. Não dá pra
+     eliminar esse delay sem atrasar a exibição inicial da página inteira
+     esperando a rede responder — decisão foi priorizar carregamento rápido
+     da página e deixar a API assumir o topo assim que chega, em vez de
+     travar a tela esperando.
+3. Também corrigido nesta leva: `doHeroSearch()` (busca pela barra do herói)
+   estava chamando `renderProds()` duas vezes (uma direta, outra já embutida
+   dentro de `showPage('compare')`) — causava o "+10 em lojas parceiras +10
+   em lojas parceiras" duplicado que apareceu no print dela.
+
+Commit: `1d85c95`. Validado sintaxe JS antes do push, sem erros.
+
+**Ainda não mexido nesta sessão** (fica pra próxima, menor prioridade que o
+pedido acima): trocar o actor do Mercado Livre na Apify (o antigo exige
+100s mínimo de execução, incompatível com Netlify Functions — abandonado)
+pelo candidato `gio21/americanas-product-scraper` (API GraphQL direta, sem
+navegador); estender o fallback de busca ao vivo pra fontes da Apify e pra
+Portugal quando a região voltar a ficar pública.
