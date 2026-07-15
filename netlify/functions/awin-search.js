@@ -66,6 +66,23 @@ async function fetchOneFeed(feedUrl) {
   return products;
 }
 
+// Alguns produtos do feed têm um `image` preenchido, mas apontando pro gráfico genérico
+// "sem foto disponível" que a própria loja (ex: Ama Beleza, via Vtex) serve quando não tem
+// foto real cadastrada pro item — a URL em si não tem nada que denuncie isso, mas o arquivo
+// costuma pesar bem menos que uma foto de produto de verdade. Checagem leve, só nos poucos
+// resultados finais (não no feed inteiro), então o custo é baixo.
+const PLACEHOLDER_MAX_BYTES = 8000;
+async function isLikelyPlaceholderImage(url) {
+  if (!url) return false;
+  try {
+    const res = await fetch(url);
+    const len = parseInt(res.headers.get('content-length') || '0', 10);
+    return len > 0 && len < PLACEHOLDER_MAX_BYTES;
+  } catch (err) {
+    return false;
+  }
+}
+
 async function fetchFeed() {
   const now = Date.now();
   if (cache.data && (now - cache.fetchedAt) < CACHE_TTL_MS) {
@@ -143,7 +160,15 @@ exports.handler = async (event) => {
       image: m.p.image || null
     }));
 
-    console.log('AWIN busca "' + query + '" ->', matches.length, 'resultado(s), lojas:', matches.map((m) => m.store).join(', '));
+    let placeholderCount = 0;
+    await Promise.all(matches.map(async (m) => {
+      if (m.image && await isLikelyPlaceholderImage(m.image)) {
+        m.image = null;
+        placeholderCount++;
+      }
+    }));
+
+    console.log('AWIN busca "' + query + '" ->', matches.length, 'resultado(s), lojas:', matches.map((m) => m.store).join(', '), '|', placeholderCount, 'imagem(ns) placeholder descartada(s)');
     return { statusCode: 200, headers, body: JSON.stringify({ results: matches }) };
   } catch (error) {
     return { statusCode: 200, headers, body: JSON.stringify({ results: [], error: error.message }) };
