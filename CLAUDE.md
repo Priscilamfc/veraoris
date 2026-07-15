@@ -372,3 +372,35 @@ pedido acima): trocar o actor do Mercado Livre na Apify (o antigo exige
 pelo candidato `gio21/americanas-product-scraper` (API GraphQL direta, sem
 navegador); estender o fallback de busca ao vivo pra fontes da Apify e pra
 Portugal quando a região voltar a ficar pública.
+
+## Sessão 15/07/2026 (continuação 2) — resultados ao vivo: categoria e diversidade de loja
+Depois do ajuste acima, a Priscila testou e reportou dois problemas novos nos
+cards ao vivo (print: busca "hidratante" dentro do filtro Skincare mostrando
+batom e loção corporal da Eudora, e L'Occitane nunca aparecendo):
+
+1. **`awin-search.js` balanceado por loja (round-robin)**: antes os 10
+   resultados eram só os de maior pontuação no combinado das duas lojas —
+   como a Eudora tem 1797 produtos contra 274 da L'Occitane, a Eudora sozinha
+   preenchia os 10 lugares e a L'Occitane nunca entrava, mesmo tendo produto
+   relevante pro termo buscado. Agora intercala entre as lojas com resultado
+   (melhor pontuação de cada uma primeiro) até completar 10.
+2. **Filtro de categoria nos resultados ao vivo** (`finishRenderProds`,
+   `index.html`): "hidratante" é adjetivo de marketing usado em produtos de
+   categorias bem diferentes (batom hidratante, loção corporal hidratante) —
+   reaproveitado o `conflictsWithCategory()` que já existia pro D3, agora
+   também filtrando os resultados ao vivo pela categoria ativa (Skincare/
+   Maquilhagem/Cabelo) antes de virar card.
+3. **`liveResultCard` ganhou botão Amazon** (busca, sem preço conhecido)
+   como segunda opção de compra — antes era destino único (só a loja
+   parceira), agora sempre tem pelo menos uma comparação.
+
+Commit: `df5d910`. Validado sintaxe JS + `node --check` na function antes do
+push, sem erros.
+
+**Observação pra próxima sessão**: comparação "de verdade" entre Eudora e
+L'Occitane pro MESMO produto não é realista pra a maioria dos resultados ao
+vivo — são marcas próprias de cada loja (linhas Eudora/SOUL/Instance vs.
+L'Occitane en Provence), então dificilmente o mesmo item exato aparece nas
+duas. O que foi implementado é a próxima melhor coisa: pelo menos duas
+opções de compra por card (loja parceira real + Amazon busca) e nunca
+loja/categoria erradas misturadas.
