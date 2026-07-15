@@ -7142,15 +7142,16 @@ function isWrongRegionStore(storeName){
   return false;
 }
 function loadComparison(cardId, searchTerm, brand, name, fallbackLink, sub, cat){
-  var combined=[];
-  var pending = region==='BR' ? 3 : 1;
-  function onSource(results, source){
-    (results||[]).forEach(function(r){ r._source = source; });
-    combined = combined.concat(results||[]);
-    pending--;
-    if(pending>0) return;
+  var rawCombined=[];
+  // Scrappa + Awin are fast APIs — the card renders as soon as those two answer.
+  // Mercado Livre (Apify) is a real scraper and can take much longer; it's treated as a
+  // non-blocking enhancement that patches the card afterwards if/when it arrives, instead
+  // of making every card wait on the slowest source before showing any price at all.
+  var pending = region==='BR' ? 2 : 1;
+  function renderCombined(){
     var el=document.getElementById(cardId);
     if(!el) return; // card may no longer be on screen
+    var combined = rawCombined.slice();
 
     var html='';
     // Drop results from stores that don't belong to this region before doing anything else
@@ -7226,9 +7227,22 @@ function loadComparison(cardId, searchTerm, brand, name, fallbackLink, sub, cat)
       if(srt==='price_asc'||srt==='price_desc') applySortOrder('productGrid');
     }
   }
+  function onSource(results, source){
+    (results||[]).forEach(function(r){ r._source = source; });
+    rawCombined = rawCombined.concat(results||[]);
+    pending--;
+    if(pending<=0) renderCombined();
+  }
   scrappaSearchPrices(searchTerm, function(results){ onSource(results, 'scrappa'); });
   if(region==='BR') awinSearchPrices(searchTerm, function(results){ onSource(results, 'awin'); });
-  if(region==='BR') mercadoLivreSearchPrices(searchTerm, function(results){ onSource(results, 'mercadolivre'); });
+  // Mercado Livre doesn't count towards `pending` — if it comes back after the card already
+  // rendered, just fold it in and re-render so it can improve the result (real link, maybe a
+  // better price), without ever delaying the initial display.
+  if(region==='BR') mercadoLivreSearchPrices(searchTerm, function(results){
+    (results||[]).forEach(function(r){ r._source = 'mercadolivre'; });
+    rawCombined = rawCombined.concat(results||[]);
+    if(pending<=0) renderCombined();
+  });
 }
 
 function renderFAQ(){
