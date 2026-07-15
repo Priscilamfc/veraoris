@@ -72,14 +72,42 @@ async function fetchOneFeed(feedUrl) {
 // costuma pesar bem menos que uma foto de produto de verdade. Checagem leve, só nos poucos
 // resultados finais (não no feed inteiro), então o custo é baixo.
 const PLACEHOLDER_MAX_BYTES = 8000;
+const CHECK_TIMEOUT_MS = 4500;
+function fetchWithTimeout(url, ms) {
+  const controller = new AbortController();
+  const t = setTimeout(() => controller.abort(), ms);
+  return fetch(url, { signal: controller.signal }).finally(() => clearTimeout(t));
+}
 async function isLikelyPlaceholderImage(url) {
   if (!url) return false;
   try {
-    const res = await fetch(url);
+    const res = await fetchWithTimeout(url, CHECK_TIMEOUT_MS);
     const len = parseInt(res.headers.get('content-length') || '0', 10);
     return len > 0 && len < PLACEHOLDER_MAX_BYTES;
   } catch (err) {
     return false;
+  }
+}
+
+// Produto removido do catálogo da loja, mas ainda presente (desatualizado) no feed da Awin —
+// o deep link cai numa página tipo "Ops! Esta página não existe mais.". Muitas lojas devolvem
+// HTTP 200 mesmo nesse caso (soft-404), então checa também o texto da página, não só o status.
+// Só roda nos poucos resultados finais de cada busca (não no feed inteiro), custo baixo.
+const DEAD_PAGE_PATTERNS = [
+  'não existe mais', 'nao existe mais', 'página não encontrada', 'pagina nao encontrada',
+  'produto não encontrado', 'produto nao encontrado', 'not found', 'esta página não existe',
+  'esta pagina nao existe', 'não encontramos', 'nao encontramos', 'página indisponível',
+  'pagina indisponivel', 'produto indisponível', 'produto indisponivel'
+];
+async function isDeadProductLink(url) {
+  if (!url) return true;
+  try {
+    const res = await fetchWithTimeout(url, CHECK_TIMEOUT_MS);
+    if (!res.ok) return true;
+    const text = (await res.text()).toLowerCase();
+    return DEAD_PAGE_PATTERNS.some((p) => text.includes(p));
+  } catch (err) {
+    return false; // falha de rede/timeout: não penaliza, mantém o link como estava
   }
 }
 
@@ -161,14 +189,15 @@ exports.handler = async (event) => {
     }));
 
     let placeholderCount = 0;
+    let deadLinkCount = 0;
     await Promise.all(matches.map(async (m) => {
-      if (m.image && await isLikelyPlaceholderImage(m.image)) {
-        m.image = null;
-        placeholderCount++;
-      }
+      const checks = [];
+      if (m.image) checks.push(isLikelyPlaceholderImage(m.image).then((dead) => { if (dead) { m.image = null; placeholderCount++; } }));
+      checks.push(isDeadProductLink(m.link).then((dead) => { if (dead) { m.linkOk = false; deadLinkCount++; } }));
+      await Promise.all(checks);
     }));
 
-    console.log('AWIN busca "' + query + '" ->', matches.length, 'resultado(s), lojas:', matches.map((m) => m.store).join(', '), '|', placeholderCount, 'imagem(ns) placeholder descartada(s)');
+    console.log('AWIN busca "' + query + '" ->', matches.length, 'resultado(s), lojas:', matches.map((m) => m.store).join(', '), '|', placeholderCount, 'imagem(ns) placeholder,', deadLinkCount, 'link(s) morto(s) descartado(s)');
     return { statusCode: 200, headers, body: JSON.stringify({ results: matches }) };
   } catch (error) {
     return { statusCode: 200, headers, body: JSON.stringify({ results: [], error: error.message }) };
