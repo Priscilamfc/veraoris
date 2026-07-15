@@ -519,3 +519,29 @@ controle. Se acontecer muito, o caminho seria reportar pra Awin/Eudora.
 
 **Ainda não confirmado pela Priscila se a checagem de link morto
 resolveu.**
+
+## Sessão 15/07/2026 (continuação 7) — "fora de estoque" também é link morto
+Priscila mandou mais 2 exemplos: (1) card mostrando R$ 299,00 de um batom
+Amobeleza que, ao clicar, ia pra uma página "Este produto não está
+disponível no momento" (produto esgotado, sem preço nenhum na página) — a
+frase de esgotado não batia com nenhum padrão da lista de `DEAD_PAGE_PATTERNS`
+(só cobria "não encontrado"/"removido", não "sem estoque"); (2) card da
+Eudora mostrando R$ 23,99 enquanto a página real do produto mostrava R$
+19,90 — explicado como defasagem normal de feed (não é bug, é limitação
+inerente de comparador baseado em feed que não é atualizado em tempo real;
+recomendação foi manter o disclaimer "Preços actualizados hoje" e não
+tentar resolver com scraping de preço ao vivo por enquanto, que exigiria
+lógica própria por loja e seria frágil).
+
+**Corrigido (item 1)**: `DEAD_PAGE_PATTERNS` ampliada com variações de
+"fora de estoque" ("não está disponível", "esgotado", "fora de estoque",
+"quero saber quando estiver disponível" etc.) — antes só cobria página
+removida/não encontrada. Mesmo mecanismo de antes: cai no botão honesto
+"Buscar na loja". Commit `26a44fa`.
+
+**Sobre o R$ 299,00 "vindo de onde"**: não é um bug de cálculo — é o preço
+que estava gravado no feed da Awin da última vez que ele foi atualizado
+(quando o produto ainda tinha estoque). Como a Awin não atualiza o feed em
+tempo real, um produto pode esgotar na loja antes do feed refletir isso.
+Com a correção acima, esse cenário agora cai no botão "Buscar na loja" em
+vez de continuar prometendo um preço que não existe mais pra comprar.
