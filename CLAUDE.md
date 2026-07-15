@@ -219,9 +219,26 @@ pesquisada) — implementado em camadas ao longo do dia. A auditoria do
 Luciano recomenda o oposto: só mostrar foto/preço quando é **mesma marca E
 mesmo tipo** (senão fica ícone genérico), porque "mesmo tipo" ainda deixa
 passar produto errado (ex: creme de mão em vez de creme facial, mesma
-categoria mas item diferente). As duas sessões não devem mexer nessa regra
-até a Priscila e o Luciano decidirem juntos qual caminho seguir — está
-listado como **D3** no `PLANO_ACAO_2026-07.md`.
+categoria mas item diferente).
+
+**D3 — DECIDIDA (12/07, Priscila + Luciano): revertido para "só mesma
+marca E mesmo tipo".** Implementado: a validação de identidade (marca +
+categoria/tipo) agora é aplicada ANTES de um resultado da Eudora virar
+linha de preço — não só na foto (ataca também o achado F3 da auditoria,
+onde a Eudora contaminava a comparação de qualquer produto). Quando não
+há correspondência fiel, mantém o ícone genérico com "Foto ilustrativa" —
+nunca mais mostra produto/preço errado.
+
+**Estratégia combinada de camadas (Priscila, mesma conversa)**: Camada 1
+= fontes com afiliação de verdade (Eudora hoje; Beleza na Web/Sephora/etc.
+quando aprovarem) — prioridade, geram comissão. Camada 2 = fontes via
+Apify sem comissão (Mercado Livre já integrado; Magazine Luiza e
+Americanas cotados como próximos) — servem de rede de segurança pra achar
+foto/preço fiel de marcas que a Eudora não vende, sempre com a mesma
+regra rígida de "mesma marca E mesmo tipo", nunca "any brand". Ordem de
+implementação: primeiro estabilizar a Camada 1 (feito), Mercado Livre
+(Camada 2) ainda com o link caindo no Google Shopping — resolver antes de
+adicionar mais lojas na Camada 2.
 
 ## Pendências conhecidas
 - **API de produtos da Amazon**: exige 10 vendas nos últimos 30 dias
@@ -229,16 +246,19 @@ listado como **D3** no `PLANO_ACAO_2026-07.md`.
   esse número uma vez, aguardando liberação da API.
 - **Mercado Livre via Apify**: resultados aparecem mas o link ainda cai
   numa página do Google Shopping em vez do produto — depuração em
-  andamento, ver log da sessão acima.
-- **Decisões D1, D2, D3 da Priscila** (ver `PLANO_ACAO_2026-07.md`,
-  secção final): (D1) o que fazer com preços do Scrappa sem link direto —
-  virar "preço de referência" sem botão, ou botão sincero "Buscar na
-  loja"? (D2) autorizar migrar o catálogo de dentro do `index.html` pro
-  Supabase (Onda 2 da auditoria)? (D3) reverter a regra de foto pra "só
-  mesma marca" (ver secção de tensão acima)?
+  andamento, ver log da sessão acima. Bloqueia expandir a Camada 2 pra
+  outras lojas (Magazine Luiza, Americanas) até resolver.
+- **Decisões D1 e D2 da Priscila** (ver `PLANO_ACAO_2026-07.md`, secção
+  final, D3 já decidida acima): (D1) o que fazer com preços do Scrappa sem
+  link direto — virar "preço de referência" sem botão, ou botão sincero
+  "Buscar na loja"? (D2) autorizar migrar o catálogo de dentro do
+  `index.html` pro Supabase (Onda 2 da auditoria)?
 - **D4 já decidida**: toda a operação de afiliados pela conta Awin de
   Portugal da Priscila — Natura, Minha BLZ, Mercado Livre Afiliados e
   Shopee BR ficam fora do plano enquanto essa decisão valer.
 - Beleza na Web: aprovada na Awin mas sem feed de produtos ainda — email
   de solicitação de feed redigido, aguardando resposta. Existe também o
   programa próprio "Minha BLZ" (exige CNPJ) como alternativa não explorada.
+- **Achado F1 da auditoria (Scrappa mistura produto/loja/preço por
+  pareamento de índice) ainda não corrigido** — Etapa 1 do
+  `PLANO_ACAO_2026-07.md`, item 1, ainda em aberto.
