@@ -545,3 +545,40 @@ que estava gravado no feed da Awin da última vez que ele foi atualizado
 tempo real, um produto pode esgotar na loja antes do feed refletir isso.
 Com a correção acima, esse cenário agora cai no botão "Buscar na loja" em
 vez de continuar prometendo um preço que não existe mais pra comprar.
+
+## Sessão 15/07/2026 (continuação 8) — checagem de link morto desativada (falso positivo generalizado)
+Pouco depois da correção acima, a Priscila reportou algo muito mais grave:
+**todos** os links da Eudora e da Ama Beleza (incluindo produtos que
+existem e funcionam de verdade) passaram a cair numa busca do Google em
+vez do link direto — o exato problema que a checagem de link morto foi
+criada pra evitar, só que ao contrário. Ela também alertou que isso estava
+consumindo crédito do Netlify à toa em testes que davam errado.
+
+**Causa provável (não confirmada — não dá pra testar deste ambiente, sem
+acesso à internet externa)**: a checagem fazia um GET no link de cada
+resultado a partir da function do Netlify (servidor), sem cabeçalho de
+navegador real nem cookies — é bem provável que a Eudora e/ou a Ama Beleza
+tenham proteção contra bot (Cloudflare/Akamai/etc.) que serve uma página
+diferente (ou bloqueia) pra esse tipo de requisição, o que faria a
+checagem enxergar "página não existe"/"indisponível" em praticamente
+qualquer link, mesmo os que funcionam perfeitamente num navegador normal.
+
+**Ação tomada**: checagem de link morto **desativada** (`LINK_CHECK_ENABLED
+= false` em `awin-search.js`) — voltou a usar o link do feed diretamente,
+sem verificação, do jeito que era antes dela existir. A checagem de imagem
+placeholder (Ama Beleza) continua ativa, não teve esse problema. Commit
+`f56b62c`. Consequência aceita: os casos legítimos de link morto/esgotado
+descritos nas sessões anteriores (Eudora "página não existe mais",
+Amobeleza "produto esgotado") voltam a acontecer sem aviso — foi uma troca
+consciente, porque um falso positivo generalizado (praticamente todo link
+caindo no Google) é pior que um falso negativo ocasional (raro link morto
+sem aviso).
+
+**Pendência real pra próxima sessão**: se alguém quiser reativar essa
+checagem, precisa primeiro conseguir inspecionar de verdade a resposta que
+a Eudora/Ama Beleza devolvem pra uma requisição de servidor (ex: a
+Priscila rodando `curl` num link real e mandando o HTML/status de volta,
+ou testando com um header `User-Agent` de navegador comum) — sem essa
+visibilidade não dá pra saber se o problema é bot-detection, redirect,
+ou outra coisa, e continuar tentando "no escuro" só gasta mais crédito
+do Netlify de novo.
