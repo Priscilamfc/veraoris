@@ -315,15 +315,14 @@ vendas iniciais que desbloqueariam a API da Amazon — **nunca foi pra ser
 a espinha dorsal permanente do site**. Com Eudora e L'Occitane já
 funcionando como fontes de dados reais (Awin), a Priscila decidiu:
 
-1. **A busca do site não pode depender só do catálogo fixo.** Hoje, se a
-   marca/produto não está pré-cadastrada em `AMZ_PRODUCTS`, a busca
-   simplesmente não encontra nada — mesmo que uma loja parceira (Eudora,
-   L'Occitane, ou no futuro Beleza na Web) realmente venda aquele
-   produto. Exemplo dela: buscar "Redken" devia funcionar se a Beleza na
-   Web vender Redken, mesmo sem Redken estar no catálogo fixo. **Ainda
-   não implementado** — precisa que a busca também consulte as lojas
-   conectadas ao vivo (Awin hoje; Apify depois) quando o catálogo fixo
-   não achar nada, em vez de só mostrar "Nenhum produto encontrado".
+1. **A busca do site não pode depender só do catálogo fixo. IMPLEMENTADO
+   (15/07)**: quando o catálogo fixo não acha nada pra um termo buscado,
+   `finishRenderProds` agora chama `awinSearchPrices` ao vivo (Eudora +
+   L'Occitane combinadas) e renderiza os resultados reais direto —
+   `liveResultCard()` monta um card simples com foto/preço/link reais da
+   loja, sem precisar de entrada prévia no catálogo. Só cobre a região
+   Brasil por enquanto (as lojas Awin configuradas hoje são BR). Ainda
+   não estendido pra Apify (Mercado Livre etc.) nesse fallback — só Awin.
 2. **Ordem de prioridade das fontes daqui pra frente**: Eudora + L'Occitane
    (Awin, comissão real) são as fontes principais agora. Scrappa fica
    em segundo plano por enquanto ("muito erro e confusão" — nas palavras
@@ -331,8 +330,6 @@ funcionando como fontes de dados reais (Awin), a Priscila decidiu:
    desenvolvimento. Amazon volta depois, junto com as fontes da Apify
    (Mercado Livre quando resolvido, Americanas, etc.) — como mais uma
    fonte entre várias, não como base do site.
-3. **Próximo passo de código** (ainda não feito): fazer a busca (`renderProds`
-   / caixa "Pesquisar produto ou marca...") tentar uma busca ao vivo nos
-   feeds da Awin quando o catálogo fixo não retornar nada, montando um
-   card "virtual" a partir do resultado real da loja (nome, preço, foto,
-   link — tudo já vem do feed, sem precisar de entrada prévia no catálogo).
+3. **Próximo passo de código**: estender esse mesmo fallback pras fontes
+   da Apify (Mercado Livre quando estiver funcionando, Americanas, etc.)
+   e pra região Portugal quando ela voltar a ficar pública.
