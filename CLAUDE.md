@@ -450,3 +450,34 @@ Depois da Ama Beleza aparecer, dois pontos novos da Priscila:
    externa) — pode precisar de ajuste fino se aparecer foto real pequena
    sendo escondida por engano, ou algum placeholder maior que 8KB passando.
    Commit `58b39b1`. **Ainda não confirmado pela Priscila se resolveu.**
+
+## Sessão 15/07/2026 (continuação 5) — comparação real entre lojas parceiras (Ama Beleza é multimarca)
+Priscila corrigiu uma premissa importante: diferente da Eudora e da
+L'Occitane (marca própria, só vendem produto delas mesmas), **a Ama
+Beleza é multimarca** — revende Eudora, L'Occitane e outras marcas, igual
+a Amazon/Beleza na Web. Ela mandou print do site da Ama Beleza mostrando
+produtos Eudora à venda lá. Ou seja: o MESMO produto pode legitimamente
+aparecer em mais de uma loja parceira ao mesmo tempo (ex: Eudora vende
+direto por X, Ama Beleza revende o mesmo item por Y) — isso não é o caso
+"maçã com laranja" da sessão anterior, é comparação de preço de verdade.
+
+**Implementado**: os resultados ao vivo (Awin) agora são agrupados por
+identidade de produto antes de virar card — `normalizeProductTitle()`
+(minúsculas, sem acento, sem tamanho/unidade tipo "50ml"/"200g", palavras
+em ordem alfabética) + `groupLiveResults()`. Quando duas lojas batem o
+mesmo título normalizado, viram UM card só com várias linhas de preço
+(menor primeiro, "Melhor preço ✓"), igual ao card do catálogo — antes
+cada ocorrência era um card separado e repetido. Quando o título não bate
+(produtos realmente diferentes ou paráfrase que a normalização não pegou),
+cada um continua card próprio — o pior caso é só perder uma junção
+possível, nunca junta errado. `liveResultCard` foi reescrito pra aceitar
+o grupo (`items[]`) em vez de um resultado solto. Commit `8d1e5b9`.
+
+**Pergunta da Priscila sobre a Amazon (respondida)**: quando a API de
+produtos da Amazon voltar (10 vendas/30 dias correntes), ela entra nesse
+MESMO mecanismo de agrupamento — a Amazon também é multimarca (vende
+L'Occitane, Eudora etc. de terceiros), então viraria só mais uma fonte
+alimentando o `groupLiveResults`, com preço/link reais dela nas linhas de
+comparação. Não precisa mudar a arquitetura quando isso acontecer, só
+plugar a Amazon como mais uma fonte no mesmo pipeline (hoje só Awin
+alimenta esse fallback ao vivo).
