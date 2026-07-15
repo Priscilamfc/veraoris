@@ -262,3 +262,77 @@ adicionar mais lojas na Camada 2.
 - **Achado F1 da auditoria (Scrappa mistura produto/loja/preço por
   pareamento de índice) ainda não corrigido** — Etapa 1 do
   `PLANO_ACAO_2026-07.md`, item 1, ainda em aberto.
+
+### Sessão 15/07/2026 — lado da Priscila (meu Claude)
+- **Site ficou fora do ar**: Netlify pausou por estourar o limite de uso
+  (causa: comparação automática disparando em todo produto visível ×3
+  fontes). Priscila resolveu do lado do Netlify. Correção no código:
+  só os primeiros `AUTO_LOAD_COUNT=6` produtos de cada tela carregam
+  sozinhos — o resto carrega via `IntersectionObserver` (lazy load) só
+  quando o card entra na tela, sem precisar clicar.
+- **D3 implementada de vez**: validação de marca+tipo aplicada às LINHAS
+  de preço também (não só à foto) — ataca o achado F3 da auditoria.
+  Correção em camadas até funcionar direito:
+  1. 1ª versão exigia a marca aparecer literalmente no título — quebrou
+     produtos da própria Eudora (linha SOUL/Instance não repete "Eudora"
+     no título).
+  2. Corrigido: marca pode bater no título OU no nome da loja/anunciante
+     do resultado (não precisa de lista fixa de exceção por marca própria,
+     escala sozinho pra qualquer feed novo).
+  3. Prioridade de link também ajustada: só conta como "link confiável"
+     pra ordenação se vier do Awin ou Apify — o campo `link` do Scrappa,
+     mesmo quando existe, normalmente é uma página do Google Shopping,
+     não da loja (não confiar nele pra prioridade).
+- **Mercado Livre via Apify — causa raiz finalmente encontrada**: o actor
+  `karamelo/mercadolivre-scraper-brasil-portugues` **exige tempo mínimo de
+  execução de 100 segundos** (usa navegador completo via `xvfb-run`) — com
+  menos que isso ele aborta sozinho em ~1s sem erro nem resultado. Isso é
+  incompatível com uma function do Netlify chamada de forma síncrona (que
+  tem limite de tempo bem menor). **Decisão: abandonar esse actor
+  específico** — não dá pra simplesmente aumentar o timeout, o Netlify
+  cortaria antes de qualquer forma. Candidato pra tentar no lugar:
+  **Americanas Product Scraper** (`gio21/americanas-product-scraper`),
+  que usa API GraphQL direto (sem navegador, rápido) — ainda não
+  implementado.
+- **L'Occitane en Provence BR aprovada na Awin** (Priscila conseguiu
+  direto, sem precisar do email de solicitação). `awin-search.js`
+  reescrito pra suportar **múltiplos feeds simultâneos** (variáveis
+  `AWIN_EUDORA_FEED_URL` + `AWIN_LOCCITANE_FEED_URL`, mais fáceis de
+  adicionar no futuro — só configurar a variável nova no Netlify).
+  Feed configurado com sucesso, mas **Eudora parou de aparecer nos
+  resultados depois dessa mudança** (mesmo pra "hidratante", que ela
+  vende) — bug não identificado ainda, aguardando logs da function
+  `awin-search` pra diagnosticar (não vistos ainda nesta sessão).
+- **Aviso importante sobre a Awin**: gerar um deep link funciona mesmo
+  pra anunciante ainda "Pendente" (não aprovado) — mas não rastreia
+  comissão nesse estado. Não usar/publicar link de programa pendente até
+  o status virar "Inscrito".
+
+## DECISÃO ESTRATÉGICA GRANDE (15/07, Priscila): parar de depender do catálogo fixo
+O catálogo `AMZ_PRODUCTS`/`AMZ_PRODUCTS_ES` dentro do `index.html` (~1500
+produtos) foi criado só pra "esquentar" o site no início e gerar as
+vendas iniciais que desbloqueariam a API da Amazon — **nunca foi pra ser
+a espinha dorsal permanente do site**. Com Eudora e L'Occitane já
+funcionando como fontes de dados reais (Awin), a Priscila decidiu:
+
+1. **A busca do site não pode depender só do catálogo fixo.** Hoje, se a
+   marca/produto não está pré-cadastrada em `AMZ_PRODUCTS`, a busca
+   simplesmente não encontra nada — mesmo que uma loja parceira (Eudora,
+   L'Occitane, ou no futuro Beleza na Web) realmente venda aquele
+   produto. Exemplo dela: buscar "Redken" devia funcionar se a Beleza na
+   Web vender Redken, mesmo sem Redken estar no catálogo fixo. **Ainda
+   não implementado** — precisa que a busca também consulte as lojas
+   conectadas ao vivo (Awin hoje; Apify depois) quando o catálogo fixo
+   não achar nada, em vez de só mostrar "Nenhum produto encontrado".
+2. **Ordem de prioridade das fontes daqui pra frente**: Eudora + L'Occitane
+   (Awin, comissão real) são as fontes principais agora. Scrappa fica
+   em segundo plano por enquanto ("muito erro e confusão" — nas palavras
+   dela) — não removido do código, mas não é mais prioridade de
+   desenvolvimento. Amazon volta depois, junto com as fontes da Apify
+   (Mercado Livre quando resolvido, Americanas, etc.) — como mais uma
+   fonte entre várias, não como base do site.
+3. **Próximo passo de código** (ainda não feito): fazer a busca (`renderProds`
+   / caixa "Pesquisar produto ou marca...") tentar uma busca ao vivo nos
+   feeds da Awin quando o catálogo fixo não retornar nada, montando um
+   card "virtual" a partir do resultado real da loja (nome, preço, foto,
+   link — tudo já vem do feed, sem precisar de entrada prévia no catálogo).
