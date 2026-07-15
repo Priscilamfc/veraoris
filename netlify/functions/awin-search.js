@@ -97,7 +97,12 @@ const DEAD_PAGE_PATTERNS = [
   'não existe mais', 'nao existe mais', 'página não encontrada', 'pagina nao encontrada',
   'produto não encontrado', 'produto nao encontrado', 'not found', 'esta página não existe',
   'esta pagina nao existe', 'não encontramos', 'nao encontramos', 'página indisponível',
-  'pagina indisponivel', 'produto indisponível', 'produto indisponivel'
+  'pagina indisponivel', 'produto indisponível', 'produto indisponivel',
+  // Produto ainda existe na loja, mas sem estoque — pro usuário é a mesma frustração de um
+  // link morto (clica em "Comprar" e não dá pra comprar nada), então trata igual.
+  'não está disponível', 'nao esta disponivel', 'indisponível no momento', 'indisponivel no momento',
+  'fora de estoque', 'sem estoque', 'esgotado', 'out of stock', 'quero saber quando estiver disponível',
+  'avise-me quando chegar', 'avise quando chegar'
 ];
 async function isDeadProductLink(url) {
   if (!url) return true;
