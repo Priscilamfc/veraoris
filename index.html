@@ -1525,9 +1525,10 @@ function renderProds(){
     finishRenderProds(pool, g);
   }
 }
-// Card simples pra um resultado vindo AO VIVO de uma loja parceira (Awin), quando o produto
-// não está no catálogo fixo. Já é o preço/link/foto reais de uma loja específica — não precisa
-// de comparação entre lojas, só um botão direto de "ver na loja".
+// Card pra um resultado vindo AO VIVO de uma loja parceira (Awin), quando o produto não está
+// no catálogo fixo. O preço/link/foto reais são dessa loja específica; a Amazon entra como
+// segunda opção de compra (busca, sem preço conhecido) pra sempre haver uma comparação — nunca
+// fica um destino só, igual ao card do catálogo.
 function liveResultCard(r){
   var cur = region==='PT' ? '€ ' : 'R$ ';
   var safeTitle=(r.title||'').replace(/'/g,"");
@@ -1546,6 +1547,7 @@ function liveResultCard(r){
     +'<div><span class="cpc-store">'+(r.store||'')+'</span><span class="cpc-bl">'+(lang==='pt'?'Ver na loja ✓':'View in store ✓')+'</span></div>'
     +'<div style="display:flex;align-items:center;gap:8px"><span class="cpc-amt">'+cur+r.price.toFixed(2)+'</span><button class="cpc-buy">'+(lang==='pt'?'Comprar':'Buy')+'</button></div>'
     +'</a>'
+    +amazonBtnHtml(amzLink(r.title||''), r.store||'', r.title||'')
     +'</div>'
     +'</div></div>';
 }
@@ -1579,6 +1581,13 @@ function finishRenderProds(pool, g){
     var hadCatalogResults=pool.length>0;
     awinSearchPrices(searchedTerm, function(results){
       if(srch!==searchedTerm) return; // a pessoa já buscou outra coisa, descarta
+      // "hidratante" etc. são adjetivos de marketing usados em categorias bem diferentes
+      // (batom hidratante, loção corporal hidratante...) — quando há um filtro de categoria
+      // ativo (Skincare/Maquilhagem/Cabelo), rejeita resultado ao vivo que não bate com ela,
+      // senão aparece batom/loção corporal misturado numa busca de hidratante facial.
+      if(results && cat && cat!=='todas'){
+        results = results.filter(function(r){ return !conflictsWithCategory(cat, r.title); });
+      }
       if(results && results.length){
         // Prioridade: lojas com API/feed de afiliado real (Eudora, L'Occitane) são a
         // primeira leva de resultados; o catálogo fixo (criado só pra esquentar o site no

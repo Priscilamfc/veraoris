@@ -105,22 +105,42 @@ exports.handler = async (event) => {
     const products = await fetchFeed();
     const terms = query.split(/\s+/).filter(Boolean);
 
-    const matches = products
+    const scored = products
       .map((p) => {
         const nameLower = p.name.toLowerCase();
         const score = terms.reduce((acc, t) => acc + (nameLower.includes(t) ? 1 : 0), 0);
         return { p, score };
       })
       .filter((m) => m.score > 0)
-      .sort((a, b) => b.score - a.score)
-      .slice(0, 10)
-      .map((m) => ({
-        title: m.p.name,
-        price: m.p.price,
-        store: m.p.merchant || 'Eudora',
-        link: m.p.link,
-        image: m.p.image || null
-      }));
+      .sort((a, b) => b.score - a.score);
+
+    // Uma loja com catálogo muito maior (ex: Eudora, 1797 produtos) pode sozinha preencher os
+    // 10 primeiros lugares e nunca deixar uma loja menor (ex: L'Occitane, 274 produtos) aparecer,
+    // mesmo quando ela também tem produtos relevantes. Round-robin por loja garante que todas as
+    // lojas com resultado relevante apareçam, em vez de só a com mais produtos no feed.
+    const byStore = new Map();
+    scored.forEach((m) => {
+      const key = m.p.merchant || 'Eudora';
+      if (!byStore.has(key)) byStore.set(key, []);
+      byStore.get(key).push(m);
+    });
+    const queues = Array.from(byStore.values());
+    const balanced = [];
+    let i = 0;
+    while (balanced.length < 10 && queues.some((q) => q.length > i)) {
+      queues.forEach((q) => {
+        if (balanced.length < 10 && q[i]) balanced.push(q[i]);
+      });
+      i++;
+    }
+
+    const matches = balanced.map((m) => ({
+      title: m.p.name,
+      price: m.p.price,
+      store: m.p.merchant || 'Eudora',
+      link: m.p.link,
+      image: m.p.image || null
+    }));
 
     console.log('AWIN busca "' + query + '" ->', matches.length, 'resultado(s), lojas:', matches.map((m) => m.store).join(', '));
     return { statusCode: 200, headers, body: JSON.stringify({ results: matches }) };
