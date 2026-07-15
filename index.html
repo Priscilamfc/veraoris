@@ -1065,19 +1065,21 @@ function inferCat(text){
   return null;
 }
 // Preload a real product photo from the free Eudora feed (no Scrappa credits used).
-// Only trusts a match that is actually the same TYPE of product (any brand is fine) — plain
+// D3: only trusts a match that is the same BRAND and same TYPE of product — plain
 // word-overlap scoring alone can match an unrelated product (ex: a brush, or a lipstick that
 // also happens to say "hidratante") which would show a completely wrong photo.
-function preloadEudoraImage(imgId, searchTerm, sub, cat){
+function preloadEudoraImage(imgId, searchTerm, sub, cat, brand){
   awinSearchPrices(searchTerm, function(results){
     var kws=subKeywords(sub);
     var effCat=cat||inferCat(searchTerm);
+    var brandLower=(brand||'').toLowerCase();
     var withPhoto=(results||[]).find(function(r){
       if(!r.image) return false;
-      if(effCat && conflictsWithCategory(effCat, r.title)) return false;
       var t=(r.title||'').toLowerCase();
+      if(brandLower && t.indexOf(brandLower)<0) return false;
+      if(effCat && conflictsWithCategory(effCat, r.title)) return false;
       if(sub) return kws.some(function(k){return t.indexOf(k.toLowerCase())>=0;});
-      return looseTypeMatch(searchTerm, r.title);
+      return !brandLower && looseTypeMatch(searchTerm, r.title);
     });
     if(withPhoto){
       var imgEl=document.getElementById(imgId);
@@ -1936,7 +1938,7 @@ function renderPromosHome(){
         +'</div>';
     }).join('');
     if(region==='BR'){
-      promos.forEach(function(p,i){ preloadEudoraImage(promoImgIds[i], p.brand+' '+p.name); });
+      promos.forEach(function(p,i){ preloadEudoraImage(promoImgIds[i], p.brand+' '+p.name, null, null, p.brand); });
     }
   });
 }
@@ -7054,7 +7056,7 @@ function amzCard(p, auto){
   if(auto){
     setTimeout(function(){ loadComparison(cardId, searchTerm, safeBrand, safeName, link, p.sub, p.cat); }, 50);
   } else if(region==='BR'){
-    setTimeout(function(){ preloadEudoraImage(cardId+'_img', searchTerm, p.sub, p.cat); }, 50);
+    setTimeout(function(){ preloadEudoraImage(cardId+'_img', searchTerm, p.sub, p.cat, safeBrand); }, 50);
   }
 
   return '<div class="cpc">'
@@ -7153,6 +7155,21 @@ function loadComparison(cardId, searchTerm, brand, name, fallbackLink, sub, cat)
     var html='';
     // Drop results from stores that don't belong to this region before doing anything else
     combined = combined.filter(function(r){ return !isWrongRegionStore(r.store); });
+    // D3 (decidida com o Luciano): a Eudora só compara/mostra foto de produtos que
+    // realmente são da MARCA pesquisada — nunca "mesmo tipo, qualquer marca". Sem isso,
+    // qualquer produto que bata uma palavra solta (ex: "hidratante") contaminava a
+    // comparação com preço/foto de um item completamente diferente (achado F3 da auditoria).
+    var brandLower=(brand||'').toLowerCase();
+    var kws0=subKeywords(sub);
+    var effCat0=cat||inferCat(searchTerm);
+    combined = combined.filter(function(r){
+      if(r._source!=='awin') return true;
+      var t=(r.title||'').toLowerCase();
+      if(brandLower && t.indexOf(brandLower)<0) return false;
+      if(effCat0 && conflictsWithCategory(effCat0, r.title)) return false;
+      if(sub) return kws0.some(function(k){return t.indexOf(k.toLowerCase())>=0;});
+      return true;
+    });
     if(combined.length){
       // Sort so results with a real direct link always win over ones without (ex: a Scrappa
       // "Mercado Livre" result with no link vs. the dedicated Mercado Livre source that has
@@ -7186,20 +7203,11 @@ function loadComparison(cardId, searchTerm, brand, name, fallbackLink, sub, cat)
           +'</span>'
           +'</div>';
       });
-      // Only swap in a photo from the Eudora feed (our own structured product data), shown
-      // to the user, and never from Scrappa/Google Shopping thumbnails (frequently mismatched).
-      // Also require the matched Eudora product to be the same TYPE of item (any brand is
-      // fine) — otherwise a loose word-overlap match (ex: a lipstick that also says
-      // "hidratante") can surface a completely unrelated photo.
-      var kws=subKeywords(sub);
-      var effCat=cat||inferCat(searchTerm);
-      var withPhoto=top.find(function(r){
-        if(!r.image || r._source!=='awin') return false;
-        if(effCat && conflictsWithCategory(effCat, r.title)) return false;
-        var t=(r.title||'').toLowerCase();
-        if(sub) return kws.some(function(k){return t.indexOf(k.toLowerCase())>=0;});
-        return looseTypeMatch(searchTerm, r.title);
-      });
+      // Only swap in a photo from the Eudora feed (our own structured product data), never
+      // from Scrappa/Google Shopping thumbnails (frequently mismatched). The brand+type
+      // identity check already happened above when filtering `combined`, so any awin entry
+      // that made it into `top` is already confirmed to be the same product (decision D3).
+      var withPhoto=top.find(function(r){ return r.image && r._source==='awin'; });
       if(withPhoto){
         var imgEl=document.getElementById(cardId+'_img');
         if(imgEl){ imgEl.src=withPhoto.image; imgEl.style.padding='0'; }
