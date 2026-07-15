@@ -7,6 +7,7 @@ const FEED_URLS = [
   process.env.AWIN_EUDORA_FEED_URL,
   process.env.AWIN_LOCCITANE_FEED_URL
 ].filter(Boolean);
+console.log('AWIN variáveis configuradas -> Eudora:', !!process.env.AWIN_EUDORA_FEED_URL, '| L\'Occitane:', !!process.env.AWIN_LOCCITANE_FEED_URL, '| total feeds:', FEED_URLS.length);
 const CACHE_TTL_MS = 30 * 60 * 1000; // 30 minutos
 
 let cache = { data: null, fetchedAt: 0 };
@@ -121,6 +122,7 @@ exports.handler = async (event) => {
         image: m.p.image || null
       }));
 
+    console.log('AWIN busca "' + query + '" ->', matches.length, 'resultado(s), lojas:', matches.map((m) => m.store).join(', '));
     return { statusCode: 200, headers, body: JSON.stringify({ results: matches }) };
   } catch (error) {
     return { statusCode: 200, headers, body: JSON.stringify({ results: [], error: error.message }) };
