@@ -404,3 +404,17 @@ L'Occitane en Provence), então dificilmente o mesmo item exato aparece nas
 duas. O que foi implementado é a próxima melhor coisa: pelo menos duas
 opções de compra por card (loja parceira real + Amazon busca) e nunca
 loja/categoria erradas misturadas.
+
+## Sessão 15/07/2026 (continuação 3) — terceira loja: Ama Beleza BR
+Priscila avisou que a Ama Beleza BR aceitou a parceria na Awin e também tem
+feed de produtos. `awin-search.js` ganhou suporte a esse terceiro feed, no
+mesmo padrão dos anteriores (`AWIN_AMABELEZA_FEED_URL` somada ao array
+`FEED_URLS`) — não precisou mexer em mais nada, o resto do pipeline (busca,
+round-robin por loja, D3 marca+tipo, fallback ao vivo) já combina qualquer
+feed novo automaticamente. Commit `b109371`.
+
+**Falta a Priscila**: gerar o feed da Ama Beleza igual fez com a L'Occitane
+("Crie um Feed" no painel da Awin, mesmas colunas) e colar a URL gerada
+direto na variável `AWIN_AMABELEZA_FEED_URL` no Netlify (nunca no chat/git —
+tem chave de API embutida). Depois de salvar, o Netlify reimplanta sozinho
+e o feed passa a valer.
