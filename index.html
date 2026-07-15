@@ -1525,29 +1525,64 @@ function renderProds(){
     finishRenderProds(pool, g);
   }
 }
-// Card pra um resultado vindo AO VIVO de uma loja parceira (Awin), quando o produto não está
-// no catálogo fixo. O preço/link/foto reais são dessa loja específica; a Amazon entra como
-// segunda opção de compra (busca, sem preço conhecido) pra sempre haver uma comparação — nunca
-// fica um destino só, igual ao card do catálogo.
-function liveResultCard(r){
+// Normaliza um título de produto pra comparação de identidade: minúsculas, sem acento, sem
+// tamanho/unidade (50ml, 200g...), sem pontuação, palavras em ordem alfabética. Duas listagens
+// do mesmo produto em lojas diferentes (ex: a Eudora vende direto E a Ama Beleza revende) tendem
+// a usar o mesmo nome de produto — normalizar assim junta as duas com segurança. Quando o texto
+// difere de verdade (produtos diferentes), a normalização não casa e cada um vira card próprio,
+// então o pior caso de uma paráfrase não pega é só perder a junção, nunca juntar errado.
+function normalizeProductTitle(t){
+  return (t||'').toLowerCase()
+    .normalize('NFD').replace(/[̀-ͯ]/g,'')
+    .replace(/\b\d+([.,]\d+)?\s*(ml|mls|g|gr|kg|un|unid|cm|l)\b/g,'')
+    .replace(/[^a-z0-9\s]/g,' ')
+    .split(/\s+/).filter(Boolean).sort().join(' ');
+}
+// Agrupa resultados ao vivo de várias lojas parceiras pelo mesmo produto (Ama Beleza é
+// multimarca e revende Eudora/L'Occitane, então o mesmo item pode vir de mais de uma fonte) —
+// vira um card só com várias linhas de preço, comparação de verdade, em vez de cards repetidos.
+function groupLiveResults(results){
+  var groups={}, order=[];
+  results.forEach(function(r){
+    var key=normalizeProductTitle(r.title);
+    if(!groups[key]){ groups[key]={title:r.title, image:r.image, items:[]}; order.push(key); }
+    if(!groups[key].image && r.image) groups[key].image=r.image;
+    groups[key].items.push(r);
+  });
+  return order.map(function(key){
+    var g=groups[key];
+    g.items.sort(function(a,b){ return a.price-b.price; });
+    return g;
+  });
+}
+// Card pra um produto vindo AO VIVO de loja(s) parceira(s) (Awin), quando ele não está no
+// catálogo fixo. Se o mesmo produto veio de mais de uma loja (ex: Eudora direto + Ama Beleza
+// revendendo), mostra todas as linhas de preço, igual ao card do catálogo. A Amazon sempre
+// entra como opção extra de compra (busca, sem preço conhecido).
+function liveResultCard(g){
   var cur = region==='PT' ? '€ ' : 'R$ ';
-  var safeTitle=(r.title||'').replace(/'/g,"");
-  var safeStore=(r.store||'').replace(/'/g,"");
-  var img = r.image || ISKIN;
+  var items=g.items;
+  var safeTitle=(g.title||'').replace(/'/g,"");
+  var img = g.image || ISKIN;
+  var rows=items.map(function(r,i){
+    var isBest=i===0;
+    var safeStore=(r.store||'').replace(/'/g,"");
+    return '<a class="cpc-pr'+(isBest?' best':'')+'" href="'+r.link+'" target="_blank" rel="noopener" onclick="trackClick(\''+safeStore+'\',\''+safeTitle+'\','+r.price+')">'
+      +'<div><span class="cpc-store">'+(r.store||'')+'</span><span class="cpc-bl">'+(isBest&&items.length>1?(lang==='pt'?'Melhor preço ✓':'Best price ✓'):(lang==='pt'?'Ver na loja ✓':'View in store ✓'))+'</span></div>'
+      +'<div style="display:flex;align-items:center;gap:8px"><span class="cpc-amt">'+cur+r.price.toFixed(2)+'</span><button class="cpc-buy">'+(lang==='pt'?'Comprar':'Buy')+'</button></div>'
+      +'</a>';
+  }).join('');
   return '<div class="cpc">'
     +'<div class="cpc-img" style="background:var(--gold4)">'
-    +(r.image?'':'<span style="position:absolute;bottom:6px;left:6px;background:rgba(0,0,0,.55);color:#fff;font-size:9px;font-weight:600;padding:3px 9px;border-radius:8px;letter-spacing:.03em">'+(lang==='pt'?'Foto ilustrativa':'Illustrative photo')+'</span>')
-    +'<img src="'+img+'" alt="'+(r.title||'')+'" style="width:100%;height:100%;object-fit:contain;padding:18px">'
+    +(g.image?'':'<span style="position:absolute;bottom:6px;left:6px;background:rgba(0,0,0,.55);color:#fff;font-size:9px;font-weight:600;padding:3px 9px;border-radius:8px;letter-spacing:.03em">'+(lang==='pt'?'Foto ilustrativa':'Illustrative photo')+'</span>')
+    +'<img src="'+img+'" alt="'+(g.title||'')+'" style="width:100%;height:100%;object-fit:contain;padding:18px">'
     +'</div>'
     +'<div class="cpc-body">'
-    +'<div class="cpc-brand">'+(r.store||'')+'</div>'
-    +'<div class="cpc-name">'+(r.title||'')+'</div>'
+    +'<div class="cpc-brand">'+(items.length>1?(lang==='pt'?items.length+' lojas parceiras':items.length+' partner stores'):(items[0].store||''))+'</div>'
+    +'<div class="cpc-name">'+(g.title||'')+'</div>'
     +'<div class="cpc-prices">'
-    +'<a class="cpc-pr best" href="'+r.link+'" target="_blank" rel="noopener" onclick="trackClick(\''+safeStore+'\',\''+safeTitle+'\','+r.price+')">'
-    +'<div><span class="cpc-store">'+(r.store||'')+'</span><span class="cpc-bl">'+(lang==='pt'?'Ver na loja ✓':'View in store ✓')+'</span></div>'
-    +'<div style="display:flex;align-items:center;gap:8px"><span class="cpc-amt">'+cur+r.price.toFixed(2)+'</span><button class="cpc-buy">'+(lang==='pt'?'Comprar':'Buy')+'</button></div>'
-    +'</a>'
-    +amazonBtnHtml(amzLink(r.title||''), r.store||'', r.title||'')
+    +rows
+    +amazonBtnHtml(amzLink(g.title||''), items[0].store||'', g.title||'')
     +'</div>'
     +'</div></div>';
 }
@@ -1589,16 +1624,21 @@ function finishRenderProds(pool, g){
         results = results.filter(function(r){ return !conflictsWithCategory(cat, r.title); });
       }
       if(results && results.length){
-        // Prioridade: lojas com API/feed de afiliado real (Eudora, L'Occitane) são a
-        // primeira leva de resultados; o catálogo fixo (criado só pra esquentar o site no
+        // Prioridade: lojas com API/feed de afiliado real (Eudora, L'Occitane, Ama Beleza) são
+        // a primeira leva de resultados; o catálogo fixo (criado só pra esquentar o site no
         // início) fica como segunda leva, empurrado pra baixo — nunca na frente da API.
-        var liveHtml=results.map(liveResultCard).join('');
+        // Ama Beleza é multimarca (revende Eudora, L'Occitane etc.), então o mesmo produto pode
+        // legitimamente vir de mais de uma loja parceira ao mesmo tempo — agrupa por identidade
+        // de título antes de virar card, pra mostrar comparação de preço de verdade entre elas
+        // em vez de cards repetidos e soltos.
+        var grouped = groupLiveResults(results);
+        var liveHtml=grouped.map(liveResultCard).join('');
         if(hadCatalogResults){
           g.insertAdjacentHTML('afterbegin', liveHtml);
-          if(cnt0)cnt0.textContent=(lang==='pt'?results.length+' em lojas parceiras + ':results.length+' from partner stores + ')+cnt0.textContent;
+          if(cnt0)cnt0.textContent=(lang==='pt'?grouped.length+' em lojas parceiras + ':grouped.length+' from partner stores + ')+cnt0.textContent;
         } else {
           g.innerHTML=liveHtml;
-          if(cnt0)cnt0.textContent=(lang==='pt'?results.length+' resultado(s) em lojas parceiras':results.length+' result(s) from partner stores');
+          if(cnt0)cnt0.textContent=(lang==='pt'?grouped.length+' resultado(s) em lojas parceiras':grouped.length+' result(s) from partner stores');
         }
         return;
       }
