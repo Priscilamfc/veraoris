@@ -1580,10 +1580,13 @@ function finishRenderProds(pool, g){
     awinSearchPrices(searchedTerm, function(results){
       if(srch!==searchedTerm) return; // a pessoa já buscou outra coisa, descarta
       if(results && results.length){
+        // Prioridade: lojas com API/feed de afiliado real (Eudora, L'Occitane) são a
+        // primeira leva de resultados; o catálogo fixo (criado só pra esquentar o site no
+        // início) fica como segunda leva, empurrado pra baixo — nunca na frente da API.
         var liveHtml=results.map(liveResultCard).join('');
         if(hadCatalogResults){
-          g.insertAdjacentHTML('beforeend', liveHtml);
-          if(cnt0)cnt0.textContent+=(lang==='pt'?' + '+results.length+' em lojas parceiras':' + '+results.length+' from partner stores');
+          g.insertAdjacentHTML('afterbegin', liveHtml);
+          if(cnt0)cnt0.textContent=(lang==='pt'?results.length+' em lojas parceiras + ':results.length+' from partner stores + ')+cnt0.textContent;
         } else {
           g.innerHTML=liveHtml;
           if(cnt0)cnt0.textContent=(lang==='pt'?results.length+' resultado(s) em lojas parceiras':results.length+' result(s) from partner stores');
@@ -7236,13 +7239,16 @@ function isWrongRegionStore(storeName){
   }
   return false;
 }
+// Priscila (15/07): Scrappa desativado por enquanto — "muito erro e confusão" (links caindo
+// no Google Shopping em vez da loja, preço/loja embaralhados por bug de pareamento — achado F1
+// da auditoria). Prioridade agora é 100% as fontes com afiliação real (Awin: Eudora, L'Occitane).
+var SCRAPPA_ENABLED=false;
 function loadComparison(cardId, searchTerm, brand, name, fallbackLink, sub, cat){
   var rawCombined=[];
-  // Scrappa + Awin are fast APIs — the card renders as soon as those two answer.
-  // Mercado Livre (Apify) is a real scraper and can take much longer; it's treated as a
-  // non-blocking enhancement that patches the card afterwards if/when it arrives, instead
-  // of making every card wait on the slowest source before showing any price at all.
-  var pending = region==='BR' ? 2 : 1;
+  // Awin é a fonte rápida — o card renderiza assim que ela responde. Mercado Livre (Apify) é
+  // um scraper de verdade e pode demorar bem mais; é tratado como um complemento que atualiza
+  // o card depois, se/quando chegar, sem nunca atrasar a exibição inicial.
+  var pending = (region==='BR') ? 1 : (SCRAPPA_ENABLED ? 1 : 0);
   function renderCombined(){
     var el=document.getElementById(cardId);
     if(!el) return; // card may no longer be on screen
@@ -7334,7 +7340,7 @@ function loadComparison(cardId, searchTerm, brand, name, fallbackLink, sub, cat)
     pending--;
     if(pending<=0) renderCombined();
   }
-  scrappaSearchPrices(searchTerm, function(results){ onSource(results, 'scrappa'); });
+  if(SCRAPPA_ENABLED) scrappaSearchPrices(searchTerm, function(results){ onSource(results, 'scrappa'); });
   if(region==='BR') awinSearchPrices(searchTerm, function(results){ onSource(results, 'awin'); });
   // Mercado Livre doesn't count towards `pending` — if it comes back after the card already
   // rendered, just fold it in and re-render so it can improve the result (real link, maybe a
@@ -7367,7 +7373,7 @@ function toggleFAQ(i,btn){
   document.querySelectorAll('.faq-q').forEach(function(x){x.classList.remove('open');});
   if(!isOpen){a.classList.add('open');btn.classList.add('open');}
 }
-function doHeroSearch(){var q=document.getElementById('heroSearch').value.trim();if(q){srch=q.toLowerCase();showPage('compare');renderCats('catFilters');renderProds();}}
+function doHeroSearch(){var q=document.getElementById('heroSearch').value.trim();if(q){srch=q.toLowerCase();showPage('compare');}}
 document.addEventListener('keydown',function(e){if(e.key==='Enter'&&document.activeElement.id==='heroSearch')doHeroSearch();});
 function submitContact(){
   var n=document.getElementById('cName').value.trim(),em=document.getElementById('cEmail').value.trim(),m=document.getElementById('cMsg').value.trim();
