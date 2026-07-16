@@ -666,3 +666,31 @@ produto — sempre caem na busca nativa do site delas. Só a L'Occitane
 mantém link direto (não apresentou esse problema nos testes). Se o feed
 de alguma das duas for corrigido no futuro e o link direto voltar a
 funcionar de verdade, é só tirar da lista `UNRELIABLE_LINK_STORES`.
+
+**Priscila recusou a busca como solução definitiva** ("a pessoa tem que
+clicar e ir para o produto certo, senão vale mais ir ao Google ou ao site
+da loja") — com razão, busca não é o mesmo valor que link direto. Como não
+dá pra testar/depurar esse formato de link deste ambiente (sem acesso à
+internet), o caminho combinado foi ela abrir um chamado com o **suporte da
+Awin** perguntando por que os deep links da Eudora e da Ama Beleza caem em
+"produto não encontrado" — quem sabe o formato certo de deep link é a
+própria Awin, evita mais tentativa e erro cego no código.
+
+**Quiz sem comparação, corrigido nesta sessão**: Priscila reparou que os
+resultados do quiz mostravam quase só Amazon (sem linha de preço
+parceira), mesmo com respostas do quiz "alargadas" pra aumentar
+compatibilidade. Causa: o quiz sempre usou só o catálogo fixo
+(`renderAmazonResults`/`getActiveProducts`), nunca foi conectado à busca
+ao vivo (`awinSearchPrices`) que a página de produtos já usa — e como o
+catálogo é majoritariamente marca de farmácia/drugstore (Nivea, CeraVe...)
+que a Eudora/L'Occitane/Ama Beleza não vendem, a regra D3 (marca+tipo)
+rejeitava quase tudo, sobrando só o botão Amazon.
+
+**Corrigido**: `renderAmazonResults` agora chama `renderLiveQuizResults()`
+no final — monta até 3 termos de busca a partir dos tipos de produto
+escolhidos no quiz (`qD.skin_prod`/`hair_prod`/`maq_prod`, via
+`subKeywords()`), busca ao vivo nas lojas parceiras, filtra por categoria,
+deduplica resultado repetido entre os termos, agrupa por identidade
+(`groupLiveResults`, mesmo mecanismo da busca de produtos) e insere como
+complemento no topo da grade de resultados. Commit `6a774e7`. **Ainda não
+confirmado pela Priscila se resolveu.**
