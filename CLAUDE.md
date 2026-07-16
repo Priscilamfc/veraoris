@@ -710,3 +710,20 @@ afiliado que ela gera (`aw_affid=2940275` nos exemplos testados com a
 Eudora), confirma que é o ID certo da conta.
 
 **Nada de código mudou nesta continuação** — só textos de e-mail/suporte.
+
+## Sessão 15/07/2026 (continuação 13) — quarta loja: Natura via Awin
+Priscila avisou que a Natura aceitou a parceria — **pela Awin**, não pelo
+programa próprio (`afiliadosnatura.com.br`) que a `MAPA_LOJAS_AFILIADOS_2026-07.md`
+e a decisão D4 tinham marcado como "fora do plano" por exigir CNPJ + nota
+fiscal brasileira. Isso não é uma contradição: a exclusão da D4 vale só
+para o programa direto (que exige presença fiscal no Brasil); via Awin
+(conta de Portugal da Priscila, sem CNPJ) o mesmo problema não existe —
+mesma lógica que já vale pra Eudora/L'Occitane/Ama Beleza. `awin-search.js`
+ganhou suporte ao quarto feed, mesmo padrão (`AWIN_NATURA_FEED_URL`
+somada ao array `FEED_URLS`). Commit `98a3cc4`.
+
+**Falta a Priscila**: gerar o feed da Natura no painel da Awin ("Crie um
+Feed", mesmas colunas das outras) e colar a URL na variável
+`AWIN_NATURA_FEED_URL` no Netlify — depois **não esquecer o "Trigger
+deploy" manual** (mudar env var sozinho não redeploya as functions, foi
+o que faltou da primeira vez com a Ama Beleza).
