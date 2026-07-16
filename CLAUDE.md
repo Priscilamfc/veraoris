@@ -582,3 +582,38 @@ ou testando com um header `User-Agent` de navegador comum) — sem essa
 visibilidade não dá pra saber se o problema é bot-detection, redirect,
 ou outra coisa, e continuar tentando "no escuro" só gasta mais crédito
 do Netlify de novo.
+
+## Sessão 15/07/2026 (continuação 9) — checagem de imagem também desativada + expectativa realista
+Mesmo com o link morto desativado, a Priscila reportou: (1) Eudora ainda
+caindo em "produto não encontrado" às vezes (**esperado** — é a
+consequência aceita de ter desligado a checagem, não um bug novo); (2)
+Ama Beleza caindo numa página de listagem (**sem correção possível**, já
+documentado antes — link mal cadastrado no feed deles); (3) **nenhuma foto
+de produto real aparecendo mais, pra loja nenhuma** (bug novo, grave); (4)
+achou R$ 299,00 de um batom "estratosférico" (dúvida, não bug).
+
+**(3) corrigido**: a checagem de imagem placeholder (Ama Beleza) sofria do
+mesmo bloqueio de servidor suspeitado na checagem de link — desativada
+também (`IMAGE_CHECK_ENABLED=false`, `awin-search.js`). Fotos voltam a usar
+o campo do feed direto, sem verificação extra. Commit `4777e72`.
+
+**(4) esclarecido, não é bug**: os R$ 299,00 e R$ 249,00 eram de produtos
+**Lancôme** ("Batom Cremoso Cintilante Lancôme L'Absolu Rouge...") — marca
+de luxo revendida pela Ama Beleza, não Eudora nem drugstore. Preço de
+batom Lancôme no Brasil realmente fica nessa faixa — não é erro de
+cálculo nem de leitura do feed.
+
+**Estado combinado depois desta sessão**: as duas checagens extras de
+validação server-side (link morto, imagem placeholder da Ama Beleza) estão
+DESATIVADAS — o site confia direto no que o feed da Awin manda (preço,
+link, foto), sem tentar verificar ao vivo. Isso é uma escolha consciente:
+tentar verificar a partir do servidor Netlify parece esbarrar em proteção
+anti-bot das lojas, e sem conseguir inspecionar a resposta real (ambiente
+sem acesso à internet externa), continuar tentando corrigir "no escuro"
+só cria mais regressões e gasta mais crédito. O que FICA implementado e
+funcionando (confirmado): round-robin por loja, filtro de categoria,
+agrupamento de mesmo produto em várias lojas (`groupLiveResults`), Scrappa
+desligado, API em primeiro lugar. Pendência real de link/foto/preço
+desatualizados no feed é uma limitação conhecida e aceita de qualquer
+comparador baseado em feed de terceiros — mitigada pelo aviso "Preços
+actualizados hoje", não por mais checagem ao vivo por enquanto.
