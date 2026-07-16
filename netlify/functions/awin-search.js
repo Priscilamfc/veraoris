@@ -43,7 +43,15 @@ function parseCsvLine(line) {
 async function fetchOneFeed(feedUrl) {
   const res = await fetch(feedUrl);
   const buf = Buffer.from(await res.arrayBuffer());
-  const decompressed = zlib.gunzipSync(buf).toString('utf-8');
+  // Nem todo feed vem comprimido em gzip — depende de como a pessoa gerou o feed no painel da
+  // Awin (a Natura, por exemplo, veio como CSV puro, sem compressão, diferente dos outros).
+  // Tenta descomprimir; se não for gzip válido, trata como CSV direto.
+  let decompressed;
+  try {
+    decompressed = zlib.gunzipSync(buf).toString('utf-8');
+  } catch (err) {
+    decompressed = buf.toString('utf-8');
+  }
   const lines = decompressed.split('\n').filter(Boolean);
   const header = parseCsvLine(lines[0]).map((h) => h.trim());
   const idx = {};
