@@ -617,3 +617,29 @@ desligado, API em primeiro lugar. Pendência real de link/foto/preço
 desatualizados no feed é uma limitação conhecida e aceita de qualquer
 comparador baseado em feed de terceiros — mitigada pelo aviso "Preços
 actualizados hoje", não por mais checagem ao vivo por enquanto.
+
+## Sessão 15/07/2026 (continuação 10) — Ama Beleza: link direto confirmado quebrado (regra fixa, sem verificação ao vivo)
+Priscila insistiu que TODO clique na Ama Beleza dava errado e provou com 3
+exemplos reais e bem diferentes entre si (shampoo L'Oréal Professionnel,
+hidratante Davines, lip balm Embryolisse — nenhum é "kit"/edição limitada,
+então a teoria de "produto de giro rápido esgota mais" não explicava).
+Um deles nem chegou a "esgotado": foi direto pra "Não encontramos nenhum
+resultado" — ou seja, o `idsku` do feed da Ama Beleza não corresponde mais
+a nenhum produto real no site ao vivo deles. Sistemático, não coincidência.
+
+**Corrigido, sem depender de nenhuma requisição extra** (a checagem via
+servidor já tinha se mostrado furada por bloqueio anti-bot — não dá pra
+repetir esse erro): `awin-search.js` ganhou uma regra fixa —
+`UNRELIABLE_LINK_STORES=['amobeleza','ama beleza']` — qualquer resultado
+cuja loja contenha esse nome já sai marcado `linkOk:false` direto, sem
+verificar nada ao vivo. O cliente (que já sabia lidar com `linkOk:false`
+desde a tentativa anterior) cai automaticamente no botão honesto "Buscar
+na loja" pra Ama Beleza, mantendo preço/nome/foto (que continuam
+confiáveis, só o link de compra direto que não é). Commit `9c54fe8`.
+
+**Pendência real**: o link da Ama Beleza só volta a ser confiável se/quando
+ela corrigir o feed do lado dela (provavelmente reexportar com os idsku
+certos). Até lá, mesmo que ela continue aprovada e enviando dados
+(preço/nome/foto úteis pra comparação), a compra em si sempre passa pela
+busca no site dela, não pelo link direto. Se ela corrigir, é só remover
+a entrada da lista `UNRELIABLE_LINK_STORES`.
