@@ -7134,6 +7134,57 @@ function renderAmazonResults(){
 
   renderAmzPage();
   renderCats('resCatF');
+  renderLiveQuizResults();
+}
+
+// O catálogo fixo (Nivea, CeraVe etc.) raramente casa com Eudora/L'Occitane/Ama Beleza, que
+// vendem sobretudo marca própria — então a maioria dos cards do quiz não tinha nenhuma linha
+// de preço parceira, só o botão Amazon, mesmo a pessoa tendo escolhido tipos de produto bem
+// específicos. Complementa com uma busca ao vivo pelos tipos de produto escolhidos no quiz
+// (mesmas lojas parceiras reais), igual ao que já existe na busca de produtos.
+function quizSearchTerms(){
+  var subs=[];
+  if(qD.cat==='skincare') subs=qD.skin_prod||[];
+  else if(qD.cat==='cabelo') subs=qD.hair_prod||[];
+  else if(qD.cat==='maquiagem') subs=qD.maq_prod||[];
+  var terms=[];
+  subs.forEach(function(sub){
+    var kws=subKeywords(sub);
+    if(kws[0] && terms.indexOf(kws[0])<0) terms.push(kws[0]);
+  });
+  return terms.slice(0,3);
+}
+function renderLiveQuizResults(){
+  if(region!=='BR') return;
+  var terms=quizSearchTerms();
+  if(!terms.length) return;
+  var grid=document.getElementById('resultsGrid');
+  if(!grid) return;
+  var allResults=[], pending=terms.length;
+  terms.forEach(function(term){
+    awinSearchPrices(term, function(results){
+      pending--;
+      if(results && results.length){
+        if(qD.cat && qD.cat!=='todos'){
+          results=results.filter(function(r){ return !conflictsWithCategory(qD.cat, r.title); });
+        }
+        allResults=allResults.concat(results);
+      }
+      if(pending<=0 && allResults.length){
+        // Vários termos podem trazer o mesmo produto de volta — descarta duplicata exata
+        // (mesma loja + mesmo link) antes de agrupar por identidade.
+        var seen={};
+        var deduped=allResults.filter(function(r){
+          var key=(r.store||'')+'|'+(r.link||r.title);
+          if(seen[key]) return false;
+          seen[key]=true;
+          return true;
+        });
+        var grouped=groupLiveResults(deduped);
+        grid.insertAdjacentHTML('afterbegin', grouped.map(liveResultCard).join(''));
+      }
+    });
+  });
 }
 
 function renderAmzPage(){
