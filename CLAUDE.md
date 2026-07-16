@@ -727,3 +727,15 @@ Feed", mesmas colunas das outras) e colar a URL na variável
 `AWIN_NATURA_FEED_URL` no Netlify — depois **não esquecer o "Trigger
 deploy" manual** (mudar env var sozinho não redeploya as functions, foi
 o que faltou da primeira vez com a Ama Beleza).
+
+**Atualização**: Priscila fez os dois passos certinhos (variável +
+trigger deploy), mas a Natura não aparecia em nenhuma busca. Log mostrou
+`AWIN feed falhou: incorrect header check` — erro de zlib, sinal de que o
+buffer não era gzip válido. Causa: o feed da Natura veio em **CSV puro,
+sem compressão**, diferente dos outros três (gzip) — `fetchOneFeed` só
+sabia descomprimir gzip, então descartava o feed inteiro em silêncio
+(capturado pelo catch de `fetchFeed`, virava lista vazia sem erro visível
+pra ninguém perceber, só pelo log). **Corrigido**: tenta gzip primeiro,
+se falhar trata como CSV direto — testado localmente com os dois formatos
+antes de subir. Commit `5880f3f`. **Ainda não confirmado pela Priscila se
+a Natura passou a aparecer.**
