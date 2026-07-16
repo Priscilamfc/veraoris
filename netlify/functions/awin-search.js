@@ -101,15 +101,16 @@ async function isLikelyPlaceholderImage(url) {
 // conseguir testar/confirmar uma correção de verdade (ex: enviar um User-Agent de navegador),
 // os links do feed voltam a ser usados diretamente, sem essa checagem.
 const LINK_CHECK_ENABLED = false;
-// A Ama Beleza tem preço/nome/foto confiáveis no feed, mas o link direto do produto está
-// confirmado quebrado na prática (Priscila testou vários produtos reais e diferentes — shampoo,
-// hidratante, batom, lip balm — todos caindo em "não encontramos nada" ou "produto
-// indisponível"), provavelmente porque o idsku do feed não bate mais com o catálogo Vtex ao
-// vivo deles. Diferente da checagem de link morto (que tentava verificar via servidor e
+// Ama Beleza e Eudora têm preço/nome/foto confiáveis no feed, mas o link direto do produto está
+// confirmado quebrado na prática pra maioria dos produtos (Priscila testou vários produtos reais
+// e diferentes de cada uma — shampoo, hidratante, batom, lip balm, kit — a maioria caindo em
+// "não encontramos nada", "produto indisponível" ou "esta página não existe mais"),
+// provavelmente porque o feed da Awin fica desatualizado mais rápido do que o catálogo ao vivo
+// dessas lojas muda. Diferente da checagem de link morto (que tentava verificar via servidor e
 // mostrou falso positivo por bloqueio anti-bot), isso aqui é uma regra fixa baseada em teste
-// real de uma pessoa — sem depender de nenhuma requisição extra. Remover quando a Ama Beleza
-// corrigir o feed do lado dela.
-const UNRELIABLE_LINK_STORES = ['amobeleza', 'ama beleza'];
+// real de uma pessoa — sem depender de nenhuma requisição extra. Remover cada loja da lista
+// quando o link dela voltar a ser confiável na prática.
+const UNRELIABLE_LINK_STORES = ['amobeleza', 'ama beleza', 'eudora'];
 function hasUnreliableLink(storeName) {
   var s = (storeName || '').toLowerCase();
   return UNRELIABLE_LINK_STORES.some(function (k) { return s.indexOf(k) >= 0; });

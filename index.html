@@ -7267,10 +7267,23 @@ var STORE_DOMAINS = {
   'vicnic.com':'vicnic.com'
 };
 
-// Gera o link mais directo possível para ir à loja: usa o domínio conhecido se existir,
-// senão usa busca Google restrita ao nome da loja (sempre funciona, qualquer loja)
+// Lojas Vtex (Eudora, Ama Beleza) têm busca própria no site que sabemos que funciona de verdade
+// (testado manualmente) — usar a busca delas diretamente é mais confiável do que depender do
+// Google ter indexado a página certa, e leva a pessoa direto pra loja em vez de passar por fora.
+var VTEX_SEARCH_DOMAINS = {
+  'eudora':'eudora.com.br', 'eudora br':'eudora.com.br',
+  'amobeleza':'amobeleza.com.br', 'amobeleza br':'amobeleza.com.br',
+  'ama beleza':'amobeleza.com.br', 'ama beleza br':'amobeleza.com.br'
+};
+// Gera o link mais directo possível para ir à loja: busca própria da loja (Vtex) se for uma
+// loja conhecida, senão busca Google restrita ao domínio, senão busca Google pelo nome da loja
 function storeGoLink(storeName, searchTerm){
   var key = (storeName||'').toLowerCase().trim();
+  var vtexKey = Object.keys(VTEX_SEARCH_DOMAINS).filter(function(k){ return key.indexOf(k)>=0; }).sort(function(a,b){return b.length-a.length;})[0];
+  if(vtexKey){
+    var vtexDomain = VTEX_SEARCH_DOMAINS[vtexKey];
+    return 'https://www.'+vtexDomain+'/'+encodeURIComponent(searchTerm)+'?_q='+encodeURIComponent(searchTerm)+'&map=ft';
+  }
   var domain = STORE_DOMAINS[key];
   if(domain){
     return 'https://www.google.com/search?q=site:'+domain+'+'+encodeURIComponent(searchTerm);
