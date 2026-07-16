@@ -694,3 +694,19 @@ deduplica resultado repetido entre os termos, agrupa por identidade
 (`groupLiveResults`, mesmo mecanismo da busca de produtos) e insere como
 complemento no topo da grade de resultados. Commit `6a774e7`. **Ainda não
 confirmado pela Priscila se resolveu.**
+
+## Sessão 15/07/2026 (continuação 12) — chamado aberto na Awin + reenvio pra Beleza na Web
+Priscila abriu o chamado de suporte com a Awin (usando o texto único que
+preparei, unificando o problema + os 6 exemplos de link quebrado + IDs dos
+anunciantes + confirmação de que os produtos existem no site + datas de
+teste + comparação com a L'Occitane que funciona) — **aguardando resposta**.
+
+Também foi preparado um e-mail pra reenviar à Beleza na Web pedindo o feed
+de produtos (parceria já aprovada na Awin, mas sem feed ainda) — reenvio
+necessário porque a pessoa responsável pelo primeiro contato está de
+férias. E-mail inclui o **ID de publisher da Awin da Priscila: Veraoris
+(2940275)** — esse mesmo número já aparece embutido em todo link de
+afiliado que ela gera (`aw_affid=2940275` nos exemplos testados com a
+Eudora), confirma que é o ID certo da conta.
+
+**Nada de código mudou nesta continuação** — só textos de e-mail/suporte.
