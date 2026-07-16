@@ -6,9 +6,10 @@ const zlib = require('zlib');
 const FEED_URLS = [
   process.env.AWIN_EUDORA_FEED_URL,
   process.env.AWIN_LOCCITANE_FEED_URL,
-  process.env.AWIN_AMABELEZA_FEED_URL
+  process.env.AWIN_AMABELEZA_FEED_URL,
+  process.env.AWIN_NATURA_FEED_URL
 ].filter(Boolean);
-console.log('AWIN variáveis configuradas -> Eudora:', !!process.env.AWIN_EUDORA_FEED_URL, '| L\'Occitane:', !!process.env.AWIN_LOCCITANE_FEED_URL, '| Ama Beleza:', !!process.env.AWIN_AMABELEZA_FEED_URL, '| total feeds:', FEED_URLS.length);
+console.log('AWIN variáveis configuradas -> Eudora:', !!process.env.AWIN_EUDORA_FEED_URL, '| L\'Occitane:', !!process.env.AWIN_LOCCITANE_FEED_URL, '| Ama Beleza:', !!process.env.AWIN_AMABELEZA_FEED_URL, '| Natura:', !!process.env.AWIN_NATURA_FEED_URL, '| total feeds:', FEED_URLS.length);
 const CACHE_TTL_MS = 30 * 60 * 1000; // 30 minutos
 
 let cache = { data: null, fetchedAt: 0 };
