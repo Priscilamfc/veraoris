@@ -66,13 +66,16 @@ async function fetchOneFeed(feedUrl) {
   return products;
 }
 
-// Alguns produtos do feed têm um `image` preenchido, mas apontando pro gráfico genérico
-// "sem foto disponível" que a própria loja (ex: Ama Beleza, via Vtex) serve quando não tem
-// foto real cadastrada pro item — a URL em si não tem nada que denuncie isso, mas o arquivo
-// costuma pesar bem menos que uma foto de produto de verdade. Checagem leve, só nos poucos
-// resultados finais (não no feed inteiro), então o custo é baixo.
+// DESATIVADO (15/07): mesmo problema do LINK_CHECK_ENABLED abaixo — essa checagem buscava
+// cada imagem a partir da function do Netlify (servidor) pra medir o tamanho do arquivo e
+// detectar o gráfico genérico "sem foto disponível" da Ama Beleza. Mas logo depois de ligar a
+// checagem de link (que provou ter o mesmo tipo de bloqueio), as fotos de produto pararam de
+// aparecer pra QUALQUER loja, não só Ama Beleza — sinal de que essas requisições de servidor
+// também estão sendo bloqueadas/alteradas na origem (CDN de imagem), fazendo a checagem
+// descartar foto real por engano. Desativada até dar pra confirmar a causa de verdade.
 const PLACEHOLDER_MAX_BYTES = 8000;
 const CHECK_TIMEOUT_MS = 4500;
+const IMAGE_CHECK_ENABLED = false;
 function fetchWithTimeout(url, ms) {
   const controller = new AbortController();
   const t = setTimeout(() => controller.abort(), ms);
@@ -202,7 +205,7 @@ exports.handler = async (event) => {
     let deadLinkCount = 0;
     await Promise.all(matches.map(async (m) => {
       const checks = [];
-      if (m.image) checks.push(isLikelyPlaceholderImage(m.image).then((dead) => { if (dead) { m.image = null; placeholderCount++; } }));
+      if (IMAGE_CHECK_ENABLED && m.image) checks.push(isLikelyPlaceholderImage(m.image).then((dead) => { if (dead) { m.image = null; placeholderCount++; } }));
       if (LINK_CHECK_ENABLED) checks.push(isDeadProductLink(m.link).then((dead) => { if (dead) { m.linkOk = false; deadLinkCount++; } }));
       await Promise.all(checks);
     }));
