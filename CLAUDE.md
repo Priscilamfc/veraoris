@@ -737,5 +737,23 @@ sabia descomprimir gzip, então descartava o feed inteiro em silêncio
 (capturado pelo catch de `fetchFeed`, virava lista vazia sem erro visível
 pra ninguém perceber, só pelo log). **Corrigido**: tenta gzip primeiro,
 se falhar trata como CSV direto — testado localmente com os dois formatos
-antes de subir. Commit `5880f3f`. **Ainda não confirmado pela Priscila se
-a Natura passou a aparecer.**
+antes de subir. Commit `5880f3f`. **Confirmado pela Priscila: Natura e
+L'Occitane funcionando perfeitamente** (feed carregando, resultados
+aparecendo, link direto funcionando).
+
+## Status das lojas parceiras (16/07/2026)
+- **L'Occitane en Provence BR** — ✅ funcionando perfeitamente (feed +
+  link direto).
+- **Natura BR** — ✅ funcionando perfeitamente (feed + link direto),
+  desde a correção do formato CSV acima.
+- **Eudora BR** — ⚠️ feed funcionando (preço/nome/foto certos), mas link
+  direto de produto confirmado não confiável (`UNRELIABLE_LINK_STORES`) —
+  cai na busca nativa do site dela. **Aguardando resposta da Awin** sobre
+  o chamado aberto (feed desatualizado do lado da loja).
+- **Ama Beleza BR** — ⚠️ mesma situação da Eudora (feed ok, link direto
+  não confiável). Também aguardando resposta da Awin.
+- **Beleza na Web** — aprovada na Awin, mas **sem feed de produtos
+  ainda** — aguardando resposta da loja (segundo e-mail enviado, o
+  primeiro contato estava de férias).
+- **Amazon** — em segundo plano, aguardando liberação da API (regra de
+  10 vendas/30 dias correntes).
