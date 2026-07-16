@@ -101,6 +101,19 @@ async function isLikelyPlaceholderImage(url) {
 // conseguir testar/confirmar uma correção de verdade (ex: enviar um User-Agent de navegador),
 // os links do feed voltam a ser usados diretamente, sem essa checagem.
 const LINK_CHECK_ENABLED = false;
+// A Ama Beleza tem preço/nome/foto confiáveis no feed, mas o link direto do produto está
+// confirmado quebrado na prática (Priscila testou vários produtos reais e diferentes — shampoo,
+// hidratante, batom, lip balm — todos caindo em "não encontramos nada" ou "produto
+// indisponível"), provavelmente porque o idsku do feed não bate mais com o catálogo Vtex ao
+// vivo deles. Diferente da checagem de link morto (que tentava verificar via servidor e
+// mostrou falso positivo por bloqueio anti-bot), isso aqui é uma regra fixa baseada em teste
+// real de uma pessoa — sem depender de nenhuma requisição extra. Remover quando a Ama Beleza
+// corrigir o feed do lado dela.
+const UNRELIABLE_LINK_STORES = ['amobeleza', 'ama beleza'];
+function hasUnreliableLink(storeName) {
+  var s = (storeName || '').toLowerCase();
+  return UNRELIABLE_LINK_STORES.some(function (k) { return s.indexOf(k) >= 0; });
+}
 const DEAD_PAGE_PATTERNS = [
   'não existe mais', 'nao existe mais', 'página não encontrada', 'pagina nao encontrada',
   'produto não encontrado', 'produto nao encontrado', 'not found', 'esta página não existe',
@@ -193,13 +206,18 @@ exports.handler = async (event) => {
       i++;
     }
 
-    const matches = balanced.map((m) => ({
-      title: m.p.name,
-      price: m.p.price,
-      store: m.p.merchant || 'Eudora',
-      link: m.p.link,
-      image: m.p.image || null
-    }));
+    const matches = balanced.map((m) => {
+      const store = m.p.merchant || 'Eudora';
+      const entry = {
+        title: m.p.name,
+        price: m.p.price,
+        store: store,
+        link: m.p.link,
+        image: m.p.image || null
+      };
+      if (hasUnreliableLink(store)) entry.linkOk = false;
+      return entry;
+    });
 
     let placeholderCount = 0;
     let deadLinkCount = 0;
