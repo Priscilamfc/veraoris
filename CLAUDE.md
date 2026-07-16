@@ -643,3 +643,26 @@ certos). Até lá, mesmo que ela continue aprovada e enviando dados
 (preço/nome/foto úteis pra comparação), a compra em si sempre passa pela
 busca no site dela, não pelo link direto. Se ela corrigir, é só remover
 a entrada da lista `UNRELIABLE_LINK_STORES`.
+
+## Sessão 15/07/2026 (continuação 11) — Eudora também entra na lista + busca nativa da loja no fallback
+Priscila testou mais produtos Eudora (não-kit também) a pedido meu e
+confirmou: **a maioria** cai em "Ops! Esta página não existe mais." — não
+é só kit/edição limitada esgotando, é o mesmo padrão sistemático da Ama
+Beleza. Ela também alertou que o fallback (Google) não estava parecendo
+uma solução de verdade pra quem clica.
+
+**Duas mudanças**: (1) `'eudora'` entrou em `UNRELIABLE_LINK_STORES`
+(`awin-search.js`) — mesmo tratamento da Ama Beleza, preço/foto continuam
+mas o link de compra vira busca. (2) `storeGoLink()` (`index.html`) ganhou
+`VTEX_SEARCH_DOMAINS` — pra Eudora e Ama Beleza, em vez de rotear por uma
+busca do Google (que depende do Google ter indexado a página certa), usa a
+busca própria do site delas (formato Vtex: `dominio/termo?_q=termo&map=ft`,
+confirmado funcionando num teste manual da Priscila). Isso leva a pessoa
+direto pro site da loja com resultado de verdade, mais confiável que
+Google. Commit `11ebedc`.
+
+**Consequência aceita**: Eudora e Ama Beleza não têm mais link direto de
+produto — sempre caem na busca nativa do site delas. Só a L'Occitane
+mantém link direto (não apresentou esse problema nos testes). Se o feed
+de alguma das duas for corrigido no futuro e o link direto voltar a
+funcionar de verdade, é só tirar da lista `UNRELIABLE_LINK_STORES`.
