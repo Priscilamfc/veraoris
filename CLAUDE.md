@@ -757,3 +757,23 @@ aparecendo, link direto funcionando).
   primeiro contato estava de férias).
 - **Amazon** — em segundo plano, aguardando liberação da API (regra de
   10 vendas/30 dias correntes).
+
+## Sessão 16/07/2026 — resposta da Awin + contato direto com Eudora e Amobeleza
+A Awin (Partner Success) respondeu ao chamado: confirmaram que a
+implementação da Priscila está correta (`aw_deep_link` usado exatamente
+como fornecido) e que o problema é mesmo do lado de cada anunciante (feed
+desatualizado — URL/SKU que não bate mais com o catálogo ao vivo). Não é
+algo que a Awin corrige centralizadamente; cada anunciante mantém o
+próprio feed. Awin passou dois contatos diretos:
+- Eudora BR → luana.spinelli@awin.com (gestora de conta na Awin)
+- Amobeleza → maria.andrade@amobeleza.com.br (contato direto da loja)
+
+Priscila já enviou e-mail pra cada uma, com os exemplos de link quebrado
+específicos de cada loja (2 exemplos Eudora, 4 exemplos Amobeleza) e o
+mesmo contexto do chamado original. **Aguardando resposta das duas.**
+
+Nada de código mudou nesta sessão — só os e-mails. Quando alguma delas
+corrigir o feed (ou confirmar que os links passam a funcionar), o próximo
+passo é remover a loja correspondente de `UNRELIABLE_LINK_STORES`
+(`netlify/functions/awin-search.js`) pra ela voltar a ter link direto de
+produto no site, em vez de cair na busca nativa.
