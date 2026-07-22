@@ -111,16 +111,14 @@ async function isLikelyPlaceholderImage(url) {
 // conseguir testar/confirmar uma correção de verdade (ex: enviar um User-Agent de navegador),
 // os links do feed voltam a ser usados diretamente, sem essa checagem.
 const LINK_CHECK_ENABLED = false;
-// Ama Beleza e Eudora têm preço/nome/foto confiáveis no feed, mas o link direto do produto está
-// confirmado quebrado na prática pra maioria dos produtos (Priscila testou vários produtos reais
-// e diferentes de cada uma — shampoo, hidratante, batom, lip balm, kit — a maioria caindo em
-// "não encontramos nada", "produto indisponível" ou "esta página não existe mais"),
-// provavelmente porque o feed da Awin fica desatualizado mais rápido do que o catálogo ao vivo
-// dessas lojas muda. Diferente da checagem de link morto (que tentava verificar via servidor e
-// mostrou falso positivo por bloqueio anti-bot), isso aqui é uma regra fixa baseada em teste
-// real de uma pessoa — sem depender de nenhuma requisição extra. Remover cada loja da lista
+// Ama Beleza e Eudora tiveram o link direto do produto confirmado quebrado na prática (feed
+// desatualizado em relação ao catálogo ao vivo da loja). Regra fixa baseada em teste real de uma
+// pessoa — sem depender de nenhuma requisição extra (a checagem via servidor mostrou falso
+// positivo por bloqueio anti-bot, ver LINK_CHECK_ENABLED acima). Remover cada loja da lista
 // quando o link dela voltar a ser confiável na prática.
-const UNRELIABLE_LINK_STORES = ['amobeleza', 'ama beleza', 'eudora'];
+// Ama Beleza removida em 22/07/2026: gerou feed novo na Awin, testado (2 produtos reais,
+// diferentes) e os dois foram pro produto certo (um em estoque, outro esgotado mas página certa).
+const UNRELIABLE_LINK_STORES = ['eudora'];
 function hasUnreliableLink(storeName) {
   var s = (storeName || '').toLowerCase();
   return UNRELIABLE_LINK_STORES.some(function (k) { return s.indexOf(k) >= 0; });
