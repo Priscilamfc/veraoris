@@ -798,15 +798,41 @@ sinal de que o link direto dela está confiável (a lista só marca lojas
 testadas e confirmadas como quebradas na prática, e a Forever Liss ainda
 não apresentou esse problema).
 
+## Sessão 22/07/2026 (continuação) — feeds novos de Eudora e Ama Beleza: só a Ama Beleza melhorou
+Priscila gerou feed novo na Awin pra Eudora e Ama Beleza (mesmo dia da
+Forever Liss), pra testar se o link direto de produto — quebrado desde
+15/07 (ver `UNRELIABLE_LINK_STORES`) — tinha sido corrigido do lado de
+cada loja.
+
+**Teste feito nesta sessão** (via `WebFetch`, que neste ambiente conseguiu
+acessar a internet — diferente de sessões anteriores que registravam "sem
+acesso à internet externa"):
+- **Ama Beleza**: 2 links de produtos reais e diferentes (fluido Davines,
+  shampoo L'Oréal Curl Expression) seguidos até o destino final — os dois
+  foram pro produto certo (um em estoque, outro esgotado mas com a página
+  certa do produto, não mais "não encontramos nada"). **Removida de
+  `UNRELIABLE_LINK_STORES`** — link direto reativado. Commit `3277094`.
+- **Eudora**: todas as tentativas de acesso (inclusive a homepage) deram
+  HTTP 403 — bloqueio anti-bot do lado dela, impede testar por aqui.
+  Priscila testou manualmente no navegador (3-4 produtos reais) e
+  confirmou: **todos caem em "Ops, produto não encontrado"**. Ou seja, o
+  feed novo não corrigiu nada — o problema não é feed desatualizado, é
+  algo mais estrutural do lado da loja. **Continua em
+  `UNRELIABLE_LINK_STORES`**, sem mudança de código. Próximo passo
+  sugerido: avisar de novo o contato direto da Awin pra Eudora
+  (luana.spinelli@awin.com) que o feed novo não resolveu.
+
 ## Status das lojas parceiras (22/07/2026)
 - **L'Occitane en Provence BR** — ✅ funcionando (feed + link direto).
 - **Natura BR** — ✅ funcionando (feed + link direto).
 - **Forever Liss BR** — ✅ funcionando (feed + link direto, confirmado
   nesta sessão).
-- **Eudora BR** — ⚠️ feed ok, link direto não confiável
-  (`UNRELIABLE_LINK_STORES`) — cai na busca nativa do site dela.
-  Aguardando resposta do contato direto (luana.spinelli@awin.com).
-- **Ama Beleza BR** — ⚠️ mesma situação da Eudora. Aguardando resposta do
-  contato direto (maria.andrade@amobeleza.com.br).
+- **Ama Beleza BR** — ✅ funcionando (feed + link direto reativado nesta
+  sessão, feed novo confirmado corrigido).
+- **Eudora BR** — ⚠️ feed ok (preço/nome/foto), mas link direto continua
+  **não confiável mesmo com feed novo** (`UNRELIABLE_LINK_STORES`) — cai
+  na busca nativa do site dela. Confirmado por teste manual da Priscila
+  em 22/07. Precisa de resposta/correção de verdade da loja, não é mais
+  "só gerar feed novo".
 - **Beleza na Web** — aprovada na Awin, sem feed de produtos ainda.
 - **Amazon** — em segundo plano, aguardando liberação da API.
