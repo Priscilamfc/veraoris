@@ -975,10 +975,14 @@ function awinSearchPrices(query, callback){
     callback([]);
   });
 }
-// ── MERCADO LIVRE (via Apify, teste em paralelo com o Scrappa) ──
-// A conta gratuita da Apify tem um limite de memória compartilhado entre execuções
-// simultâneas — como vários cards podem carregar ao mesmo tempo, colocamos as buscas
-// numa fila com no máximo N rodando ao mesmo tempo, em vez de disparar tudo de uma vez.
+// ── MERCADO LIVRE (via Apify) — DESLIGADO (22/07/2026) ──
+// O ator usado (karamelo/mercadolivre-scraper-brasil-portugues) exige no mínimo 100s de
+// execução (navegador completo via xvfb-run); o timeout de 25s da function sempre corta
+// antes disso, então toda chamada gastava crédito da Apify sem nunca trazer resultado.
+// Código mantido, só desligado — reversível trocando ML_ENABLED de volta pra true caso um
+// dia troquemos de ator. Substituído pela Americanas (americanas-search.js), que usa a API
+// VTEX direta (sem navegador) e responde em segundos.
+var ML_ENABLED=false;
 var ML_MAX_CONCURRENT=2, ML_ACTIVE=0, ML_QUEUE=[];
 function mercadoLivreSearchPrices(query, callback){
   ML_QUEUE.push({query:query, callback:callback});
@@ -1001,6 +1005,35 @@ function mlProcessQueue(){
     .finally(function(){
       ML_ACTIVE--;
       mlProcessQueue();
+    });
+  }
+}
+// ── AMERICANAS (via Apify, API VTEX direta — sem navegador, rápido) ──
+// Segunda fonte multimarca (Camada 2), pro catálogo achar preço/foto fiel em marcas que
+// as lojas parceiras da Awin não vendem. Mesmo padrão de fila da Mercado Livre, memória
+// menor porque o ator não usa navegador.
+var AM_MAX_CONCURRENT=3, AM_ACTIVE=0, AM_QUEUE=[];
+function americanasSearchPrices(query, callback){
+  AM_QUEUE.push({query:query, callback:callback});
+  amProcessQueue();
+}
+function amProcessQueue(){
+  while(AM_ACTIVE<AM_MAX_CONCURRENT && AM_QUEUE.length){
+    var job=AM_QUEUE.shift();
+    AM_ACTIVE++;
+    var url = '/.netlify/functions/americanas-search?query='+encodeURIComponent(job.query);
+    fetch(url)
+    .then(function(r){ return r.json(); })
+    .then(function(data){
+      job.callback(data.results || []);
+    })
+    .catch(function(err){
+      console.log('Americanas search failed:', err);
+      job.callback([]);
+    })
+    .finally(function(){
+      AM_ACTIVE--;
+      amProcessQueue();
     });
   }
 }
@@ -7387,8 +7420,11 @@ function loadComparison(cardId, searchTerm, brand, name, fallbackLink, sub, cat)
     var brandLower=(brand||'').toLowerCase();
     var kws0=subKeywords(sub);
     var effCat0=cat||inferCat(searchTerm);
+    // D3 se aplica a qualquer fonte de marketplace multimarca (Awin, Americanas) — só não
+    // se aplica ao Scrappa (já desligado) porque ele nunca teve esse tratamento e não é
+    // prioridade de desenvolvimento no momento.
     combined = combined.filter(function(r){
-      if(r._source!=='awin') return true;
+      if(r._source!=='awin' && r._source!=='americanas') return true;
       var t=(r.title||'').toLowerCase();
       var storeLower=(r.store||'').toLowerCase();
       if(brandLower && t.indexOf(brandLower)<0 && storeLower.indexOf(brandLower)<0) return false;
@@ -7430,11 +7466,11 @@ function loadComparison(cardId, searchTerm, brand, name, fallbackLink, sub, cat)
           +'</span>'
           +'</div>';
       });
-      // Only swap in a photo from the Eudora feed (our own structured product data), never
-      // from Scrappa/Google Shopping thumbnails (frequently mismatched). The brand+type
-      // identity check already happened above when filtering `combined`, so any awin entry
-      // that made it into `top` is already confirmed to be the same product (decision D3).
-      var withPhoto=top.find(function(r){ return r.image && r._source==='awin'; });
+      // Only swap in a photo from structured product data (Awin feeds, Americanas/VTEX API),
+      // never from Scrappa/Google Shopping thumbnails (frequently mismatched). The brand+type
+      // identity check already happened above when filtering `combined`, so any awin/americanas
+      // entry that made it into `top` is already confirmed to be the same product (decision D3).
+      var withPhoto=top.find(function(r){ return r.image && (r._source==='awin'||r._source==='americanas'); });
       if(withPhoto){
         var imgEl=document.getElementById(cardId+'_img');
         if(imgEl){ imgEl.src=withPhoto.image; imgEl.style.padding='0'; }
@@ -7461,11 +7497,18 @@ function loadComparison(cardId, searchTerm, brand, name, fallbackLink, sub, cat)
   }
   if(SCRAPPA_ENABLED) scrappaSearchPrices(searchTerm, function(results){ onSource(results, 'scrappa'); });
   if(region==='BR') awinSearchPrices(searchTerm, function(results){ onSource(results, 'awin'); });
-  // Mercado Livre doesn't count towards `pending` — if it comes back after the card already
-  // rendered, just fold it in and re-render so it can improve the result (real link, maybe a
-  // better price), without ever delaying the initial display.
-  if(region==='BR') mercadoLivreSearchPrices(searchTerm, function(results){
+  // Mercado Livre: desligado (ver ML_ENABLED acima) — ator abandonado, sempre estourava o
+  // timeout sem trazer resultado.
+  if(region==='BR' && ML_ENABLED) mercadoLivreSearchPrices(searchTerm, function(results){
     (results||[]).forEach(function(r){ r._source = 'mercadolivre'; });
+    rawCombined = rawCombined.concat(results||[]);
+    if(pending<=0) renderCombined();
+  });
+  // Americanas doesn't count towards `pending` — mesmo tratamento do Mercado Livre: se
+  // chegar depois do card já ter renderizado, só complementa e re-renderiza, sem nunca
+  // atrasar a exibição inicial.
+  if(region==='BR') americanasSearchPrices(searchTerm, function(results){
+    (results||[]).forEach(function(r){ r._source = 'americanas'; });
     rawCombined = rawCombined.concat(results||[]);
     if(pending<=0) renderCombined();
   });

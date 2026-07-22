@@ -836,3 +836,92 @@ acesso à internet externa"):
   "só gerar feed novo".
 - **Beleza na Web** — aprovada na Awin, sem feed de produtos ainda.
 - **Amazon** — em segundo plano, aguardando liberação da API.
+
+## Sessão 22/07/2026 (continuação) — sessão "perdida" recuperada + Americanas via Apify implementada
+Priscila reportou que uma conversa longa de mais cedo (22/07, ~17:56-17:57)
+tinha sumido depois que o terminal ficou muito tempo aberto — receio de
+estar perdendo trabalho por trocar de nuvem pra Claude Code local. Achado
+importante: **nada foi perdido**, o histórico bruto de toda sessão do
+Claude Code fica salvo em disco automaticamente (pasta
+`~/.claude/projects/...`), só não vira resumo no `CLAUDE.md` sozinho (isso
+sempre exigiu escrita explícita — ver preferência salva em memória:
+atualizar este arquivo proativamente a partir de agora, sem esperar ela
+pedir, sempre que algo mudar de verdade na sessão).
+
+**Recuperando essa sessão perdida**, achei uma decisão real que tinha sido
+tomada e nunca executada: Priscila tinha escolhido explicitamente "Ocultar
+Eudora + começar Americanas via Apify" numa pergunta de múltipla escolha,
+mas a sessão foi pro segundo plano ("backgrounding") logo depois e nunca
+voltou — a decisão nunca virou código. Também achei, nessa recuperação,
+que o **Mercado Livre (ator antigo, abandonado em 15/07 por exigir 100s+
+de execução) nunca tinha sido desligado de fato no código** — toda busca
+de produto em produção continuava disparando uma execução real na Apify
+que sempre estourava o timeout (25s) sem trazer resultado, gastando
+crédito à toa desde então.
+
+**Correção da Priscila sobre a premissa antiga**: a explicação anterior
+(sessão perdida) de que só a Ama Beleza mostra botão "Ir →" porque é a
+única revendedora multimarca das 5 lojas parceiras estava incompleta —
+Priscila apontou que a **Eudora também vende marcas de terceiros**, não só
+linhas próprias (SOUL, Instance). Verificado: o código (`loadComparison`,
+`index.html`) não trata nenhuma loja como especial — a regra D3
+(marca+tipo) é genérica pra qualquer fonte. Se a Eudora realmente carrega
+uma marca do catálogo pra um produto específico, o "Ir →" já deveria
+aparecer sozinho, sem mudança de código. **Ainda em aberto**: nenhum
+exemplo concreto (produto+marca) foi dado ainda pra confirmar se isso
+funciona na prática ou se há um bug real escondido — investigar se ela
+trouxer um caso específico.
+
+**Pesquisa feita** (Apify + WebSearch/WebFetch) sobre alternativas ao
+Mercado Livre abandonado, já que ele não é o único ator disponível:
+- **Americanas Product Scraper** (`gio21/americanas-product-scraper`) —
+  confirmado: usa a API VTEX Catalog **direta, sem navegador**, ~5-10s
+  pra 50 produtos. Mesma tecnologia (VTEX) que a Ama Beleza usa — não é
+  coincidência, é comum em loja brasileira. Candidato ideal, compatível
+  com o timeout de uma function do Netlify. **Escolhido e implementado.**
+- Magazine Luiza (`gio21/magazine-luiza-scraper`) — lê página de busca
+  direto (sem navegador completo), mas tempo de execução não documentado
+  ("segundos a horas") — arriscado demais pro timeout do Netlify, não
+  implementado.
+- Casas Bahia (`pmodinger/casas-bahia-brasil`) — não confirma API direta,
+  timeout padrão de 45s por página — mais arriscado, não implementado.
+- Mercado Livre tem um ator mais novo (`leadercorp/mercadolivre-scraper-br-pro`)
+  que usa HTTP direto na maioria das vezes (só cai pra navegador se
+  bloqueado) — bem melhor que o antigo, mas Priscila pediu pra não
+  investir mais tempo em Mercado Livre agora. Fica anotado como opção
+  futura, não perseguido nesta sessão.
+
+**Implementado**:
+1. `netlify/functions/americanas-search.js` (novo, mesmo padrão de cache
+   de 30min do `mercadolivre-search.js`) — chama o ator
+   `gio21~americanas-product-scraper` com `{searchTerm, maxItems:20,
+   onlyAvailable:true}`, normaliza `name/price/url/imageUrl/brand` do
+   retorno.
+2. Mercado Livre **desligado** (`ML_ENABLED=false`, `index.html`) — só
+   uma flag, reversível, mesmo padrão do `SCRAPPA_ENABLED`. Código do
+   ator antigo mantido, só parou de ser chamado.
+3. `americanasSearchPrices()` adicionada (`index.html`) — mesmo padrão de
+   fila de concorrência do Mercado Livre (`AM_MAX_CONCURRENT=3`), memória
+   menor pedida na function (512MB vs 1024MB do ator antigo, porque não
+   usa navegador). Entra em `loadComparison` como complemento não-
+   bloqueante (mesmo tratamento que o Mercado Livre tinha: se chegar depois
+   do card já ter renderizado, só complementa e re-renderiza).
+4. **Regra D3 estendida pra cobrir a Americanas** — o filtro de marca+tipo
+   em `renderCombined()` só validava resultados `_source==='awin'`;
+   resultados de outras fontes passavam sem checagem nenhuma. Corrigido
+   pra também exigir a validação pra `_source==='americanas'` (a
+   Americanas é multimarca de verdade, precisa da mesma regra rígida —
+   nunca "qualquer marca"). Scrappa continua fora dessa checagem (já
+   desligado, não é prioridade).
+5. Troca de foto do card (`withPhoto`) também estendida: antes só aceitava
+   foto vinda de `_source==='awin'`; agora aceita também `'americanas'`
+   (dado estruturado real da VTEX, não thumbnail do Google — mesmo
+   raciocínio que já valia pra Awin).
+
+Sintaxe validada com `node --check` (function nova + `<script>` inteiro do
+`index.html` extraído e checado) — sem erros. **Ainda não commitado nem
+enviado pro GitHub** — Priscila precisa confirmar que quer commitar (o
+`APIFY_TOKEN` já existe no Netlify, usado antes pelo Mercado Livre, deve
+funcionar sem precisar configurar nada novo). Depois do push, testar ao
+vivo (`americanas-search?query=...`) antes de considerar resolvido —
+ainda não confirmado em produção nesta sessão.
