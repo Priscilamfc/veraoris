@@ -3,14 +3,21 @@ const zlib = require('zlib');
 // Cada loja aprovada na Awin com feed de produtos entra aqui como uma variável de ambiente
 // nova no Netlify. Todas são buscadas e combinadas — não precisa mexer no resto do código
 // pra adicionar mais uma loja, só configurar a variável correspondente no Netlify.
+//
+// Eudora OCULTA (22/07/2026, decisão da Priscila): mesmo com feed novo, o link direto de
+// produto continua quebrado na prática (confirmado por teste manual dela) — problema
+// estrutural do lado da loja, não é mais "só gerar feed novo". Até a Awin/Eudora corrigir
+// de verdade, ela fica fora da comparação inteira (preço/foto/link), não só com o link
+// marcado como não confiável. Reversível: trocar EUDORA_ENABLED de volta pra true.
+const EUDORA_ENABLED = false;
 const FEED_URLS = [
-  process.env.AWIN_EUDORA_FEED_URL,
+  EUDORA_ENABLED ? process.env.AWIN_EUDORA_FEED_URL : null,
   process.env.AWIN_LOCCITANE_FEED_URL,
   process.env.AWIN_AMABELEZA_FEED_URL,
   process.env.AWIN_NATURA_FEED_URL,
   process.env.AWIN_FOREVERLISS_FEED_URL
 ].filter(Boolean);
-console.log('AWIN variáveis configuradas -> Eudora:', !!process.env.AWIN_EUDORA_FEED_URL, '| L\'Occitane:', !!process.env.AWIN_LOCCITANE_FEED_URL, '| Ama Beleza:', !!process.env.AWIN_AMABELEZA_FEED_URL, '| Natura:', !!process.env.AWIN_NATURA_FEED_URL, '| Forever Liss:', !!process.env.AWIN_FOREVERLISS_FEED_URL, '| total feeds:', FEED_URLS.length);
+console.log('AWIN variáveis configuradas -> Eudora:', EUDORA_ENABLED ? !!process.env.AWIN_EUDORA_FEED_URL : 'OCULTA (EUDORA_ENABLED=false)', '| L\'Occitane:', !!process.env.AWIN_LOCCITANE_FEED_URL, '| Ama Beleza:', !!process.env.AWIN_AMABELEZA_FEED_URL, '| Natura:', !!process.env.AWIN_NATURA_FEED_URL, '| Forever Liss:', !!process.env.AWIN_FOREVERLISS_FEED_URL, '| total feeds:', FEED_URLS.length);
 const CACHE_TTL_MS = 30 * 60 * 1000; // 30 minutos
 
 let cache = { data: null, fetchedAt: 0 };

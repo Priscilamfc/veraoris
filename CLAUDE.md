@@ -919,9 +919,72 @@ Mercado Livre abandonado, já que ele não é o único ator disponível:
    raciocínio que já valia pra Awin).
 
 Sintaxe validada com `node --check` (function nova + `<script>` inteiro do
-`index.html` extraído e checado) — sem erros. **Ainda não commitado nem
-enviado pro GitHub** — Priscila precisa confirmar que quer commitar (o
-`APIFY_TOKEN` já existe no Netlify, usado antes pelo Mercado Livre, deve
-funcionar sem precisar configurar nada novo). Depois do push, testar ao
-vivo (`americanas-search?query=...`) antes de considerar resolvido —
-ainda não confirmado em produção nesta sessão.
+`index.html` extraído e checado) — sem erros. Commitado (`eaa1898`) e
+enviado — **confirmado funcionando em produção pela Priscila.**
+
+## Sessão 22/07/2026 (continuação 2) — Eudora ocultada de vez + sexta fonte: Época Cosméticos
+Depois de testar a Americanas em produção, Priscila reportou dois problemas
+e pediu mais lojas:
+1. Um item da Eudora apareceu nos resultados, mesmo ela tendo decidido
+   antes (na sessão "perdida" recuperada) ocultá-la até a loja corrigir o
+   link de vez — essa parte da decisão não tinha sido implementada ainda
+   (só a parte da Americanas tinha sido feita). **Corrigido**:
+   `netlify/functions/awin-search.js` ganhou `EUDORA_ENABLED=false` — a
+   Eudora sai inteiramente do array `FEED_URLS` (nem é buscada), não só
+   com o link marcado como não confiável. Reversível trocando a flag de
+   volta pra `true` se a loja corrigir o problema estrutural do link.
+2. Card mostrando só 2 opções (Americanas + Amazon) em vez de 3 —
+   **não é bug**: acontece quando só uma fonte multimarca bate marca+tipo
+   (regra D3) pro produto específico. Resolvido indiretamente adicionando
+   mais uma fonte (abaixo), não por afrouxar a regra D3.
+3. Pedido pra pesquisar mais lojas no Apify. Pesquisa (WebSearch +
+   WebFetch): **Época Cosméticos** — grande loja de beleza multimarca do
+   Brasil, vende justamente as marcas de farmácia do catálogo (confirmado:
+   CeraVe disponível, R$63,99), roda em **VTEX** como a Americanas. Melhor
+   ainda: a **API pública de catálogo responde direto, sem precisar de
+   Apify nem pagar por busca** (`/api/catalog_system/pub/products/search`).
+   Achado colateral: a página do produto em si (não a API) mostrou CAPTCHA
+   num teste automatizado — mesma incerteza já vista com a Eudora (pode
+   ser só bloqueio pra tráfego automatizado, sem afetar clique real de
+   navegador — não dá pra confirmar sem teste manual dela). Sephora Brasil
+   também é VTEX mas a API pública devolveu 403 — descartada. Magazine
+   Luiza/Casas Bahia (Apify) continuam arriscadas pro timeout do Netlify —
+   não implementadas, Época é opção melhor e gratuita.
+
+**Implementado**:
+1. `netlify/functions/epoca-search.js` (novo) — chamada HTTP direta na API
+   VTEX da Época (sem Apify, sem token, sem custo), com timeout de 8s via
+   `AbortController` e User-Agent de navegador. Preço vem em centavos
+   (`commertialOffer.Price/100`), escolhe o menor preço entre vendedores
+   com `IsAvailable:true`. Cada resultado sai com `linkOk:false` de
+   propósito — até a Priscila confirmar clicando de verdade, cai no botão
+   "Buscar na loja" em vez do link direto (mesmo tratamento inicial que
+   Eudora/Ama Beleza tiveram).
+2. `epocaSearchPrices()` adicionada (`index.html`), `'época cosméticos'`
+   entrou em `VTEX_SEARCH_DOMAINS` (fallback de busca própria da loja, não
+   Google). D3 (filtro de marca+tipo) e troca de foto em `loadComparison`
+   estendidos pra cobrir `_source==='epoca'`, mesmo tratamento da Awin/
+   Americanas.
+3. **Descoberta importante ao ligar a Época**: a Americanas só tinha sido
+   plugada no card de comparação do catálogo (`loadComparison`) — três
+   outros lugares que usam busca ao vivo (`preloadEudoraImage` pra foto de
+   promoção, `finishRenderProds` pra busca de produtos, e
+   `renderLiveQuizResults` pro quiz) só chamavam a Awin, nunca tinham sido
+   estendidos pra Americanas. Corrigido de forma genérica: nova função
+   `liveMultiSourceSearch()` combina Awin + Americanas + Época numa
+   chamada só (espera as 3 responderem, cada resultado sai marcado com
+   `_source`), e os 3 lugares antigos foram trocados de `awinSearchPrices`
+   pra essa combinada — agora toda busca ao vivo do site (comparação de
+   catálogo, busca de produto, quiz, foto de promoção) usa as 3 fontes,
+   não só a Awin.
+
+Sintaxe validada com `node --check` (as duas functions + `<script>`
+inteiro do `index.html`) — sem erros. **Ainda não commitado nesta
+continuação** — falta o commit+push desta parte (Eudora oculta + Época +
+`liveMultiSourceSearch`).
+
+**Pendência real pra confirmar depois do push**: testar Época em produção
+(preço/foto devem aparecer; o link deve cair em "Buscar na loja" por
+enquanto). Se a Priscila clicar em produtos reais da Época e o link direto
+funcionar bem (sem CAPTCHA pro usuário de verdade), pode tirar o
+`linkOk:false` fixo do `epoca-search.js` e deixar o link direto valer.
