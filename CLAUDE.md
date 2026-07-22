@@ -777,3 +777,36 @@ corrigir o feed (ou confirmar que os links passam a funcionar), o próximo
 passo é remover a loja correspondente de `UNRELIABLE_LINK_STORES`
 (`netlify/functions/awin-search.js`) pra ela voltar a ter link direto de
 produto no site, em vez de cair na busca nativa.
+
+## Sessão 22/07/2026 — quinta loja: Forever Liss BR via Awin
+Priscila avisou que a Forever Liss BR aceitou a parceria na Awin. Mesmo
+padrão das quatro lojas anteriores: `awin-search.js` ganhou a quinta
+entrada no array `FEED_URLS` (`AWIN_FOREVERLISS_FEED_URL`) — resto do
+pipeline (busca, round-robin por loja, D3 marca+tipo, fallback ao vivo,
+agrupamento por identidade) combina o feed novo automaticamente, sem
+precisar mexer em mais nada. Sintaxe validada com `node --check` antes do
+push. Commit `a9f3a94`.
+
+Priscila configurou a variável `AWIN_FOREVERLISS_FEED_URL` no Netlify e
+rodou o "Trigger deploy" manual. **Confirmado funcionando**: testado ao
+vivo direto na function em produção (`awin-search?query=forever liss`)
+— retornou produtos reais da Forever Liss BR (condicionador, kit banho de
+verniz, kit cresce cabelo, máscaras) com preço, foto e link. Diferente da
+Eudora/Ama Beleza, o link da Forever Liss **não** veio marcado
+`linkOk:false` — ou seja, ainda não está na lista `UNRELIABLE_LINK_STORES`,
+sinal de que o link direto dela está confiável (a lista só marca lojas
+testadas e confirmadas como quebradas na prática, e a Forever Liss ainda
+não apresentou esse problema).
+
+## Status das lojas parceiras (22/07/2026)
+- **L'Occitane en Provence BR** — ✅ funcionando (feed + link direto).
+- **Natura BR** — ✅ funcionando (feed + link direto).
+- **Forever Liss BR** — ✅ funcionando (feed + link direto, confirmado
+  nesta sessão).
+- **Eudora BR** — ⚠️ feed ok, link direto não confiável
+  (`UNRELIABLE_LINK_STORES`) — cai na busca nativa do site dela.
+  Aguardando resposta do contato direto (luana.spinelli@awin.com).
+- **Ama Beleza BR** — ⚠️ mesma situação da Eudora. Aguardando resposta do
+  contato direto (maria.andrade@amobeleza.com.br).
+- **Beleza na Web** — aprovada na Awin, sem feed de produtos ainda.
+- **Amazon** — em segundo plano, aguardando liberação da API.
