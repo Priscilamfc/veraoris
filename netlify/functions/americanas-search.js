@@ -65,7 +65,10 @@ async function fetchFeed(query) {
     return cached.data;
   }
 
-  const raw = await runActor({ searchTerm: query, maxItems: 20, onlyAvailable: true });
+  // maxItems reduzido de 20 pra 10 (23/07/2026): loadComparison só usa os top 3 diversificados
+  // por loja mesmo, e um payload menor ajuda a resposta chegar um pouco mais rápido — o grosso
+  // da demora (~5s) é overhead fixo do próprio ator/Apify, não o tamanho do resultado.
+  const raw = await runActor({ searchTerm: query, maxItems: 10, onlyAvailable: true });
   console.log('AMERICANAS itens brutos:', raw.length);
 
   const products = normalizeItems(raw);

@@ -1124,11 +1124,46 @@ round-robin por loja, D3 marca+tipo, fallback ao vivo, agrupamento por
 identidade) já combina o feed novo automaticamente. Sintaxe validada com
 `node --check`.
 
-**Falta a Priscila**: gerar o feed do Boticário no painel da Awin ("Crie
-um Feed", mesmas colunas das outras lojas) e colar a URL na variável
-`AWIN_BOTICARIO_FEED_URL` no Netlify — **não esquecer o "Trigger deploy"
-manual** depois (mudar env var sozinho não redeploya as functions, já
-esqueceu isso antes com a Ama Beleza e a Natura). Formato do feed
-(gzip ou CSV puro) só se sabe depois de configurado — `fetchOneFeed` já
-tenta os dois automaticamente (correção feita pra Natura), não deve
-precisar de ajuste novo.
+Priscila já tinha configurado a variável e disparado o deploy antes do
+código estar no GitHub — expliquei que o env var sozinho não basta, o
+código que referencia ele também precisa estar publicado. Depois do push,
+**confirmado funcionando em produção**: `awin-search?query=hidratante`
+mostrou "oBoticario BR" no rodízio junto com as outras 4 lojas.
+
+## Sessão 23/07/2026 (continuação 5) — lentidão da Americanas (fila de concorrência baixa)
+Priscila reportou, depois do Boticário: cards mostrando só Amazon (ou só
+Amazon + Ama Beleza), demora grande pra mais aparecer, "geralmente só
+aparecem 2 por vez". Investigado em produção:
+- `awin-search` e `americanas-search` **confirmados funcionando** (testei
+  "Nivea" na Americanas: 20 produtos reais, preço certo). Não é bug de
+  dado nenhuma das duas fontes.
+- **Causa real da lentidão**: medi uma chamada isolada da Americanas
+  (`curl` direto na function) — **~5,5 segundos**, overhead do próprio
+  ator do Apify (chamada VTEX + wrapper Apify), não dá pra zerar isso.
+  Com vários cards de produto na tela ao mesmo tempo, cada um disparando
+  sua própria busca da Americanas, e a fila do lado do cliente limitando
+  a só **3 rodando em paralelo** (`AM_MAX_CONCURRENT`), os cards
+  seguintes ficavam esperando na fila mostrando só Ama Beleza (ou nada) +
+  Amazon por um bom tempo até chegar a vez deles — dava a sensação de
+  "só aparecem 2".
+
+**Corrigido**:
+1. `AM_MAX_CONCURRENT` subido de 3 pra 5 (`index.html`) — o ator da
+   Americanas não usa navegador (só 512MB por execução, bem mais leve
+   que o antigo ator do Mercado Livre que exigia concorrência baixa por
+   causa da memória do navegador), suporta mais paralelismo com folga.
+2. `maxItems` da Americanas reduzido de 20 pra 10
+   (`netlify/functions/americanas-search.js`) — `loadComparison` só usa
+   os top 3 diversificados por loja mesmo, payload menor ajuda um pouco
+   (o grosso da demora é overhead fixo do ator, não o tamanho do
+   resultado, então o ganho aqui é menor que o da concorrência).
+
+Sintaxe validada com `node --check` (function + `<script>` inteiro do
+`index.html`) — sem erros.
+
+**Ideia anotada pra depois, não implementada**: um indicador visual tipo
+"buscando mais lojas..." no lugar do 3º espaço do card enquanto a
+Americanas ainda não respondeu, pra não parecer que travou em 2 mesmo
+sabendo que está a caminho. Não implementado nesta sessão (Priscila
+estava de saída) — considerar se a lentidão ainda incomodar depois do
+ajuste de concorrência.
