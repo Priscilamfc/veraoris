@@ -994,12 +994,28 @@ function epocaSearchPrices(query, callback){
     callback([]);
   });
 }
-// Combina Awin + Americanas + Época numa única busca — usado em qualquer lugar que precise
-// de preço/foto ao vivo de mais de uma fonte parceira (busca de produtos, quiz, foto de
-// promoções), pra não repetir a mesma lógica de "esperar todas as fontes responderem" em
+// ── WEPINK (API VTEX pública, chamada direta — sem Apify, sem custo) ──
+// Marca própria (não multimarca) — não ajuda a achar marca de farmácia do catálogo, mas
+// mostra produtos WePink reais quando alguém busca por eles. Página do produto testada e
+// confirmada sem CAPTCHA (23/07/2026) — link direto confiável, diferente da Época.
+function wepinkSearchPrices(query, callback){
+  var url = '/.netlify/functions/wepink-search?query='+encodeURIComponent(query);
+  fetch(url)
+  .then(function(r){ return r.json(); })
+  .then(function(data){
+    callback(data.results || []);
+  })
+  .catch(function(err){
+    console.log('WePink search failed:', err);
+    callback([]);
+  });
+}
+// Combina Awin + Americanas + Época + WePink numa única busca — usado em qualquer lugar que
+// precise de preço/foto ao vivo de mais de uma fonte parceira (busca de produtos, quiz, foto
+// de promoções), pra não repetir a mesma lógica de "esperar todas as fontes responderem" em
 // cada lugar. Cada resultado já sai marcado com `_source` pra quem precisar diferenciar.
 function liveMultiSourceSearch(query, callback){
-  var results=[], waiting=3;
+  var results=[], waiting=4;
   function done(list, source){
     (list||[]).forEach(function(r){ r._source=source; });
     results = results.concat(list||[]);
@@ -1009,6 +1025,7 @@ function liveMultiSourceSearch(query, callback){
   awinSearchPrices(query, function(r){ done(r,'awin'); });
   americanasSearchPrices(query, function(r){ done(r,'americanas'); });
   epocaSearchPrices(query, function(r){ done(r,'epoca'); });
+  wepinkSearchPrices(query, function(r){ done(r,'wepink'); });
 }
 // ── MERCADO LIVRE (via Apify) — DESLIGADO (22/07/2026) ──
 // O ator usado (karamelo/mercadolivre-scraper-brasil-portugues) exige no mínimo 100s de
@@ -7460,7 +7477,7 @@ function loadComparison(cardId, searchTerm, brand, name, fallbackLink, sub, cat)
     // não se aplica ao Scrappa (já desligado) porque ele nunca teve esse tratamento e não é
     // prioridade de desenvolvimento no momento.
     combined = combined.filter(function(r){
-      if(r._source!=='awin' && r._source!=='americanas' && r._source!=='epoca') return true;
+      if(r._source!=='awin' && r._source!=='americanas' && r._source!=='epoca' && r._source!=='wepink') return true;
       var t=(r.title||'').toLowerCase();
       var storeLower=(r.store||'').toLowerCase();
       if(brandLower && t.indexOf(brandLower)<0 && storeLower.indexOf(brandLower)<0) return false;
@@ -7507,7 +7524,7 @@ function loadComparison(cardId, searchTerm, brand, name, fallbackLink, sub, cat)
       // brand+type identity check already happened above when filtering `combined`, so any
       // awin/americanas/epoca entry that made it into `top` is already confirmed to be the
       // same product (decision D3).
-      var withPhoto=top.find(function(r){ return r.image && (r._source==='awin'||r._source==='americanas'||r._source==='epoca'); });
+      var withPhoto=top.find(function(r){ return r.image && (r._source==='awin'||r._source==='americanas'||r._source==='epoca'||r._source==='wepink'); });
       if(withPhoto){
         var imgEl=document.getElementById(cardId+'_img');
         if(imgEl){ imgEl.src=withPhoto.image; imgEl.style.padding='0'; }
@@ -7552,6 +7569,12 @@ function loadComparison(cardId, searchTerm, brand, name, fallbackLink, sub, cat)
   // Época Cosméticos: mesmo tratamento — complemento não-bloqueante.
   if(region==='BR') epocaSearchPrices(searchTerm, function(results){
     (results||[]).forEach(function(r){ r._source = 'epoca'; });
+    rawCombined = rawCombined.concat(results||[]);
+    if(pending<=0) renderCombined();
+  });
+  // WePink: mesmo tratamento — complemento não-bloqueante.
+  if(region==='BR') wepinkSearchPrices(searchTerm, function(results){
+    (results||[]).forEach(function(r){ r._source = 'wepink'; });
     rawCombined = rawCombined.concat(results||[]);
     if(pending<=0) renderCombined();
   });

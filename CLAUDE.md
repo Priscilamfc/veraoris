@@ -1042,5 +1042,42 @@ lado dela — até lá, fica fora.
   confirmado quebrado mesmo com feed novo.
 - **Época Cosméticos** — ❌ desligada (`EPOCA_ENABLED=false`), bloqueio
   anti-bot (CAPTCHA) até no fallback de busca própria.
+- **WePink** — ✅ nova, direta via API VTEX (sem Apify, sem comissão),
+  página do produto testada sem CAPTCHA — link direto confiável.
 - **Beleza na Web** — aprovada na Awin, sem feed de produtos ainda.
 - **Amazon** — em segundo plano, aguardando liberação da API.
+
+## Sessão 23/07/2026 (continuação 2) — sétima fonte: WePink (marca própria, sem comissão)
+Priscila pediu pra achar uma fonte de dados pra WePink (marca de
+maquiagem da Virgínia Fonseca/Samara Pink, roda em VTEX). Testado o mesmo
+padrão da Época (API pública direta) — funcionou, e desta vez **a página
+do produto testada não deu CAPTCHA** (2 produtos reais testados, um em
+estoque outro não, ambos batendo com a API) — diferente da Época, o link
+direto aqui é confiável.
+
+**Implementado**:
+1. `netlify/functions/wepink-search.js` (novo, mesmo padrão da Época mas
+   sem `linkOk:false` — link confiável).
+2. `wepinkSearchPrices()` adicionada, `liveMultiSourceSearch()` estendida
+   pra incluir a WePink (agora 4 fontes: Awin + Americanas + Época +
+   WePink). D3 e troca de foto em `loadComparison` também estendidos pra
+   `_source==='wepink'`.
+
+**Importante, não é multimarca**: a WePink só vende produtos próprios
+(Welips, My Lips etc.) — não ajuda a achar marca de farmácia do catálogo
+(esse papel é da Americanas/Época), só mostra produto WePink real quando
+alguém busca por ele.
+
+**Sem comissão**: integração direta como a Americanas, não afiliada.
+Pesquisado se a WePink tem programa de afiliados de verdade — confirmado
+que existe (aceita CPF, não só CNPJ; pede conta bancária, RG, comprovante
+de residência; aprovação em dias/semanas), mas **não achei o link oficial
+de cadastro** (só guias de terceiros descrevendo o processo, nada
+encontrado no próprio site nesta sessão) — passado à Priscila a
+recomendação de procurar direto no site dela (rodapé/central de ajuda) ou
+contato via SAC perguntando pelo programa de afiliados, já que ela
+consegue navegar o site de verdade (diferente da pesquisa automatizada
+daqui).
+
+Sintaxe validada com `node --check` (function nova + `<script>` inteiro
+do `index.html`) — sem erros. **Ainda não commitado nesta continuação.**
