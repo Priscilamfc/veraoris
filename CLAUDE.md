@@ -1010,3 +1010,37 @@ de novo (preço deve estar certo agora; foto/link continuam como antes —
 reais da Época e o link direto funcionar bem (sem CAPTCHA pro usuário de
 verdade), pode tirar o
 `linkOk:false` fixo do `epoca-search.js` e deixar o link direto valer.
+
+## Sessão 23/07/2026 (continuação) — Época DESLIGADA (CAPTCHA bloqueia até o fallback)
+Priscila testou vários produtos reais da Época depois da correção de
+preço e todos caíram na mesma tela: "Ops! Essa página foi abduzida e não
+está mais no ar" — testei ao vivo (`WebFetch`) tanto o link direto de
+produto quanto o link de busca própria da loja (`storeGoLink`, o
+fallback que devería ser o "plano B" confiável) e **os dois caem em
+CAPTCHA** ("Não sou um robô", contato `abuse@magazineluiza.com.br` — Época
+faz parte do grupo Magalu). Ou seja, diferente da Eudora/Ama Beleza (onde
+só o link direto quebrava e a busca própria da loja funcionava como
+fallback), na Época **nem o fallback é confiável** — não tem plano B
+funcional pra oferecer.
+
+Priscila decidiu remover a Época do site: **`EPOCA_ENABLED=false`**
+(`index.html`, mesmo padrão de flag reversível do `SCRAPPA_ENABLED`/
+`ML_ENABLED`/`EUDORA_ENABLED`) — `epocaSearchPrices()` agora só devolve
+lista vazia sem chamar a function, então ela some de todos os lugares
+(comparação de catálogo, busca de produto, quiz) sem precisar reverter o
+resto do código. Reversível só se a Época resolver o bloqueio anti-bot do
+lado dela — até lá, fica fora.
+
+**Lojas parceiras efetivamente funcionando (23/07/2026)**:
+- **L'Occitane en Provence BR** — ✅ feed + link direto.
+- **Natura BR** — ✅ feed + link direto.
+- **Forever Liss BR** — ✅ feed + link direto.
+- **Ama Beleza BR** — ✅ feed + link direto.
+- **Americanas** (via Apify, `gio21/americanas-product-scraper`) — ✅
+  confirmado retornando produtos reais em produção.
+- **Eudora BR** — ❌ desligada (`EUDORA_ENABLED=false`), link direto
+  confirmado quebrado mesmo com feed novo.
+- **Época Cosméticos** — ❌ desligada (`EPOCA_ENABLED=false`), bloqueio
+  anti-bot (CAPTCHA) até no fallback de busca própria.
+- **Beleza na Web** — aprovada na Awin, sem feed de produtos ainda.
+- **Amazon** — em segundo plano, aguardando liberação da API.

@@ -976,7 +976,13 @@ function awinSearchPrices(query, callback){
   });
 }
 // ── ÉPOCA COSMÉTICOS (API VTEX pública, chamada direta — sem Apify, sem custo) ──
+// DESLIGADA (23/07/2026): Priscila testou vários produtos reais e a página sempre caiu em
+// CAPTCHA/erro ("Ops! Essa página foi abduzida") mesmo com o fallback de busca própria da
+// loja — não é confiável nem pro botão "Buscar na loja". Flag reversível, mesmo padrão do
+// SCRAPPA_ENABLED/ML_ENABLED/EUDORA_ENABLED — reativar só se a Época resolver isso do lado dela.
+var EPOCA_ENABLED=false;
 function epocaSearchPrices(query, callback){
+  if(!EPOCA_ENABLED){ callback([]); return; }
   var url = '/.netlify/functions/epoca-search?query='+encodeURIComponent(query);
   fetch(url)
   .then(function(r){ return r.json(); })
