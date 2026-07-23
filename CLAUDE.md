@@ -1080,4 +1080,37 @@ consegue navegar o site de verdade (diferente da pesquisa automatizada
 daqui).
 
 Sintaxe validada com `node --check` (function nova + `<script>` inteiro
-do `index.html`) — sem erros. **Ainda não commitado nesta continuação.**
+do `index.html`) — sem erros. Commitado (`e3852ab`) e enviado.
+
+## Sessão 23/07/2026 (continuação 3) — Americanas contaminada por categoria errada (corrigido)
+Priscila testou "batom" e reportou: primeira fileira mostrou Ama Beleza/
+Natura/Amazon (ok), as demais só Amazon até a Americanas chegar (esperado,
+complemento não-bloqueante — mesma explicação de sempre, D3 só bate numa
+fonte por produto); WePink não apareceu; e a Americanas trouxe um
+**chocolate** ("Garoto Baton"), uma **boneca Barbie** e material escolar
+formato batom, misturados com maquiagem de verdade.
+
+Investigado direto em produção:
+- **WePink**: confirmado, não é bug — o único produto WePink que bate
+  "batom" (Welips Batom Líquido Matte) está **sem estoque em todas as 10
+  cores** agora. Corretamente filtrado pelo `bestAvailablePrice` (só
+  aceita seller com `IsAvailable:true`).
+- **Americanas**: bug real confirmado. Marketplace geral (vende de tudo),
+  a busca por palavra livre da VTEX bate "batom" em qualquer categoria —
+  chocolate "Garoto Baton" (`/Alimentos e bebidas/Bomboniere/Chocolate/`),
+  lapiseira/caneta formato batom (`/Papelaria/...`), boneca Barbie
+  (`/Brinquedos/`). **Corrigido**: `netlify/functions/americanas-search.js`
+  agora usa o próprio campo `category` que a API já devolve — só aceita
+  resultado cujo `category` comece com `/Beleza e perfumaria` (allowlist,
+  mais confiável que tentar enumerar toda palavra de exclusão possível).
+  Rede de segurança extra por título (`infantil`, `brinquedo`, `faz de
+  conta`) pra pegar o caso raro de brinquedo de maquiagem infantil que a
+  própria Americanas categoriza (erroneamente) dentro de "Beleza e
+  perfumaria/Maquiagem" — **esse caso específico pode não ser 100%
+  filtrado ainda** (categoria não ajuda, título pode variar), é uma
+  limitação conhecida e aceita, não uma promessa de filtro perfeito.
+  Testado em produção (`americanas-search?query=BATOM`): sumiu chocolate/
+  boneca/material escolar, só sobrou produto de beleza real.
+
+Commitado em duas partes: exposição temporária do campo `category` pra
+diagnóstico (`f0bb3c7`) + filtro de verdade (`bb40c0f`). Ambos enviados.
