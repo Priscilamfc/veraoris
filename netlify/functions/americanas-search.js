@@ -8,14 +8,34 @@ const RUN_TIMEOUT_SECS = 20;
 
 let cache = {}; // { [query]: { data, fetchedAt } }
 
+// Americanas é marketplace geral (vende de tudo), então a busca por palavra livre da VTEX
+// devolve muito ruído fora de beleza — testado com "batom": chocolate "Baton", lapiseira/
+// caneta formato batom, kit escolar, boneca Barbie. O campo `category` da própria API já
+// classifica isso certinho (ex: "/Beleza e perfumaria/Maquiagem/Batom/" vs "/Papelaria/...",
+// "/Alimentos e bebidas/...", "/Brinquedos/..."), então filtramos por ele em vez de tentar
+// adivinhar toda palavra de exclusão possível (impossível de enumerar).
+const BEAUTY_CATEGORY_PREFIX = '/beleza e perfumaria';
+// Mesmo dentro de "Beleza e perfumaria" aparece brinquedo de maquiagem infantil mal
+// categorizado (ex: "Kit de Maquiagem Infantil Angel Coroa... /Beleza e perfumaria/
+// Maquiagem/") — rede de segurança extra pelo título.
+const NON_BEAUTY_TITLE_HINTS = ['infantil', 'brinquedo', 'faz de conta'];
+
+function isRealBeautyProduct(it) {
+  const cat = (it.category || '').toLowerCase();
+  if (!cat.startsWith(BEAUTY_CATEGORY_PREFIX)) return false;
+  const t = (it.name || '').toLowerCase();
+  return !NON_BEAUTY_TITLE_HINTS.some((h) => t.indexOf(h) >= 0);
+}
+
 function normalizeItems(items) {
   return (items || [])
+    .filter(isRealBeautyProduct)
     .map((it) => {
       const title = it.name;
       const price = typeof it.price === 'string' ? parseFloat(it.price.replace(/[^\d,.-]/g, '').replace(',', '.')) : it.price;
       const link = it.url;
       if (!title || !price || !link) return null;
-      return { title, price, store: 'Americanas', link, image: it.imageUrl || null, brand: it.brand || null, category: it.category || null };
+      return { title, price, store: 'Americanas', link, image: it.imageUrl || null, brand: it.brand || null };
     })
     .filter(Boolean);
 }
