@@ -1215,3 +1215,53 @@ consertar isso, segui o pedido da Priscila e **removi a opção** de vez
 
 Sintaxe validada com `node --check` (`<script>` inteiro do `index.html`)
 — sem erros.
+
+## Sessão 23/07/2026 (continuação 7) — reordenar preço "sumia" com os cards (bug sério, urgente)
+Priscila testou a correção da ordenação e reportou algo grave: ao escolher
+Menor/Maior preço, a maioria dos cards **sumia**, sobrando só ~6 (o
+`AUTO_LOAD_COUNT`) mostrando Amazon (sem preço, esperado — API da Amazon
+ainda não disponível) ou Ama Beleza (às vezes "não disponível"/"item não
+encontrado"). Ela avisou que isso bloqueia divulgar o site.
+
+**Investigação** (sem acesso a navegador nesta sessão — usuária começou a
+instalar a extensão Claude in Chrome mas optou por não continuar; segui só
+com leitura estática do código + `WebFetch` nas functions/links reais):
+- Testei um link real da Ama Beleza (`awin-search?query=hidratante`) até
+  o destino final — **produto disponível, página real**, não achei
+  evidência de quebra sistemática agora. Pode ter sido produto específico
+  sem estoque no feed (limitação já conhecida de qualquer comparador
+  baseado em feed), não necessariamente uma regressão nova — pedido à
+  Priscila confirmar com exemplo específico se continuar acontecendo.
+- **Botão Amazon sem preço é esperado**, não bug: `amazonBtnHtml()` nunca
+  mostrou preço (não temos API de preço da Amazon ainda, é só link de
+  busca/compra) — comportamento antigo, não mudou nesta sessão.
+- **Causa mais provável do "sumiço" real**: o mecanismo de reordenação ao
+  vivo (`applySortOrder`, dentro de `loadComparison`) já existia de uma
+  sessão bem anterior ("preço é reordenado ao vivo conforme os cards
+  carregam") — mas antes rodava com `AM_MAX_CONCURRENT=3` (Americanas).
+  Nesta MESMA sessão eu subi a concorrência pra 5 (corrigindo a
+  lentidão) — com mais cards resolvendo preço quase ao mesmo tempo, a
+  reordenação (`querySelectorAll('.cpc')` + `appendChild` de cada card)
+  passou a disparar em rajada, muitas vezes por segundo, o que é a
+  explicação mais provável pro comportamento instável relatado (cards em
+  carregamento lento/lazy parecendo "travar"/desaparecer da visão).
+  **Não consegui confirmar 100% o mecanismo exato no browser** (sem
+  acesso a ferramenta de navegador nesta sessão) — é a explicação mais
+  defensável dado o código e o timing (o bug apareceu bem depois do
+  ajuste de concorrência), não uma certeza absoluta.
+
+**Correção aplicada (mitigação conservadora)**: a reordenação automática
+que dispara toda vez que UM card individual termina de carregar o preço
+agora passa por um **debounce de 200ms** (`scheduleSortOrder()`, novo,
+`index.html`) em vez de chamar `applySortOrder` direto — várias chegadas
+de preço próximas no tempo (Awin + Americanas + WePink resolvendo quase
+juntas) agora viram UMA reordenação só, em vez de várias mutações do DOM
+em sequência rápida. A troca manual do seletor pela Priscila continua
+imediata (`onSortChange`/`onSortChangeQuiz` chamam `applySortOrder`
+direto, sem debounce — só o gatilho automático em segundo plano foi
+suavizado).
+
+Sintaxe validada com `node --check`. **Commitado e enviado, mas ainda não
+confirmado pela Priscila se resolveu de vez** — pedido pra ela retestar e,
+se persistir, mandar print de tela (não consigo reproduzir/depurar isso
+sem ver acontecer, ambiente sem navegador nesta sessão).

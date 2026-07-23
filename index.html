@@ -1799,6 +1799,17 @@ function applySortOrder(gridId, sortValue){
   });
   cards.forEach(function(c){ g.appendChild(c); });
 }
+// Agrupa chamadas repetidas de applySortOrder que chegam muito perto uma da outra (várias
+// fontes de preço resolvendo quase ao mesmo tempo) numa única reordenação, em vez de mexer
+// no DOM várias vezes por segundo.
+var _sortDebounce={};
+function scheduleSortOrder(gridId, sortValue){
+  if(_sortDebounce[gridId]) clearTimeout(_sortDebounce[gridId]);
+  _sortDebounce[gridId]=setTimeout(function(){
+    delete _sortDebounce[gridId];
+    applySortOrder(gridId, sortValue);
+  }, 200);
+}
 function renderProdsPage(){
   var g=document.getElementById('productGrid');if(!g)return;
   var wrap=document.getElementById('prodVmWrap');
@@ -7566,17 +7577,22 @@ function loadComparison(cardId, searchTerm, brand, name, fallbackLink, sub, cat)
     html += amazonBtnHtml(fallbackLink, brand, name);
     el.innerHTML = html;
     // Record this card's cheapest known (displayed) price so the price sort options can use
-    // it — reordering already-loaded cards live, without ever re-fetching anything. This same
-    // function serves cards on both the product comparator (#productGrid) and the quiz
-    // results page (#resultsGrid) — descobre em qual grid o card está de verdade, em vez de
-    // assumir sempre #productGrid, senão a ordenação nunca reagia no quiz.
+    // it later. This same function serves cards on both the product comparator (#productGrid)
+    // and the quiz results page (#resultsGrid).
     var cardEl=el.closest('.cpc');
     if(cardEl && typeof top!=='undefined' && top && top.length){
       cardEl.dataset.price = top[0].price;
       var parentGrid=cardEl.closest('.cmp-grid');
       if(parentGrid){
         var activeSort = parentGrid.id==='resultsGrid' ? srtQuiz : srt;
-        if(activeSort==='price_asc'||activeSort==='price_desc') applySortOrder(parentGrid.id, activeSort);
+        // Debounced, não direto: com vários cards resolvendo o preço quase ao mesmo tempo
+        // (Awin + Americanas + WePink, concorrência mais alta desde o ajuste de velocidade),
+        // reordenar o grid inteiro (querySelectorAll + appendChild de cada card) toda vez que
+        // UM card individual termina causava uma rajada de mutações do DOM em sequência muito
+        // rápida — suspeito de ser a causa de cards da fila de carregamento lento (lazy)
+        // ficarem "presos" sem nunca completar a comparação. Agrupa várias chegadas próximas
+        // numa única reordenação, bem menos agressivo com o DOM.
+        if(activeSort==='price_asc'||activeSort==='price_desc') scheduleSortOrder(parentGrid.id, activeSort);
       }
     }
   }
