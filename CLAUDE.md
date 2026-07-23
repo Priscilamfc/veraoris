@@ -1114,3 +1114,21 @@ Investigado direto em produção:
 
 Commitado em duas partes: exposição temporária do campo `category` pra
 diagnóstico (`f0bb3c7`) + filtro de verdade (`bb40c0f`). Ambos enviados.
+
+## Sessão 23/07/2026 (continuação 4) — oitava loja: O Boticário BR via Awin
+Priscila avisou que O Boticário BR aceitou a parceria na Awin (mesmo grupo
+da Eudora — Grupo Boticário). Mesmo padrão de sempre:
+`netlify/functions/awin-search.js` ganhou a entrada
+`AWIN_BOTICARIO_FEED_URL` no array `FEED_URLS` — resto do pipeline (busca,
+round-robin por loja, D3 marca+tipo, fallback ao vivo, agrupamento por
+identidade) já combina o feed novo automaticamente. Sintaxe validada com
+`node --check`.
+
+**Falta a Priscila**: gerar o feed do Boticário no painel da Awin ("Crie
+um Feed", mesmas colunas das outras lojas) e colar a URL na variável
+`AWIN_BOTICARIO_FEED_URL` no Netlify — **não esquecer o "Trigger deploy"
+manual** depois (mudar env var sozinho não redeploya as functions, já
+esqueceu isso antes com a Ama Beleza e a Natura). Formato do feed
+(gzip ou CSV puro) só se sabe depois de configurado — `fetchOneFeed` já
+tenta os dois automaticamente (correção feita pra Natura), não deve
+precisar de ajuste novo.
