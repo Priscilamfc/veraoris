@@ -15,7 +15,7 @@ function normalizeItems(items) {
       const price = typeof it.price === 'string' ? parseFloat(it.price.replace(/[^\d,.-]/g, '').replace(',', '.')) : it.price;
       const link = it.url;
       if (!title || !price || !link) return null;
-      return { title, price, store: 'Americanas', link, image: it.imageUrl || null, brand: it.brand || null };
+      return { title, price, store: 'Americanas', link, image: it.imageUrl || null, brand: it.brand || null, category: it.category || null };
     })
     .filter(Boolean);
 }
