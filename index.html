@@ -826,7 +826,7 @@ textarea.form-inp{resize:vertical;min-height:140px}
   <div class="cmp-ctrl">
     <input class="cmp-inp" type="text" id="searchBox" placeholder="Pesquisar produto ou marca…" oninput="srch=this.value.toLowerCase();renderProds()">
     <select class="cmp-sel" id="sortBy" onchange="onSortChange(this.value)">
-      <option value="price_asc" id="so1">Menor preço</option><option value="price_desc" id="so2">Maior preço</option><option value="popular" id="so3">Mais vendidos</option><option value="name" id="so4">Nome A–Z</option>
+      <option value="price_asc" id="so1">Menor preço</option><option value="price_desc" id="so2">Maior preço</option><option value="popular" id="so3">Mais vendidos</option>
     </select>
   </div>
   <div class="cat-pills" id="catFilters"></div>
@@ -869,6 +869,11 @@ textarea.form-inp{resize:vertical;min-height:140px}
   <h2 class="sec-title" id="resTitle">Os melhores produtos <em>para si</em></h2>
   <div class="prof-tags" id="profBox"></div>
   <div class="res-notice">ℹ️ <strong>Aviso:</strong> As recomendações são informativas. A VERAORIS não vende produtos directamente. Preços podem variar — confirme sempre na loja. Alguns links são de afiliado e podem gerar comissão sem custo adicional para si.</div>
+  <div class="cmp-ctrl" style="margin-bottom:12px">
+    <select class="cmp-sel" id="sortByQuiz" onchange="onSortChangeQuiz(this.value)">
+      <option value="price_asc">Menor preço</option><option value="price_desc">Maior preço</option><option value="popular">Mais vendidos</option>
+    </select>
+  </div>
   <div class="cat-pills" id="resCatF"></div>
   <div class="cmp-grid" id="resultsGrid"></div>
   <div class="vm-wrap" id="vmWrap" style="display:none">
@@ -1521,8 +1526,11 @@ function applyLang(l){
   // Nav links
   t.nl.forEach(function(n,i){var el=document.getElementById('nl'+(i+1));if(el)el.textContent=n;});
   // Sort options
+  var sortOpts=l==='pt'?['Menor preço','Maior preço','Mais vendidos']:['Lowest price','Highest price','Best sellers'];
   var so=document.getElementById('sortBy');
-  if(so){var opts=l==='pt'?['Menor preço','Maior preço','Mais vendidos','Nome A–Z']:['Lowest price','Highest price','Best sellers','Name A–Z'];so.querySelectorAll('option').forEach(function(o,i){o.textContent=opts[i];});}
+  if(so){so.querySelectorAll('option').forEach(function(o,i){o.textContent=sortOpts[i];});}
+  var soQ=document.getElementById('sortByQuiz');
+  if(soQ){soQ.querySelectorAll('option').forEach(function(o,i){o.textContent=sortOpts[i];});}
   // Quiz cat options
   var qoptMaq=document.getElementById('qoptMaq');if(qoptMaq)qoptMaq.textContent=l==='pt'?'💄 Maquilhagem':'💄 Makeup';
   var qoptAll=document.getElementById('qoptAll');if(qoptAll)qoptAll.textContent=l==='pt'?'🌟 Tudo':'🌟 Everything';
@@ -1594,14 +1602,10 @@ function renderProds(){
       .map(function(x){return x.p;});
   }
 
-  // "Nome A-Z" e "Mais vendidos" dá pra ordenar antes de mostrar (dados que já temos).
-  // "Menor/Maior preço" depende do preço em tempo real de cada produto, que só chega
-  // depois que os cards carregam — por isso são tratados à parte, sem re-pesquisar tudo
-  // (ver applySortOrder), pra não gastar crédito da Scrappa à toa numa simples reordenação.
-  if(srt==='name'){
-    pool=pool.slice().sort(function(a,b){ return (a.brand+' '+a.name).localeCompare(b.brand+' '+b.name); });
-    finishRenderProds(pool, g);
-  } else if(srt==='popular'){
+  // "Mais vendidos" dá pra ordenar antes de mostrar (dados que já temos). "Menor/Maior preço"
+  // depende do preço em tempo real de cada produto, que só chega depois que os cards
+  // carregam — por isso são tratados à parte, sem re-pesquisar tudo (ver applySortOrder).
+  if(srt==='popular'){
     getTrendingProducts(function(trendingMap){
       var ranked=pool.map(function(p){
         var key=p.brand.toLowerCase().trim()+'|'+p.name.toLowerCase().trim();
@@ -1667,7 +1671,7 @@ function liveResultCard(g){
       +'<div style="display:flex;align-items:center;gap:8px"><span class="cpc-amt">'+cur+r.price.toFixed(2)+'</span><button class="cpc-buy">'+(lang==='pt'?'Comprar':'Buy')+'</button></div>'
       +'</a>';
   }).join('');
-  return '<div class="cpc">'
+  return '<div class="cpc" data-price="'+items[0].price+'">'
     +'<div class="cpc-img" style="background:var(--gold4)">'
     +(g.image?'':'<span style="position:absolute;bottom:6px;left:6px;background:rgba(0,0,0,.55);color:#fff;font-size:9px;font-weight:600;padding:3px 9px;border-radius:8px;letter-spacing:.03em">'+(lang==='pt'?'Foto ilustrativa':'Illustrative photo')+'</span>')
     +'<img src="'+img+'" alt="'+(g.title||'')+'" style="width:100%;height:100%;object-fit:contain;padding:18px">'
@@ -1746,20 +1750,42 @@ function finishRenderProds(pool, g){
     });
   }
 }
-// Troca de ordenação: nome/mais vendidos precisam re-render (dados já conhecidos, sem custo
+// Troca de ordenação: mais vendidos precisa re-render (dados já conhecidos, sem custo
 // extra); preço só reordena os cards já na tela usando o que já foi carregado, sem re-buscar.
 function onSortChange(v){
   srt=v;
   if(srt==='price_asc'||srt==='price_desc'){
-    applySortOrder('productGrid');
+    applySortOrder('productGrid', srt);
   } else {
     renderProds();
   }
 }
+// Mesma lógica de onSortChange, mas pra página de resultados do quiz (grid e estado
+// separados do comparador de produtos, pra escolher uma ordenação não afetar a outra página).
+var srtQuiz='price_asc';
+function onSortChangeQuiz(v){
+  srtQuiz=v;
+  if(srtQuiz==='price_asc'||srtQuiz==='price_desc'){
+    applySortOrder('resultsGrid', srtQuiz);
+  } else if(srtQuiz==='popular'){
+    getTrendingProducts(function(trendingMap){
+      var ranked=amzResultsAll.map(function(p){
+        var key=p.brand.toLowerCase().trim()+'|'+p.name.toLowerCase().trim();
+        return {p:p, c:trendingMap[key]||0};
+      });
+      ranked.sort(function(a,b){ return b.c-a.c; });
+      amzResultsAll=ranked.map(function(x){return x.p;});
+      renderAmzPage();
+    });
+  }
+}
 // Reordena os cards já renderizados pelo preço mais barato já conhecido de cada um (guardado
-// em data-price quando a comparação carrega). Cards que ainda não carregaram ficam por último.
-function applySortOrder(gridId){
-  if(srt!=='price_asc' && srt!=='price_desc') return;
+// em data-price quando a comparação carrega, ou já embutido nos cards de resultado ao vivo).
+// Cards que ainda não carregaram ficam por último. `sortValue` vem de quem chama (`srt` no
+// comparador de produtos, `srtQuiz` na página de resultados do quiz) — nunca lê variável
+// global sozinho, pra funcionar certo nas duas páginas ao mesmo tempo.
+function applySortOrder(gridId, sortValue){
+  if(sortValue!=='price_asc' && sortValue!=='price_desc') return;
   var g=document.getElementById(gridId);
   if(!g) return;
   var cards=Array.prototype.slice.call(g.querySelectorAll('.cpc'));
@@ -1769,7 +1795,7 @@ function applySortOrder(gridId){
     if(pa===null && pb===null) return 0;
     if(pa===null) return 1;
     if(pb===null) return -1;
-    return srt==='price_asc' ? pa-pb : pb-pa;
+    return sortValue==='price_asc' ? pa-pb : pb-pa;
   });
   cards.forEach(function(c){ g.appendChild(c); });
 }
@@ -7540,11 +7566,18 @@ function loadComparison(cardId, searchTerm, brand, name, fallbackLink, sub, cat)
     html += amazonBtnHtml(fallbackLink, brand, name);
     el.innerHTML = html;
     // Record this card's cheapest known (displayed) price so the price sort options can use
-    // it — reordering already-loaded cards live, without ever re-fetching anything.
+    // it — reordering already-loaded cards live, without ever re-fetching anything. This same
+    // function serves cards on both the product comparator (#productGrid) and the quiz
+    // results page (#resultsGrid) — descobre em qual grid o card está de verdade, em vez de
+    // assumir sempre #productGrid, senão a ordenação nunca reagia no quiz.
     var cardEl=el.closest('.cpc');
     if(cardEl && typeof top!=='undefined' && top && top.length){
       cardEl.dataset.price = top[0].price;
-      if(srt==='price_asc'||srt==='price_desc') applySortOrder('productGrid');
+      var parentGrid=cardEl.closest('.cmp-grid');
+      if(parentGrid){
+        var activeSort = parentGrid.id==='resultsGrid' ? srtQuiz : srt;
+        if(activeSort==='price_asc'||activeSort==='price_desc') applySortOrder(parentGrid.id, activeSort);
+      }
     }
   }
   function onSource(results, source){

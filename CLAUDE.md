@@ -1167,3 +1167,51 @@ Americanas ainda não respondeu, pra não parecer que travou em 2 mesmo
 sabendo que está a caminho. Não implementado nesta sessão (Priscila
 estava de saída) — considerar se a lentidão ainda incomodar depois do
 ajuste de concorrência.
+
+## Sessão 23/07/2026 (continuação 6) — ordenação corrigida + adicionada na página do quiz
+Priscila reparou dois problemas na ordenação (Menor preço/Maior preço/
+Mais vendidos/Nome A-Z): (1) a opção "Nome A-Z" não parecia respeitar o
+alfabeto de verdade — pediu pra **tirar essa opção** de vez, deixando só
+Menor preço/Maior preço/Mais vendidos, e que a opção escolhida realmente
+funcione; (2) a página de resultados do quiz **não tinha esse seletor
+nenhum** — pediu pra ele aparecer lá também.
+
+**Investigado**: a lógica do "Nome A-Z" (`localeCompare` em brand+name)
+até ordenava certo o catálogo, mas os cards de resultado AO VIVO (Awin/
+Americanas/WePink) sempre entravam no topo da grade via
+`insertAdjacentHTML('afterbegin', ...)`, fora da ordenação alfabética —
+por isso nunca parecia seguir o alfabeto de verdade. Em vez de tentar
+consertar isso, segui o pedido da Priscila e **removi a opção** de vez
+(mais simples e é o que ela queria).
+
+**Corrigido/implementado**:
+1. Opção "Nome A-Z" removida do seletor (`index.html`, `#sortBy`) e do
+   array de tradução PT/EN — só sobrou Menor preço/Maior preço/Mais
+   vendidos. Lógica de sort por nome (`srt==='name'`) removida de
+   `renderProds()`.
+2. **Bug real encontrado e corrigido**: `applySortOrder()` estava com o
+   grid (`'productGrid'`) E a variável de ordenação (`srt`, global) fixos
+   no código — mesmo se um seletor de ordenação existisse na página do
+   quiz, a reordenação ao vivo (disparada de dentro de `loadComparison`
+   quando o preço de um card chega) sempre mexia no grid errado
+   (`productGrid`), nunca no `resultsGrid`. Generalizado:
+   `applySortOrder(gridId, sortValue)` agora recebe os dois como
+   parâmetro; `loadComparison` descobre sozinho em qual grid o card está
+   (`cardEl.closest('.cmp-grid')`) e usa a variável de ordenação certa
+   (`srt` pro comparador, `srtQuiz` novo pro quiz — estados separados, um
+   não deve afetar o outro).
+3. **Seletor de ordenação adicionado na página de resultados do quiz**
+   (`#sortByQuiz`, mesmas 3 opções) — função nova `onSortChangeQuiz()`;
+   "Mais vendidos" ali reordena `amzResultsAll` com os cliques reais do
+   Supabase (`getTrendingProducts`, mesmo mecanismo do comparador) e
+   re-renderiza (`renderAmzPage()`).
+4. **Bug adicional corrigido de passagem** (mesma categoria de "tem que
+   funcionar, não enfeite"): os cards de resultado ao vivo
+   (`liveResultCard`) nunca tinham o atributo `data-price` — na prática,
+   ao ordenar por preço, esses cards sempre caíam pro final (tratados
+   como "sem preço conhecido"), nunca entravam na ordenação de verdade.
+   Corrigido: `data-price` agora é preenchido com o menor preço do grupo
+   (`items[0].price`, já vem ordenado ascendente).
+
+Sintaxe validada com `node --check` (`<script>` inteiro do `index.html`)
+— sem erros.
