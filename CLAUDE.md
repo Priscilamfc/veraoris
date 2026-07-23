@@ -979,12 +979,34 @@ e pediu mais lojas:
    não só a Awin.
 
 Sintaxe validada com `node --check` (as duas functions + `<script>`
-inteiro do `index.html`) — sem erros. **Ainda não commitado nesta
-continuação** — falta o commit+push desta parte (Eudora oculta + Época +
-`liveMultiSourceSearch`).
+inteiro do `index.html`) — sem erros. Commitado (`ee8ef6a`) e enviado.
+
+## Sessão 23/07/2026 — bug de preço da Época corrigido (100x menor)
+Priscila testou em produção e reportou dois pontos: (1) card só mostrando
+Época ou Amazon, nunca as outras 4 lojas parceiras nem a Americanas; (2) a
+Época "não está funcionando". Investigado direto em produção (via
+`WebFetch` nas próprias functions do Netlify):
+- `awin-search.js` e `americanas-search.js` **confirmados funcionando**
+  normalmente (Natura, L'Occitane, Ama Beleza, Forever Liss e Americanas
+  todos retornando produtos reais pra termos genéricos como "hidratante"
+  e "shampoo") — não é um bug generalizado nessas duas fontes.
+- **Bug real encontrado na Época**: preços saindo **100x menores** do que
+  o real (ex: R$0,64 em vez de R$63,99 no CeraVe). Causa: o campo
+  `commertialOffer.Price` da API VTEX da Época já vem **em reais**
+  (63.99), não em centavos como eu tinha assumido antes (baseado numa
+  leitura via WebFetch que sugeriu "6399 (R$63,99)" — provavelmente já
+  era uma reformatação da IA do fetch, não o valor bruto real). Corrigido
+  em `netlify/functions/epoca-search.js`: removida a divisão por 100.
+  Isso sozinho já explica a "Época não está funcionando" (preço
+  claramente errado/quebrado visualmente).
+- O ponto "só aparece Época ou Amazon" **ainda não confirmado se é bug ou
+  comportamento esperado** (mesma explicação de sempre: só uma fonte bate
+  marca+tipo da regra D3 pro produto específico) — pedido à Priscila o
+  nome do produto exato que ela testou pra confirmar qual dos dois é.
 
 **Pendência real pra confirmar depois do push**: testar Época em produção
-(preço/foto devem aparecer; o link deve cair em "Buscar na loja" por
-enquanto). Se a Priscila clicar em produtos reais da Época e o link direto
-funcionar bem (sem CAPTCHA pro usuário de verdade), pode tirar o
+de novo (preço deve estar certo agora; foto/link continuam como antes —
+"Buscar na loja" até confirmação manual). Se a Priscila clicar em produtos
+reais da Época e o link direto funcionar bem (sem CAPTCHA pro usuário de
+verdade), pode tirar o
 `linkOk:false` fixo do `epoca-search.js` e deixar o link direto valer.

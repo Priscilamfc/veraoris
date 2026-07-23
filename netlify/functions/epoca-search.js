@@ -13,7 +13,9 @@ function bestAvailablePrice(product) {
     (item.sellers || []).forEach((seller) => {
       const offer = seller.commertialOffer || {};
       if (offer.IsAvailable && offer.Price) {
-        const price = offer.Price / 100; // API devolve em centavos
+        // Testado em produção (23/07/2026): o campo já vem em reais (ex: 63.99), não em
+        // centavos — dividir por 100 gerava preço 100x menor (R$0,64 em vez de R$63,99).
+        const price = offer.Price;
         if (!best || price < best) best = price;
       }
     });
