@@ -10,14 +10,13 @@ const zlib = require('zlib');
 // de verdade, ela fica fora da comparação inteira (preço/foto/link), não só com o link
 // marcado como não confiável. Reversível: trocar EUDORA_ENABLED de volta pra true.
 const EUDORA_ENABLED = false;
-// Ama Beleza OCULTA (24/07/2026, decisão da Priscila): feed nunca trazia produto nenhum na
-// prática ("nunca tem nenhum produto"). CAUSA REAL ENCONTRADA (24/07, mesma sessão): a
-// variável no Netlify se chama AWIN_AMOBELEZA_FEED_URL ("AMO", igual ao domínio real da loja
-// amobeleza.com.br) mas o código lia AWIN_AMABELEZA_FEED_URL ("AMA") — nome errado, sempre
-// undefined, feed nunca era buscado de verdade. Corrigido abaixo. Continua desligada só até
-// confirmar que o feed em si (agora que a busca vai funcionar) traz produto de verdade —
-// reativar trocando AMABELEZA_ENABLED de volta pra true pra testar.
-const AMABELEZA_ENABLED = false;
+// Ama Beleza REATIVADA (24/07/2026, mesma sessão): estava oculta porque o feed "nunca trazia
+// produto nenhum" — CAUSA REAL ENCONTRADA: a variável no Netlify se chama
+// AWIN_AMOBELEZA_FEED_URL ("AMO", igual ao domínio real da loja amobeleza.com.br) mas o código
+// lia AWIN_AMABELEZA_FEED_URL ("AMA") — nome errado, sempre undefined, feed nunca era buscado
+// de verdade. Corrigido. Reativando pra testar se o feed em si funciona agora. Se voltar a dar
+// problema (feed vazio de verdade, não erro de nome), trocar de volta pra false.
+const AMABELEZA_ENABLED = true;
 const FEED_URLS = [
   EUDORA_ENABLED ? process.env.AWIN_EUDORA_FEED_URL : null,
   process.env.AWIN_LOCCITANE_FEED_URL,
