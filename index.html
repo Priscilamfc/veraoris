@@ -233,7 +233,6 @@ footer{background:linear-gradient(135deg,#FFF5F0,#FFE8F0);padding:40px 40px 24px
 /* PRODUCT CARD */
 @keyframes cardFadeIn{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
 .cpc{background:var(--white);border-radius:var(--r2);border:1px solid var(--marble3);overflow:hidden;transition:all .25s;animation:cardFadeIn .5s ease-out both}
-.cpc-highlight{border-color:var(--gold)!important;box-shadow:0 0 0 3px var(--gold3),0 12px 32px rgba(154,72,53,.25)!important}
 .cpc:nth-child(1){animation-delay:0s}.cpc:nth-child(2){animation-delay:.05s}.cpc:nth-child(3){animation-delay:.1s}
 .cpc:nth-child(4){animation-delay:.15s}.cpc:nth-child(5){animation-delay:.2s}.cpc:nth-child(6){animation-delay:.25s}
 .cpc:hover{border-color:var(--gold2);box-shadow:0 10px 36px rgba(232,144,122,.18);transform:translateY(-3px)}
@@ -260,14 +259,6 @@ footer{background:linear-gradient(135deg,#FFF5F0,#FFE8F0);padding:40px 40px 24px
 .cpc-compare-btn:hover{background:var(--gold3);border-color:var(--gold)}
 .cpc-pr.best .cpc-buy{background:var(--ok);color:white}
 .cpc-save{background:var(--okbg);color:var(--ok);font-size:11px;font-weight:700;padding:6px 12px;border-radius:8px;margin-bottom:10px;border:1px solid rgba(42,107,10,.15)}
-.cpc-dupes-link{display:block;width:100%;background:var(--gold4);border:1.5px dashed var(--border);border-radius:8px;font-size:12px;font-weight:700;color:var(--gold5);cursor:pointer;text-align:center;padding:8px 12px;margin-top:6px;transition:all .2s}
-.cpc-dupes-link:hover{background:var(--gold3);border-color:var(--gold)}
-.cpc-dupes-box{display:flex;flex-direction:column;gap:5px;margin-top:2px;padding-top:8px;border-top:1px dashed var(--marble3)}
-.cpc-dupes-hint{font-size:10px;color:var(--muted);margin-bottom:2px}
-.cpc-dupe-item{display:flex;flex-direction:column;background:var(--marble);border-radius:8px;padding:7px 10px;cursor:pointer;transition:all .2s}
-.cpc-dupe-item:hover{background:var(--gold4)}
-.cpc-dupe-brand{font-size:9px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:var(--gold5)}
-.cpc-dupe-name{font-size:12px;color:var(--text)}
 .btn-add{width:100%;background:none;border:1.5px solid var(--marble3);border-radius:20px;padding:9px;font-size:11px;font-weight:700;color:var(--muted);cursor:pointer;transition:all .2s}
 .btn-add:hover{border-color:var(--gold);color:var(--gold5)}
 .btn-add.added{background:var(--night);color:var(--gold3);border-color:var(--night)}
@@ -1605,7 +1596,11 @@ function showPage(p){
   window.scrollTo({top:0,behavior:'smooth'});
   if(p==='compare'){renderCats('catFilters');renderProds();}
 }
-function goCat(c){cat=c;showPage('compare');renderCats('catFilters');renderProds();}
+// Bug real (24/07/2026): clicar numa categoria no menu não limpava uma busca de texto
+// anterior — o filtro de categoria (`cat`) e a busca antiga (`srch`) ficavam somados, às
+// vezes reduzindo o resultado quase a zero. Navegar por categoria deve mostrar a categoria
+// inteira, não uma busca velha por cima.
+function goCat(c){cat=c;srch='';showPage('compare');renderCats('catFilters');renderProds();}
 function startQuiz(){qD={};qStep=1;document.querySelectorAll('.qstep').forEach(function(s){s.classList.remove('active');});document.getElementById('qs1').classList.add('active');document.getElementById('qprog').style.width='12%';document.querySelectorAll('.qopt').forEach(function(o){o.classList.remove('sel');});showPage('quiz');}
 function renderCats(cid){
   var el=document.getElementById(cid);if(!el)return;
@@ -1743,9 +1738,6 @@ function finishRenderProds(pool, g){
 
   if(pool.length){
     renderProdsPage();
-    // Se não vai rodar busca ao vivo (fora do Brasil, ou sem termo de busca), a grade já está
-    // pronta agora — rola até o alvo do dupe (se houver) sem esperar mais nada.
-    if(!(srch && region==='BR')) setTimeout(scrollToDupeTarget, 60);
   } else {
     if(cnt0)cnt0.textContent='';
     if(wrap)wrap.style.display='none';
@@ -1757,16 +1749,20 @@ function finishRenderProds(pool, g){
         +'</div>';
   }
 
-  // Sempre complementa com resultados AO VIVO das lojas parceiras conectadas (Eudora,
-  // L'Occitane), além do catálogo fixo — não só quando o catálogo não acha nada. Assim,
+  // Sempre complementa com resultados AO VIVO das lojas parceiras conectadas (Boticário,
+  // Natura, WePink...), além do catálogo fixo — não só quando o catálogo não acha nada. Assim,
   // uma busca geral (ex: "hidratante") também mostra o que essas lojas têm de verdade,
   // e uma marca que só existe numa loja parceira (ex: "Redken") aparece mesmo sem estar
   // pré-cadastrada no catálogo.
-  if(srch && region==='BR'){
-    var searchedTerm=srch;
+  // Também dispara ao só NAVEGAR por uma categoria estreita (sem digitar nada) — Perfumaria
+  // tem poucos produtos no catálogo fixo (54), mas Boticário/Natura/WePink têm muito mais
+  // perfume de verdade nas lojas parceiras; sem isso a categoria parecia vazia.
+  var searchedTerm = srch || (cat==='perfumaria' ? 'perfume' : '');
+  if(searchedTerm && region==='BR'){
+    var snapSrch=srch, snapCat=cat;
     var hadCatalogResults=pool.length>0;
     liveMultiSourceSearch(searchedTerm, function(results){
-      if(srch!==searchedTerm) return; // a pessoa já buscou outra coisa, descarta
+      if(srch!==snapSrch || cat!==snapCat) return; // a pessoa já mudou busca/categoria, descarta
       // "hidratante" etc. são adjetivos de marketing usados em categorias bem diferentes
       // (batom hidratante, loção corporal hidratante...) — quando há um filtro de categoria
       // ativo (Skincare/Maquilhagem/Cabelo), rejeita resultado ao vivo que não bate com ela,
@@ -1791,7 +1787,6 @@ function finishRenderProds(pool, g){
           g.innerHTML=liveHtml;
           if(cnt0)cnt0.textContent=(lang==='pt'?grouped.length+' resultado(s) em lojas parceiras':grouped.length+' result(s) from partner stores');
         }
-        setTimeout(scrollToDupeTarget, 60);
         return;
       }
       if(!hadCatalogResults){
@@ -1799,10 +1794,6 @@ function finishRenderProds(pool, g){
           +'<p style="font-family:Cormorant Garamond,serif;font-size:1.6rem;color:var(--text);margin-bottom:12px">'+(lang==='pt'?'Nenhum produto encontrado':'No products found')+'</p>'
           +'<p style="font-size:14px;color:var(--muted)">'+(lang==='pt'?'Tente outra pesquisa ou categoria.':'Try another search or category.')+'</p>'
           +'</div>';
-      } else {
-        // Catálogo tinha resultado mas a busca ao vivo não trouxe nada extra — a grade já
-        // está do jeito final, só falta rolar até o alvo do dupe se houver.
-        setTimeout(scrollToDupeTarget, 60);
       }
     });
   }
@@ -7212,34 +7203,6 @@ var AMZ_PRODUCTS_ES=[
 function getActiveProducts(){
   return region==='PT' ? AMZ_PRODUCTS_ES : AMZ_PRODUCTS;
 }
-// Achador de Dupes: acha até 4 produtos do catálogo do MESMO tipo (sub) e MESMA categoria,
-// de marca DIFERENTE — nunca finge ser o mesmo produto, só sugere alternativa parecida pra
-// comparar. Não busca preço de cada sugestão (evita 4x mais chamadas de API por card); o
-// preço real aparece quando a pessoa clica e vai pra busca daquele produto específico.
-// Só skincare/maquiagem/cabelo por enquanto — "dupe" de perfume depende do CHEIRO ser
-// parecido, algo que não dá pra descobrir só comparando `sub`/categoria; exigiria curadoria
-// manual (decisão da Priscila), fora de escopo por enquanto.
-var DUPE_ELIGIBLE_CATS=['skincare','maquiagem','cabelo'];
-function findDupes(p){
-  if(!p || !p.sub || DUPE_ELIGIBLE_CATS.indexOf(p.cat)<0) return [];
-  var pool=getActiveProducts();
-  var out=[], seen={};
-  var pBrand=(p.brand||'').toLowerCase(), pName=(p.name||'').toLowerCase();
-  for(var i=0;i<pool.length;i++){
-    var q=pool[i];
-    if(q.cat!==p.cat || q.sub!==p.sub) continue;
-    var qBrand=(q.brand||'').toLowerCase();
-    if(qBrand===pBrand) continue; // só marca diferente, senão não é "dupe"
-    var key=qBrand+'|'+(q.name||'').toLowerCase();
-    if(seen[key] || key===pBrand+'|'+pName) continue;
-    seen[key]=true;
-    out.push(q);
-    if(out.length>=4) break;
-  }
-  return out;
-}
-
-
 function amzLink(searchTerm){
   if(region==='PT'){
     return 'https://www.amazon.es/s?k='+encodeURIComponent(searchTerm)+'&tag=pmfc77-21';
@@ -7452,25 +7415,6 @@ function amzCard(p, auto){
   var safeBrand=p.brand.replace(/'/g,"");
   var safeName=p.name.replace(/'/g,"");
   var safeSearch=searchTerm.replace(/'/g,"");
-  var dupes=findDupes(p);
-  var dupesId=cardId+'_dupes';
-  var dupesHtml='';
-  if(dupes.length){
-    dupesHtml='<a class="cpc-dupes-link" onclick="var d=document.getElementById(\''+dupesId+'\');d.style.display=d.style.display===\'none\'?\'flex\':\'none\';return false;">'
-      +(lang==='pt'?'🔍 Ver alternativas parecidas':'🔍 See similar alternatives')+'</a>'
-      +'<div class="cpc-dupes-box" id="'+dupesId+'" style="display:none">'
-      +'<div class="cpc-dupes-hint">'+(lang==='pt'?'Mesmo tipo de produto, marca diferente:':'Same type of product, different brand:')+'</div>'
-      +dupes.map(function(d){
-        var dSafeBrand=(d.brand||'').replace(/'/g,"");
-        var dSafeName=(d.name||'').replace(/'/g,"");
-        var dTerm=(d.brand+' '+d.name).replace(/'/g,"");
-        return '<div class="cpc-dupe-item" onclick="goSearchTerm(\''+dTerm+'\')">'
-          +'<span class="cpc-dupe-brand">'+dSafeBrand+'</span>'
-          +'<span class="cpc-dupe-name">'+dSafeName+'</span>'
-          +'</div>';
-      }).join('')
-      +'</div>';
-  }
 
   setTimeout(function(){ loadTrendingBadge(badgeId, p); }, 50);
   if(auto){
@@ -7501,7 +7445,6 @@ function amzCard(p, auto){
       : '<button class="cpc-compare-btn" onclick="triggerComparison(this,\''+cardId+'\',\''+safeSearch+'\',\''+safeBrand+'\',\''+safeName+'\',\''+link+'\')">'+(lang==='pt'?'🔍 Comparar preços em outras lojas':'🔍 Compare prices elsewhere')+'</button>'
         +amazonBtnHtml(link, safeBrand, safeName))
     +'</div>'
-    +dupesHtml
     +'</div></div>';
 }
 function amazonBtnHtml(link, brand, name){
@@ -7593,6 +7536,15 @@ function loadComparison(cardId, searchTerm, brand, name, fallbackLink, sub, cat)
   // um scraper de verdade e pode demorar bem mais; é tratado como um complemento que atualiza
   // o card depois, se/quando chegar, sem nunca atrasar a exibição inicial.
   var pending = (region==='BR') ? 1 : (SCRAPPA_ENABLED ? 1 : 0);
+  // Priscila (24/07/2026): na Perfumaria especificamente, produto sem preço real de loja
+  // parceira nenhuma não pode ficar na tela só com o botão da Amazon — some da grade em vez
+  // de aparentar resultado de verdade. Só remove depois que TODAS as fontes ao vivo já
+  // responderam (nunca no meio do caminho, senão apagaria card que ia achar preço um instante
+  // depois). Restrito a `cat==='perfumaria'` de propósito — nas outras categorias (skincare/
+  // maquiagem/cabelo) esse problema não acontece na prática (catálogo bem mais estabelecido,
+  // testado há semanas), então o comportamento delas fica exatamente como sempre foi.
+  var sourcesTotal = (region==='BR' && cat==='perfumaria') ? 5 : 0; // awin, americanas, epoca, wepink, lojasrede
+  var sourcesDone = 0;
   function renderCombined(){
     var el=document.getElementById(cardId);
     if(!el) return; // card may no longer be on screen
@@ -7671,6 +7623,13 @@ function loadComparison(cardId, searchTerm, brand, name, fallbackLink, sub, cat)
         if(lblEl){ lblEl.style.display='none'; }
       }
     }
+    // Perfumaria: se já ouvimos de todas as fontes e nenhuma achou o produto de verdade, o
+    // card some da grade — nunca fica só com o botão da Amazon fingindo ser um resultado.
+    if(sourcesTotal>0 && sourcesDone>=sourcesTotal && !combined.length){
+      var cardToRemove=el.closest('.cpc');
+      if(cardToRemove) cardToRemove.remove();
+      return;
+    }
     // Always include the Amazon affiliate button as the guaranteed purchase option
     html += amazonBtnHtml(fallbackLink, brand, name);
     el.innerHTML = html;
@@ -7698,6 +7657,7 @@ function loadComparison(cardId, searchTerm, brand, name, fallbackLink, sub, cat)
     (results||[]).forEach(function(r){ r._source = source; });
     rawCombined = rawCombined.concat(results||[]);
     pending--;
+    if(source==='awin') sourcesDone++;
     if(pending<=0) renderCombined();
   }
   if(SCRAPPA_ENABLED) scrappaSearchPrices(searchTerm, function(results){ onSource(results, 'scrappa'); });
@@ -7715,24 +7675,28 @@ function loadComparison(cardId, searchTerm, brand, name, fallbackLink, sub, cat)
   if(region==='BR') americanasSearchPrices(searchTerm, function(results){
     (results||[]).forEach(function(r){ r._source = 'americanas'; });
     rawCombined = rawCombined.concat(results||[]);
+    sourcesDone++;
     if(pending<=0) renderCombined();
   });
   // Época Cosméticos: mesmo tratamento — complemento não-bloqueante.
   if(region==='BR') epocaSearchPrices(searchTerm, function(results){
     (results||[]).forEach(function(r){ r._source = 'epoca'; });
     rawCombined = rawCombined.concat(results||[]);
+    sourcesDone++;
     if(pending<=0) renderCombined();
   });
   // WePink: mesmo tratamento — complemento não-bloqueante.
   if(region==='BR') wepinkSearchPrices(searchTerm, function(results){
     (results||[]).forEach(function(r){ r._source = 'wepink'; });
     rawCombined = rawCombined.concat(results||[]);
+    sourcesDone++;
     if(pending<=0) renderCombined();
   });
   // Lojas Rede: mesmo tratamento — complemento não-bloqueante.
   if(region==='BR') lojasredeSearchPrices(searchTerm, function(results){
     (results||[]).forEach(function(r){ r._source = 'lojasrede'; });
     rawCombined = rawCombined.concat(results||[]);
+    sourcesDone++;
     if(pending<=0) renderCombined();
   });
 }
@@ -7759,32 +7723,6 @@ function toggleFAQ(i,btn){
   if(!isOpen){a.classList.add('open');btn.classList.add('open');}
 }
 function doHeroSearch(){var q=document.getElementById('heroSearch').value.trim();if(q){srch=q.toLowerCase();showPage('compare');}}
-// Usada pelo clique numa sugestão de "alternativa parecida" (dupe). Só mudar `srch` não
-// bastava: resultados AO VIVO de lojas parceiras entram no TOPO da grade (antes do catálogo),
-// então mesmo com o catálogo achando o produto certo em 1º lugar, um resultado ao vivo
-// qualquer (que bate só ALGUMA palavra da busca) aparecia visualmente acima dele — parecendo
-// "foi pro produto errado". `dupeScrollTarget` guarda o alvo exato pra rolar até ele e
-// destacar depois que a grade terminar de montar (catálogo + resultados ao vivo).
-var dupeScrollTarget=null;
-function goSearchTerm(term){if(!term)return;dupeScrollTarget=term.toLowerCase();srch=term.toLowerCase();cat='todas';showPage('compare');}
-function scrollToDupeTarget(){
-  if(!dupeScrollTarget) return;
-  var target=dupeScrollTarget;
-  dupeScrollTarget=null;
-  var cards=document.querySelectorAll('#productGrid .cpc');
-  for(var i=0;i<cards.length;i++){
-    var brandEl=cards[i].querySelector('.cpc-brand');
-    var nameEl=cards[i].querySelector('.cpc-name');
-    if(!brandEl||!nameEl) continue;
-    var text=(brandEl.textContent+' '+nameEl.textContent).toLowerCase();
-    if(text.indexOf(target)>=0 || target.indexOf(text)>=0){
-      cards[i].scrollIntoView({behavior:'smooth',block:'center'});
-      cards[i].classList.add('cpc-highlight');
-      (function(el){ setTimeout(function(){el.classList.remove('cpc-highlight');},2500); })(cards[i]);
-      break;
-    }
-  }
-}
 document.addEventListener('keydown',function(e){if(e.key==='Enter'&&document.activeElement.id==='heroSearch')doHeroSearch();});
 function submitContact(){
   var n=document.getElementById('cName').value.trim(),em=document.getElementById('cEmail').value.trim(),m=document.getElementById('cMsg').value.trim();

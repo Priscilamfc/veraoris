@@ -1847,3 +1847,49 @@ Sintaxe validada (`node --check` + todos os blocos `<script>` do
 `index.html`). Commit único com as duas correções de código (dupe +
 normBrand). **Ainda não confirmado pela Priscila — pedido explícito dela
 de testar com mais calma desta vez antes de reportar mais problema.**
+
+## Sessão 24/07/2026 (continuação 10) — Achador de Dupes REMOVIDO + Perfumaria corrigida de vez
+Priscila testou de novo, ainda mais frustrada (volume grande de correção
+que não resolvia de primeira nesta sessão longa) — pediu explicitamente
+pra **apagar o Achador de Dupes por completo** ("esquece isso") e focar
+só em consertar a Perfumaria, que estava mostrando só 1 produto.
+
+**Achador de Dupes removido inteiro**: `findDupes()`, `DUPE_ELIGIBLE_CATS`,
+o bloco de HTML/CSS do link "Ver alternativas parecidas" em `amzCard()`,
+o mecanismo `dupeScrollTarget`/`scrollToDupeTarget()` (tentativa da
+sessão anterior de corrigir o clique indo pro produto errado) e
+`goSearchTerm()` — tudo fora do código. Se a ideia for retomada no
+futuro, fica pra uma sessão nova, com mais cuidado antes de publicar.
+
+**Causa real do "só 1 produto na Perfumaria" encontrada**: `goCat()`
+(usada pelo menu de navegação) nunca limpava a busca de texto (`srch`)
+ao trocar de categoria — um termo de busca antigo (de qualquer pesquisa
+anterior, inclusive um clique de dupe de antes) ficava "grudado" junto
+com o filtro de categoria nova, reduzindo os resultados quase a zero.
+**Corrigido**: `goCat()` agora limpa `srch` ao navegar (`filterCat()`,
+usada pra refinar uma busca já em andamento com as pílulas de categoria,
+foi deixada como estava de propósito — ali faz sentido manter a busca).
+
+**Melhoria pedida por ela**: Boticário, Natura e WePink têm bem mais
+perfume de verdade do que os 54 produtos do catálogo fixo — ela queria
+que a Perfumaria mostrasse isso. Só que a busca ao vivo nas lojas
+parceiras (`liveMultiSourceSearch`) só disparava quando havia texto
+digitado (`srch`), nunca só navegando por categoria. **Implementado**:
+`finishRenderProds()` agora também dispara busca ao vivo com o termo
+genérico `"perfume"` quando `cat==='perfumaria'` e não há busca de texto
+ativa — testado direto na function (`awin-search?query=perfume`),
+confirma produto real de Boticário/Natura voltando. Mecanismo de
+descarte de resposta desatualizada (`if(srch!==snapSrch...)`) também
+ajustado pra considerar mudança de categoria, não só de busca, já que
+agora o "termo" pode vir da categoria em vez do campo de busca.
+
+**Limitação conhecida, não corrigida agora**: a palavra "perfume" também
+aparece em produtos que NÃO são perfume (ex: "Kit Desodorante ... Sem
+Perfume" da Natura, um antitranspirante descrito como "sem fragrância")
+— o filtro `PERFUME_ONLY_NOUNS` bate a palavra solta, sem distinguir
+"tem perfume" de "sem perfume". Chance pequena de aparecer 1 produto
+errado ocasional nos resultados ao vivo da Perfumaria; não é o mesmo
+tipo de bug que causava "só 1 produto no total" (esse já está corrigido).
+Mesma categoria de limitação que "hidratante" já tinha antes.
+
+Sintaxe validada. **Ainda não confirmado pela Priscila.**
