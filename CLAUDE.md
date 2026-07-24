@@ -1551,3 +1551,49 @@ catálogo do zero.
 Sintaxe validada (`node --check` + todos os blocos `<script>` do
 `index.html` com `new Function()`). **Ainda não testado em produção nem
 confirmado pela Priscila.**
+
+## Sessão 24/07/2026 (continuação 5) — deploy bloqueado: limite de 4KB de variáveis de ambiente
+Depois de responder um chamado de suporte sobre link quebrado da Ama
+Beleza (a Kritzie, da própria loja, explicou que a Coluna A do feed —
+`aw_deep_link` — é o link certo, e a Coluna E — `merchant_image_url` — é
+só a foto, não o produto; confirmado que o nosso código já lê pelo NOME
+da coluna, não pela posição, então esse bug específico não deveria nos
+afetar), a Priscila gerou um feed novo da Ama Beleza marcando "Selecionar
+Tudo" (a pedido meu, pra garantir que nada faltasse) — só que isso deixou
+a URL do feed bem mais comprida que antes.
+
+**Resultado**: o próximo deploy no Netlify falhou com erro fatal
+`Your environment variables exceed the 4KB limit imposed by AWS` — as
+Netlify Functions rodam em AWS Lambda, que tem um limite rígido de 4KB
+pra todas as variáveis de ambiente combinadas. Com ADMIN_PASSWORD,
+APIFY_TOKEN, 6 variáveis `AWIN_*_FEED_URL`, variáveis do Supabase etc.,
+já estava no limite — a URL mais comprida da Ama Beleza (por ter todas as
+colunas) empurrou pra cima do limite. **Minha orientação de marcar
+"Selecionar Tudo" foi o gatilho direto — erro meu.**
+
+**Consequência**: o site **não caiu** (Netlify mantém a última versão
+publicada com sucesso no ar), mas parou de receber atualizações novas —
+inclusive a sessão de Perfumaria/Achador de Dupes (commit `380b023`)
+ainda não estava no ar no momento desse erro.
+
+**Corrigido nesta sessão** (só a parte de código): o erro também apontou
+um aviso secundário (não fatal) — a regra de redirect
+`/.netlify/functions/* -> /.netlify/functions/:splat` no `netlify.toml`
+é inválida (regra de redirect não pode começar com `/.netlify`) e
+desnecessária (Netlify já roteia functions automaticamente, sem precisar
+de redirect manual). Removida. Commit a seguir.
+
+**Pendência real, só a Priscila resolve** (não é código, é configuração
+do Netlify + Awin): gerar o feed da Ama Beleza de novo, mas **sem**
+"Selecionar Tudo" — só as colunas que o `awin-search.js` realmente usa:
+`aw_deep_link`, `product_name`, `merchant_image_url` (ou `aw_image_url`),
+algum campo de preço (`search_price`/`display_price`/`store_price`) e
+`merchant_name`. Isso deve encurtar a URL o suficiente pra caber no
+limite de novo. Instrução pendente de confirmação dela.
+
+**Nota pra próxima sessão**: se o limite de 4KB continuar apertado mesmo
+depois disso (mais lojas Awin no futuro vão continuar competindo pelo
+mesmo espaço), vale investigar se o Netlify permite limitar quais
+variáveis vão pra quais funções específicas (reduzir o que cada function
+individual recebe) — não confirmado se essa opção existe na conta dela,
+não pesquisado ainda nesta sessão.
