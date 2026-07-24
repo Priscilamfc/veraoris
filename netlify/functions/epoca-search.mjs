@@ -1,6 +1,13 @@
 // Época Cosméticos — chamada DIRETA na API pública do VTEX (mesma tecnologia da Americanas/
 // Ama Beleza), sem passar pelo Apify: a API de catálogo responde sem exigir autenticação nem
 // pagamento por busca, então não precisa de ator nenhum aqui, diferente da Americanas.
+//
+// MIGRADA (24/07/2026) do formato clássico (exports.handler/event) pro runtime moderno do
+// Netlify Functions (export default/Request/Response) — o modo antigo roda em cima do AWS
+// Lambda, que tem um limite rígido de 4KB pra soma de todas as variáveis de ambiente do site;
+// esse limite não existe no runtime moderno. `path` declarado explicitamente abaixo garante
+// que a URL /.netlify/functions/epoca-search continua exatamente igual pro index.html, que já
+// chama esse endereço em vários lugares.
 const CACHE_TTL_MS = 30 * 60 * 1000; // 30 minutos, mesmo padrão das outras fontes
 const FETCH_TIMEOUT_MS = 8000;
 const API_URL = 'https://www.epocacosmeticos.com.br/api/catalog_system/pub/products/search';
@@ -13,8 +20,6 @@ function bestAvailablePrice(product) {
     (item.sellers || []).forEach((seller) => {
       const offer = seller.commertialOffer || {};
       if (offer.IsAvailable && offer.Price) {
-        // Testado em produção (23/07/2026): o campo já vem em reais (ex: 63.99), não em
-        // centavos — dividir por 100 gerava preço 100x menor (R$0,64 em vez de R$63,99).
         const price = offer.Price;
         if (!best || price < best) best = price;
       }
@@ -27,7 +32,7 @@ function normalizeItems(raw) {
   return (raw || [])
     .map((p) => {
       const price = bestAvailablePrice(p);
-      if (!price || !p.productName || !p.linkText) return null; // sem estoque em nenhum vendedor
+      if (!price || !p.productName || !p.linkText) return null;
       const firstItem = (p.items || [])[0];
       const image = firstItem && firstItem.images && firstItem.images[0] && firstItem.images[0].imageUrl;
       return {
@@ -37,9 +42,6 @@ function normalizeItems(raw) {
         link: 'https://www.epocacosmeticos.com.br/' + encodeURIComponent(p.linkText) + '/p',
         image: image || null,
         brand: p.brand || null,
-        // A página do produto (não a API) mostrou CAPTCHA num teste automatizado (22/07/2026) —
-        // tratado como não confiável até a Priscila confirmar clicando de verdade, mesmo
-        // tratamento que Eudora/Ama Beleza tiveram no início (cai no botão "Buscar na loja").
         linkOk: false
       };
     })
@@ -82,28 +84,30 @@ async function fetchFeed(query) {
   return products;
 }
 
-exports.handler = async (event) => {
+export default async (request) => {
   const headers = {
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Headers': 'Content-Type',
     'Content-Type': 'application/json'
   };
 
-  if (event.httpMethod === 'OPTIONS') {
-    return { statusCode: 200, headers, body: '' };
+  if (request.method === 'OPTIONS') {
+    return new Response('', { status: 200, headers });
   }
 
   try {
-    const params = event.queryStringParameters || {};
-    const query = (params.query || '').trim();
+    const url = new URL(request.url);
+    const query = (url.searchParams.get('query') || '').trim();
     if (!query) {
-      return { statusCode: 200, headers, body: JSON.stringify({ results: [] }) };
+      return new Response(JSON.stringify({ results: [] }), { status: 200, headers });
     }
 
     const products = await fetchFeed(query);
-    return { statusCode: 200, headers, body: JSON.stringify({ results: products }) };
+    return new Response(JSON.stringify({ results: products }), { status: 200, headers });
   } catch (error) {
     console.log('EPOCA erro:', error.message);
-    return { statusCode: 200, headers, body: JSON.stringify({ results: [], error: error.message }) };
+    return new Response(JSON.stringify({ results: [], error: error.message }), { status: 200, headers });
   }
 };
+
+export const config = { path: '/.netlify/functions/epoca-search' };
