@@ -1361,3 +1361,51 @@ do `index.html`). **Ainda não testado em produção nem confirmado pela
 Priscila** — pedir pra ela testar uma busca (ex: "hidratante" ou "batom")
 depois do deploy e confirmar se a Americanas volta a aparecer com preço/
 foto/link certos.
+
+## Sessão 24/07/2026 (continuação 2) — pesquisa de mais "gigantes VTEX de graça" + nona fonte: Lojas Rede
+Priscila pediu pra testar mais grandes redes de cosmético do Brasil pelo
+mesmo método (API pública VTEX, sem Apify/Scrappa). Testado via `WebFetch`
+(uma por uma, algumas em paralelo causaram 429 de limite de requisição):
+
+**Bloqueadas (403 — provável proteção anti-robô, mesmo sendo VTEX)**:
+Sephora Brasil, Natura (site próprio), Boticário (site próprio, já coberto
+via Awin mesmo assim), Eudora (site próprio), Vult, Beleza na Web, Quem
+Disse Berenice, Casas Bahia.
+
+**Não é VTEX / não aplicável**: Shopee Brasil (404, plataforma própria
+deles, resultado esperado). Avon e Ikesaki deram 404 no caminho
+testado — inconclusivo, não confirmado se são VTEX por outro caminho.
+
+**The Beauty Box**: o domínio redireciona (301) pra `belezanaweb.com.br`
+— é a mesma empresa/plataforma da Beleza na Web, já sabidamente bloqueada.
+
+**Achado novo: Lojas Rede** (`lojasrede.com.br`, indicada pela Priscila)
+— ✅ **funciona de graça**, testado e confirmado com produto real
+(Neutrogena Hydro Boost, R$59,99) — bônus importante: é multimarca e
+vende marca de farmácia, que a maioria das lojas parceiras não vende.
+Categorias testadas (busca "batom") mostraram só "Maquiagem/..." — loja
+focada em beleza, não precisa do filtro pesado de categoria que a
+Americanas (marketplace geral) precisa.
+
+**Conclusão prática pra próxima vez que quiser pesquisar mais lojas**: só
+porque uma rede grande roda em VTEX não garante acesso de graça — só
+funciona quando a loja não tem proteção anti-robô na frente da API. As
+fontes de graça confirmadas até agora (Época, WePink, Americanas, Lojas
+Rede) parecem ser exceção, não regra — não adianta testar toda loja VTEX
+que aparecer, só vale a pena testar quando a Priscila trouxer um nome
+específico.
+
+**Implementado**: `netlify/functions/lojasrede-search.js` (novo, mesmo
+padrão de `epoca-search.js`, sem filtro de categoria por ser loja 100%
+beleza). `lojasredeSearchPrices()` adicionada ao `index.html`,
+`liveMultiSourceSearch()` estendida (5 fontes agora: Awin + Americanas +
+Época + WePink + Lojas Rede). D3 (marca+tipo) e troca de foto em
+`loadComparison` estendidos pra `_source==='lojasrede'`. `'lojas rede'`
+adicionada em `VTEX_SEARCH_DOMAINS` (busca própria do site, não Google) —
+link direto sai com `linkOk:false` por enquanto (não testado clicando de
+verdade ainda), mesmo tratamento inicial que Eudora/Ama Beleza/Época
+tiveram até confirmação manual da Priscila.
+
+Sintaxe validada (`node --check` na function + todos os blocos `<script>`
+do `index.html`). **Ainda não testado em produção nem confirmado pela
+Priscila.**

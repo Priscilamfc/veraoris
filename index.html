@@ -1015,12 +1015,28 @@ function wepinkSearchPrices(query, callback){
     callback([]);
   });
 }
-// Combina Awin + Americanas + Época + WePink numa única busca — usado em qualquer lugar que
-// precise de preço/foto ao vivo de mais de uma fonte parceira (busca de produtos, quiz, foto
-// de promoções), pra não repetir a mesma lógica de "esperar todas as fontes responderem" em
-// cada lugar. Cada resultado já sai marcado com `_source` pra quem precisar diferenciar.
+// ── LOJAS REDE (API VTEX pública, chamada direta — sem Apify, sem custo) ──
+// Loja de beleza multimarca (vende marca de farmácia tipo Neutrogena, testado 24/07/2026).
+// Link direto ainda não testado clicando de verdade — sai com linkOk:false até confirmação.
+function lojasredeSearchPrices(query, callback){
+  var url = '/.netlify/functions/lojasrede-search?query='+encodeURIComponent(query);
+  fetch(url)
+  .then(function(r){ return r.json(); })
+  .then(function(data){
+    callback(data.results || []);
+  })
+  .catch(function(err){
+    console.log('Lojas Rede search failed:', err);
+    callback([]);
+  });
+}
+// Combina Awin + Americanas + Época + WePink + Lojas Rede numa única busca — usado em
+// qualquer lugar que precise de preço/foto ao vivo de mais de uma fonte parceira (busca de
+// produtos, quiz, foto de promoções), pra não repetir a mesma lógica de "esperar todas as
+// fontes responderem" em cada lugar. Cada resultado já sai marcado com `_source` pra quem
+// precisar diferenciar.
 function liveMultiSourceSearch(query, callback){
-  var results=[], waiting=4;
+  var results=[], waiting=5;
   function done(list, source){
     (list||[]).forEach(function(r){ r._source=source; });
     results = results.concat(list||[]);
@@ -1031,6 +1047,7 @@ function liveMultiSourceSearch(query, callback){
   americanasSearchPrices(query, function(r){ done(r,'americanas'); });
   epocaSearchPrices(query, function(r){ done(r,'epoca'); });
   wepinkSearchPrices(query, function(r){ done(r,'wepink'); });
+  lojasredeSearchPrices(query, function(r){ done(r,'lojasrede'); });
 }
 // ── MERCADO LIVRE (via Apify) — DESLIGADO (22/07/2026) ──
 // O ator usado (karamelo/mercadolivre-scraper-brasil-portugues) exige no mínimo 100s de
@@ -7451,7 +7468,8 @@ var VTEX_SEARCH_DOMAINS = {
   'eudora':'eudora.com.br', 'eudora br':'eudora.com.br',
   'amobeleza':'amobeleza.com.br', 'amobeleza br':'amobeleza.com.br',
   'ama beleza':'amobeleza.com.br', 'ama beleza br':'amobeleza.com.br',
-  'época cosméticos':'epocacosmeticos.com.br', 'epoca cosmeticos':'epocacosmeticos.com.br'
+  'época cosméticos':'epocacosmeticos.com.br', 'epoca cosmeticos':'epocacosmeticos.com.br',
+  'lojas rede':'lojasrede.com.br'
 };
 // Gera o link mais directo possível para ir à loja: busca própria da loja (Vtex) se for uma
 // loja conhecida, senão busca Google restrita ao domínio, senão busca Google pelo nome da loja
@@ -7514,11 +7532,11 @@ function loadComparison(cardId, searchTerm, brand, name, fallbackLink, sub, cat)
     var brandLower=(brand||'').toLowerCase();
     var kws0=subKeywords(sub);
     var effCat0=cat||inferCat(searchTerm);
-    // D3 se aplica a qualquer fonte de marketplace multimarca (Awin, Americanas, Época) — só
-    // não se aplica ao Scrappa (já desligado) porque ele nunca teve esse tratamento e não é
-    // prioridade de desenvolvimento no momento.
+    // D3 se aplica a qualquer fonte de marketplace multimarca (Awin, Americanas, Época,
+    // Lojas Rede) — só não se aplica ao Scrappa (já desligado) porque ele nunca teve esse
+    // tratamento e não é prioridade de desenvolvimento no momento.
     combined = combined.filter(function(r){
-      if(r._source!=='awin' && r._source!=='americanas' && r._source!=='epoca' && r._source!=='wepink') return true;
+      if(r._source!=='awin' && r._source!=='americanas' && r._source!=='epoca' && r._source!=='wepink' && r._source!=='lojasrede') return true;
       var t=(r.title||'').toLowerCase();
       var storeLower=(r.store||'').toLowerCase();
       if(brandLower && t.indexOf(brandLower)<0 && storeLower.indexOf(brandLower)<0) return false;
@@ -7565,7 +7583,7 @@ function loadComparison(cardId, searchTerm, brand, name, fallbackLink, sub, cat)
       // brand+type identity check already happened above when filtering `combined`, so any
       // awin/americanas/epoca entry that made it into `top` is already confirmed to be the
       // same product (decision D3).
-      var withPhoto=top.find(function(r){ return r.image && (r._source==='awin'||r._source==='americanas'||r._source==='epoca'||r._source==='wepink'); });
+      var withPhoto=top.find(function(r){ return r.image && (r._source==='awin'||r._source==='americanas'||r._source==='epoca'||r._source==='wepink'||r._source==='lojasrede'); });
       if(withPhoto){
         var imgEl=document.getElementById(cardId+'_img');
         if(imgEl){ imgEl.src=withPhoto.image; imgEl.style.padding='0'; }
@@ -7628,6 +7646,12 @@ function loadComparison(cardId, searchTerm, brand, name, fallbackLink, sub, cat)
   // WePink: mesmo tratamento — complemento não-bloqueante.
   if(region==='BR') wepinkSearchPrices(searchTerm, function(results){
     (results||[]).forEach(function(r){ r._source = 'wepink'; });
+    rawCombined = rawCombined.concat(results||[]);
+    if(pending<=0) renderCombined();
+  });
+  // Lojas Rede: mesmo tratamento — complemento não-bloqueante.
+  if(region==='BR') lojasredeSearchPrices(searchTerm, function(results){
+    (results||[]).forEach(function(r){ r._source = 'lojasrede'; });
     rawCombined = rawCombined.concat(results||[]);
     if(pending<=0) renderCombined();
   });
