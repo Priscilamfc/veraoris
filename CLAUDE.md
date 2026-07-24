@@ -1436,6 +1436,29 @@ Safari do iPhone não faz da mesma forma), estourando o layout puxado pro
 tamanho original. **Corrigido**: `-webkit-text-size-adjust:100%;
 text-size-adjust:100%` adicionado à regra `html{}` (`index.html`) —
 desliga esse ajuste automático, texto passa a respeitar o tamanho
-definido no CSS em qualquer navegador. Sintaxe validada. **Ainda não
-confirmado pela Priscila se resolveu** — pedir pra ela testar de novo no
-Android do marido depois do deploy.
+definido no CSS em qualquer navegador. Sintaxe validada.
+
+**Correção acima NÃO resolveu** — Priscila confirmou que abriu direto
+pelo app do Chrome (descartando a teoria de ser o navegador embutido do
+WhatsApp) e o corte continuava. Mandou uma captura de tela de verdade
+(não foto) que confirmou o bug é real: o parágrafo do hero ("Encontre os
+melhores produtos de beleza comparando preços em várias lojas, num só
+lugar.") quebra certinho na 1ª linha (com margem à direita), mas a 2ª
+linha ("comparando preços em várias lojas, num só lugar.") vaza pra fora
+da tela e é cortada bem no "lugar." — só nesse parágrafo, não no badge
+nem no título acima dele. Não achei a causa exata sem inspecionar o DOM
+ao vivo (sem navegador neste ambiente) — descartei alguns candidatos por
+análise estática do código (sem espaço não-quebrável escondido no texto,
+`box-sizing:border-box` já global, sem `white-space:nowrap` na regra,
+viewport meta e breakpoint mobile `@media(max-width:900px)` corretos).
+**Correção aplicada como rede de segurança geral** (mais robusta que
+tentar achar a causa exata sem conseguir ver o layout ao vivo):
+`overflow-wrap:break-word` adicionado ao reset universal `*{}` — impede
+qualquer texto do site (não só esse parágrafo) de vazar pra fora do
+elemento, em qualquer navegador, futuro ou não. Sintaxe validada.
+
+**Ainda não confirmado pela Priscila se resolveu de vez.** Se persistir,
+o próximo passo é usar a extensão "Claude in Chrome" (já instalada dela,
+ver sessão anterior) pra inspecionar o layout ao vivo e achar a causa
+exata, já que análise estática do código sem ver o DOM renderizado tem
+limite.
