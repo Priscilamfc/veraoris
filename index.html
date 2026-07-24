@@ -233,6 +233,7 @@ footer{background:linear-gradient(135deg,#FFF5F0,#FFE8F0);padding:40px 40px 24px
 /* PRODUCT CARD */
 @keyframes cardFadeIn{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
 .cpc{background:var(--white);border-radius:var(--r2);border:1px solid var(--marble3);overflow:hidden;transition:all .25s;animation:cardFadeIn .5s ease-out both}
+.cpc-highlight{border-color:var(--gold)!important;box-shadow:0 0 0 3px var(--gold3),0 12px 32px rgba(154,72,53,.25)!important}
 .cpc:nth-child(1){animation-delay:0s}.cpc:nth-child(2){animation-delay:.05s}.cpc:nth-child(3){animation-delay:.1s}
 .cpc:nth-child(4){animation-delay:.15s}.cpc:nth-child(5){animation-delay:.2s}.cpc:nth-child(6){animation-delay:.25s}
 .cpc:hover{border-color:var(--gold2);box-shadow:0 10px 36px rgba(232,144,122,.18);transform:translateY(-3px)}
@@ -1204,11 +1205,11 @@ function preloadEudoraImage(imgId, searchTerm, sub, cat, brand){
     var kws=subKeywords(sub);
     var effCat=cat||inferCat(searchTerm);
     var brandLower=(brand||'').toLowerCase();
+    var brandNorm=normBrand(brand);
     var withPhoto=(results||[]).find(function(r){
       if(!r.image) return false;
       var t=(r.title||'').toLowerCase();
-      var storeLower=(r.store||'').toLowerCase();
-      if(brandLower && t.indexOf(brandLower)<0 && storeLower.indexOf(brandLower)<0) return false;
+      if(brandLower && t.indexOf(brandLower)<0 && normBrand(r.store).indexOf(brandNorm)<0) return false;
       if(effCat && conflictsWithCategory(effCat, r.title)) return false;
       if(sub) return kws.some(function(k){return t.indexOf(k.toLowerCase())>=0;});
       return !brandLower && looseTypeMatch(searchTerm, r.title);
@@ -1659,6 +1660,13 @@ function renderProds(){
     finishRenderProds(pool, g);
   }
 }
+// Normaliza marca/nome de loja pra comparar (D3): minúsculas, sem acento, sem espaço/pontuação.
+// Achado real (24/07/2026): catálogo tem "O Boticário" (com espaço e acento), mas o feed da
+// Awin devolve o nome da loja como "oBoticario BR" (sem espaço, sem acento) — comparação de
+// texto direto nunca batia, nenhum produto do Boticário conseguia confirmar marca pela loja.
+function normBrand(s){
+  return (s||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^a-z0-9]/g,'');
+}
 // Normaliza um título de produto pra comparação de identidade: minúsculas, sem acento, sem
 // tamanho/unidade (50ml, 200g...), sem pontuação, palavras em ordem alfabética. Duas listagens
 // do mesmo produto em lojas diferentes (ex: a Eudora vende direto E a Ama Beleza revende) tendem
@@ -1735,6 +1743,9 @@ function finishRenderProds(pool, g){
 
   if(pool.length){
     renderProdsPage();
+    // Se não vai rodar busca ao vivo (fora do Brasil, ou sem termo de busca), a grade já está
+    // pronta agora — rola até o alvo do dupe (se houver) sem esperar mais nada.
+    if(!(srch && region==='BR')) setTimeout(scrollToDupeTarget, 60);
   } else {
     if(cnt0)cnt0.textContent='';
     if(wrap)wrap.style.display='none';
@@ -1780,6 +1791,7 @@ function finishRenderProds(pool, g){
           g.innerHTML=liveHtml;
           if(cnt0)cnt0.textContent=(lang==='pt'?grouped.length+' resultado(s) em lojas parceiras':grouped.length+' result(s) from partner stores');
         }
+        setTimeout(scrollToDupeTarget, 60);
         return;
       }
       if(!hadCatalogResults){
@@ -1787,6 +1799,10 @@ function finishRenderProds(pool, g){
           +'<p style="font-family:Cormorant Garamond,serif;font-size:1.6rem;color:var(--text);margin-bottom:12px">'+(lang==='pt'?'Nenhum produto encontrado':'No products found')+'</p>'
           +'<p style="font-size:14px;color:var(--muted)">'+(lang==='pt'?'Tente outra pesquisa ou categoria.':'Try another search or category.')+'</p>'
           +'</div>';
+      } else {
+        // Catálogo tinha resultado mas a busca ao vivo não trouxe nada extra — a grade já
+        // está do jeito final, só falta rolar até o alvo do dupe se houver.
+        setTimeout(scrollToDupeTarget, 60);
       }
     });
   }
@@ -7594,6 +7610,7 @@ function loadComparison(cardId, searchTerm, brand, name, fallbackLink, sub, cat)
     // "Eudora BR") — assim não precisa de lista fixa de exceção por marca própria, funciona
     // igual pra qualquer loja nova que a gente adicionar no feed.
     var brandLower=(brand||'').toLowerCase();
+    var brandNorm0=normBrand(brand);
     var kws0=subKeywords(sub);
     var effCat0=cat||inferCat(searchTerm);
     // D3 se aplica a qualquer fonte de marketplace multimarca (Awin, Americanas, Época,
@@ -7602,8 +7619,7 @@ function loadComparison(cardId, searchTerm, brand, name, fallbackLink, sub, cat)
     combined = combined.filter(function(r){
       if(r._source!=='awin' && r._source!=='americanas' && r._source!=='epoca' && r._source!=='wepink' && r._source!=='lojasrede') return true;
       var t=(r.title||'').toLowerCase();
-      var storeLower=(r.store||'').toLowerCase();
-      if(brandLower && t.indexOf(brandLower)<0 && storeLower.indexOf(brandLower)<0) return false;
+      if(brandLower && t.indexOf(brandLower)<0 && normBrand(r.store).indexOf(brandNorm0)<0) return false;
       if(effCat0 && conflictsWithCategory(effCat0, r.title)) return false;
       if(sub) return kws0.some(function(k){return t.indexOf(k.toLowerCase())>=0;});
       return true;
@@ -7743,7 +7759,32 @@ function toggleFAQ(i,btn){
   if(!isOpen){a.classList.add('open');btn.classList.add('open');}
 }
 function doHeroSearch(){var q=document.getElementById('heroSearch').value.trim();if(q){srch=q.toLowerCase();showPage('compare');}}
-function goSearchTerm(term){if(!term)return;srch=term.toLowerCase();cat='todas';showPage('compare');}
+// Usada pelo clique numa sugestão de "alternativa parecida" (dupe). Só mudar `srch` não
+// bastava: resultados AO VIVO de lojas parceiras entram no TOPO da grade (antes do catálogo),
+// então mesmo com o catálogo achando o produto certo em 1º lugar, um resultado ao vivo
+// qualquer (que bate só ALGUMA palavra da busca) aparecia visualmente acima dele — parecendo
+// "foi pro produto errado". `dupeScrollTarget` guarda o alvo exato pra rolar até ele e
+// destacar depois que a grade terminar de montar (catálogo + resultados ao vivo).
+var dupeScrollTarget=null;
+function goSearchTerm(term){if(!term)return;dupeScrollTarget=term.toLowerCase();srch=term.toLowerCase();cat='todas';showPage('compare');}
+function scrollToDupeTarget(){
+  if(!dupeScrollTarget) return;
+  var target=dupeScrollTarget;
+  dupeScrollTarget=null;
+  var cards=document.querySelectorAll('#productGrid .cpc');
+  for(var i=0;i<cards.length;i++){
+    var brandEl=cards[i].querySelector('.cpc-brand');
+    var nameEl=cards[i].querySelector('.cpc-name');
+    if(!brandEl||!nameEl) continue;
+    var text=(brandEl.textContent+' '+nameEl.textContent).toLowerCase();
+    if(text.indexOf(target)>=0 || target.indexOf(text)>=0){
+      cards[i].scrollIntoView({behavior:'smooth',block:'center'});
+      cards[i].classList.add('cpc-highlight');
+      (function(el){ setTimeout(function(){el.classList.remove('cpc-highlight');},2500); })(cards[i]);
+      break;
+    }
+  }
+}
 document.addEventListener('keydown',function(e){if(e.key==='Enter'&&document.activeElement.id==='heroSearch')doHeroSearch();});
 function submitContact(){
   var n=document.getElementById('cName').value.trim(),em=document.getElementById('cEmail').value.trim(),m=document.getElementById('cMsg').value.trim();

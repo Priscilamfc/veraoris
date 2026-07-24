@@ -1787,3 +1787,63 @@ Priscila testou de novo e achou dois problemas novos, ambos meus erros:
    fora de escopo por ora). Perfumaria BR: 60→54 produtos.
 
 Sintaxe validada. **Ainda não confirmado pela Priscila.**
+
+## Sessão 24/07/2026 (continuação 9) — três bugs reais achados de uma vez, sessão pesada
+Priscila testou de novo (frustrada com o volume de correções que não
+"pegavam" de primeira) e trouxe 3 problemas concretos com prints. Desta
+vez cada um foi investigado com teste real (script Node contra os dados
+de verdade, ou chamada direta às functions) antes de aplicar a correção
+— não só teoria.
+
+**1. Clique numa "alternativa parecida" (dupe) levava pra produto
+diferente do clicado.** Causa raiz confirmada: `goSearchTerm()` só
+mudava `srch` e navegava pra página Comparar — mas resultados AO VIVO
+das lojas parceiras entram no TOPO da grade (`insertAdjacentHTML('afterbegin',...)`,
+decisão de sessão anterior), ANTES do catálogo. Mesmo o catálogo achando
+o produto certo em 1º lugar (confirmado com script Node — busca por
+"maybelline superstay matte ink batom" retorna o produto exato em 1º),
+um resultado ao vivo qualquer que bate só uma palavra aparecia
+visualmente acima dele, parecendo "foi pro produto errado". **Corrigido**:
+novo mecanismo `dupeScrollTarget` — depois que a grade termina de montar
+(catálogo + resultados ao vivo, cobrindo os 3 pontos de saída de
+`finishRenderProds`), `scrollToDupeTarget()` procura o card com
+brand+nome exatos, rola suavemente até ele e aplica destaque visual
+temporário (`.cpc-highlight`, borda dourada + sombra, 2.5s). Produto
+certo agora fica impossível de não notar, mesmo com resultado ao vivo
+acima dele.
+
+**2. Achado grande: O Boticário nunca batia com o próprio feed dele
+mesmo.** A Priscila reparou que produtos do Boticário (loja que TEM API/
+feed configurado) apareciam sem preço/link, só com botão da Amazon.
+Investigado e confirmado com teste direto: o catálogo usa a marca
+`'O Boticário'` (com espaço entre "O" e "Boticário", com acento), mas o
+feed da Awin devolve o nome da loja como `"oBoticario BR"` (sem espaço,
+sem acento — tudo grudado). A regra D3 (marca precisa aparecer no título
+OU no nome da loja) comparava esses textos direto — nunca batia,
+NENHUM produto do Boticário conseguia confirmar a marca pela loja.
+Esse é provavelmente um pedaço grande do motivo de "muitos produtos sem
+preço" reportado (Boticário é uma das únicas 4 lojas Awin ativas hoje).
+**Corrigido**: nova função `normBrand()` (`index.html`, perto de
+`normalizeProductTitle`) — remove acento E espaço/pontuação antes de
+comparar (`"O Boticário"` e `"oBoticario BR"` viram `"oboticario"` e
+`"oboticariobr"`, aí bate). Aplicada nos dois pontos onde marca é
+comparada com nome de loja (`preloadEudoraImage` e o filtro D3 principal
+em `loadComparison`/`renderCombined`). Testado com script Node
+diretamente na função real — confirma o match agora. Vale pra qualquer
+marca com esse tipo de diferença de formatação, não só Boticário.
+
+**3. "Só os primeiros produtos mostram preço, depois nada"** — não achei
+um TERCEIRO bug distinto de lógica pra isso além do item 2 acima (que já
+deve resolver parte considerável, já que Boticário é loja ativa
+importante). O mecanismo de carregamento (`AUTO_LOAD_COUNT=6` automático
++ resto via `IntersectionObserver`/`registerLazyCompare` ao rolar a
+tela) parece correto na leitura do código. **Sem confirmação real (sem
+navegador nesta sessão) se isso é 100% a explicação ou se sobra algo
+mais** — pedir pra ela testar de novo depois deste deploy, especificamente
+reparando se rolar a tela faz preço novo aparecer (lazy load funcionando)
+ou se realmente trava depois de um tempo mesmo rolando.
+
+Sintaxe validada (`node --check` + todos os blocos `<script>` do
+`index.html`). Commit único com as duas correções de código (dupe +
+normBrand). **Ainda não confirmado pela Priscila — pedido explícito dela
+de testar com mais calma desta vez antes de reportar mais problema.**
