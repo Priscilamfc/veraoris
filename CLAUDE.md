@@ -1635,5 +1635,67 @@ bug de nome errado de variável explica o problema dela também? Resposta:
 improvável — "EUDORA" não tem uma grafia alternativa ambígua tipo
 "AMA"/"AMO" que confundisse o código. De qualquer forma não dá pra
 testar agora (variável apagada pra liberar espaço do 4KB) — replanejar
-teste da Eudora só depois da migração de functions (próximo passo, ver
-plano ativo em `C:\Users\macie\.claude\plans\jazzy-moseying-hamming.md`).
+teste da Eudora só depois da migração de functions.
+
+## Sessão 24/07/2026 (continuação 6) — migração completa: fim do limite de 4KB pra sempre
+A Priscila apontou corretamente que apagar a variável da Eudora foi só
+remendo — quando ela (ou Amazon, ou Shopee) voltar, o mesmo travamento
+ia acontecer nu de novo. Pesquisa confirmou a causa raiz: as 9 functions
+do site rodavam no "Lambda compatibility mode" do Netlify (modo antigo,
+compatível com AWS Lambda clássico), que tem um teto FIXO de 4KB pra
+soma de todas as variáveis de ambiente — não é algo que dá pra configurar
+ou aumentar. O runtime moderno do Netlify Functions não tem esse limite
+nenhum. `/plan` usado antes de mexer (9 arquivos, mudança de arquitetura,
+alto risco de quebrar tudo de uma vez se desse errado).
+
+**Migração feita, function por function, testando cada uma em produção
+antes de seguir pra próxima** (nenhuma migrada sem confirmar a anterior):
+1. **Piloto** (`epoca-search.mjs`) — confirmou o ponto mais arriscado do
+   plano: a URL `/.netlify/functions/nome` continua idêntica no runtime
+   novo, contanto que cada function declare
+   `export const config = { path: '/.netlify/functions/nome' }`
+   explicitamente (sem isso não tinha garantia). Com essa confirmação,
+   as outras 8 seguiram o mesmo molde com confiança.
+2. `wepink-search.mjs`, `americanas-search.mjs`, `lojasrede-search.mjs`
+   — mesmo padrão VTEX do piloto.
+3. `mercadolivre-search.mjs`, `scrappa-search.mjs`, `search.mjs` —
+   parâmetros de busca diferentes (`new URL(request.url).searchParams`
+   no lugar de `event.queryStringParameters`), testados em produção
+   (erros retornados foram problemas antigos de credencial/dado, não da
+   migração).
+4. `admin.mjs` — único endpoint POST com corpo JSON
+   (`JSON.parse(await request.text())` no lugar de
+   `JSON.parse(event.body)`). Testado com `curl` direto (senha errada →
+   401, GET → 405, OPTIONS → 200) — todos corretos, sem tocar em dado
+   real.
+5. `awin-search.mjs` — a mais arriscada (`require('zlib')` →
+   `import zlib from 'zlib'`, `Buffer.from()`, variáveis `AWIN_*_FEED_URL`
+   lidas no carregamento do módulo). Testada em produção, feed gzip da
+   Awin descomprimindo e produtos aparecendo normalmente.
+
+**Padrão técnico usado em todas**: arquivo renomeado de `.js` pra `.mjs`
+(ativa ESM sem precisar de `package.json` novo no projeto — mais
+contido/previsível que a alternativa de `"type":"module"` no
+`package.json` da raiz, que teve relatos de comportamento inconsistente
+em alguns setups do Netlify segundo a documentação pesquisada).
+`exports.handler = async (event) => {...}` virou
+`export default async (request) => {...}`; retorno
+`{statusCode, headers, body}` virou `new Response(body, {status,
+headers})`; `event.queryStringParameters.x` virou
+`new URL(request.url).searchParams.get('x')`; toda function ganhou
+`export const config = { path: '/.netlify/functions/<nome-original>' }`
+pra garantir que nenhuma URL chamada pelo `index.html` mudasse.
+
+**Resultado**: as 9 functions (`admin`, `americanas-search`,
+`awin-search`, `epoca-search`, `lojasrede-search`,
+`mercadolivre-search`, `scrappa-search`, `search`, `wepink-search`) estão
+todas no runtime moderno agora. O limite de 4KB não existe mais pro
+site — pode adicionar Eudora de volta, Amazon quando a API liberar,
+Shopee, quantas lojas quiser, nunca mais vai faltar espaço de variável
+de ambiente. Plano completo usado nesta migração está arquivado em
+`C:\Users\macie\.claude\plans\jazzy-moseying-hamming.md` se precisar
+consultar os detalhes técnicos de novo.
+
+**Pendência real**: confirmar com a Priscila que o site em produção
+continua funcionando normalmente depois de toda essa troca (ela ainda
+não testou navegando no site de verdade depois da migração completa).
