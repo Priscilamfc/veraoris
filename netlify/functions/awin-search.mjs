@@ -7,12 +7,13 @@ import zlib from 'zlib';
 // MIGRADA (24/07/2026) pro runtime moderno do Netlify Functions — ver epoca-search.mjs pro
 // contexto completo (elimina o limite de 4KB de variáveis de ambiente do modo antigo).
 //
-// Eudora OCULTA (22/07/2026, decisão da Priscila): mesmo com feed novo, o link direto de
-// produto continua quebrado na prática (confirmado por teste manual dela) — problema
-// estrutural do lado da loja, não é mais "só gerar feed novo". Até a Awin/Eudora corrigir
-// de verdade, ela fica fora da comparação inteira (preço/foto/link), não só com o link
-// marcado como não confiável. Reversível: trocar EUDORA_ENABLED de volta pra true.
-const EUDORA_ENABLED = false;
+// Eudora REATIVADA (24/07/2026, mesma sessão da migração de functions): a Priscila vai colar
+// a variável AWIN_EUDORA_FEED_URL de novo no Netlify (removida antes só pra liberar espaço do
+// limite de 4KB, que não existe mais depois da migração). Link direto continua marcado como
+// não confiável (`UNRELIABLE_LINK_STORES` abaixo, nunca removido de lá) até confirmação real de
+// que o problema do link quebrado (sessões anteriores) foi resolvido — preço/nome/foto valem,
+// o link cai no fallback de busca nativa do site por enquanto.
+const EUDORA_ENABLED = true;
 // Ama Beleza REATIVADA (24/07/2026, mesma sessão): estava oculta porque o feed "nunca trazia
 // produto nenhum" — CAUSA REAL ENCONTRADA: a variável no Netlify se chama
 // AWIN_AMOBELEZA_FEED_URL ("AMO", igual ao domínio real da loja amobeleza.com.br) mas o código
