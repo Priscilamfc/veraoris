@@ -133,7 +133,12 @@ const LINK_CHECK_ENABLED = false;
 // quando o link dela voltar a ser confiável na prática.
 // Ama Beleza removida em 22/07/2026: gerou feed novo na Awin, testado (2 produtos reais,
 // diferentes) e os dois foram pro produto certo (um em estoque, outro esgotado mas página certa).
-const UNRELIABLE_LINK_STORES = ['eudora'];
+// Ama Beleza de volta pra cá (24/07/2026): agora que o feed é buscado de verdade (nome da
+// variável corrigido), a Priscila testou 11 produtos reais e só 4 funcionaram — os outros 7
+// caíram em "produto não encontrado"/"não disponível" (feed desatualizado em relação ao
+// catálogo ao vivo da loja, mesma categoria de problema que a Eudora já tem). Link direto não
+// é confiável o bastante; cai no fallback de busca nativa do site (VTEX_SEARCH_DOMAINS).
+const UNRELIABLE_LINK_STORES = ['eudora', 'amobeleza'];
 function hasUnreliableLink(storeName) {
   var s = (storeName || '').toLowerCase();
   return UNRELIABLE_LINK_STORES.some(function (k) { return s.indexOf(k) >= 0; });

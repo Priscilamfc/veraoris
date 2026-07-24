@@ -1603,9 +1603,37 @@ erro listou o nome real de cada variável configurada — e
 `AWIN_AMOBELEZA_FEED_URL` ("AMO", igual ao domínio real `amobeleza.com.br`)
 é o nome verdadeiro no Netlify, mas `netlify/functions/awin-search.js`
 lia `AWIN_AMABELEZA_FEED_URL` ("AMA") — nome errado, sempre `undefined`.
-**Essa pode ser a causa raiz real do mistério "Ama Beleza nunca tem
-produto nenhum"** de sessões anteriores — não era o feed dela que tinha
-problema, o código nunca estava buscando o feed de verdade. Corrigido
-(2 ocorrências trocadas de AMABELEZA→AMOBELEZA). `AMABELEZA_ENABLED`
-continua `false` por enquanto — reativar pra testar só depois que o
-deploy voltar a funcionar (bloqueado pelo limite de 4KB, ver acima).
+**Essa era a causa raiz real do mistério "Ama Beleza nunca tem produto
+nenhum"** de sessões anteriores — não era o feed dela que tinha problema,
+o código nunca estava buscando o feed de verdade. Corrigido (2
+ocorrências trocadas de AMABELEZA→AMOBELEZA).
+
+**Deploy travado resolvido em duas frentes**: (1) apagada a variável
+`AWIN_EUDORA_FEED_URL` do Netlify (não usada, Eudora desligada mesmo) pra
+liberar espaço rápido; (2) a Priscila regenerou o feed da Ama Beleza com
+só as colunas necessárias (`aw_deep_link`, `product_name`,
+`merchant_image_url`, `search_price`, `merchant_name`) em vez de
+"Selecionar Tudo" (que tinha sido minha orientação errada e causou o
+estouro do limite). Deploy voltou a funcionar.
+
+**Ama Beleza reativada e testada em produção**: `AMABELEZA_ENABLED=true`,
+confirmado via function ao vivo (`awin-search?query=shampoo`) trazendo
+produtos reais dela ("AMOBELEZA BR", Wella Professionals, Lowell) com
+link `awin1.com/pclick.php` correto. **Mas a Priscila testou 11 produtos
+reais clicando de verdade e só 4 funcionaram** — os outros 7 caíram em
+"produto não encontrado"/"não disponível", mesma categoria de problema
+que a Eudora sempre teve (feed desatualizado em relação ao catálogo ao
+vivo da loja — bug de nome de variável resolvido é uma coisa, feed
+sincronizado é outra, independente). `'amobeleza'` foi devolvida pra
+`UNRELIABLE_LINK_STORES` (`awin-search.js`) — link direto marcado
+`linkOk:false`, cai no fallback de busca nativa do site dela
+(`VTEX_SEARCH_DOMAINS` no `index.html`, nunca removido de lá). Preço/
+nome/foto continuam confiáveis, só o link de compra direto que não é.
+
+**Pergunta da Priscila sobre a Eudora (respondida)**: será que o mesmo
+bug de nome errado de variável explica o problema dela também? Resposta:
+improvável — "EUDORA" não tem uma grafia alternativa ambígua tipo
+"AMA"/"AMO" que confundisse o código. De qualquer forma não dá pra
+testar agora (variável apagada pra liberar espaço do 4KB) — replanejar
+teste da Eudora só depois da migração de functions (próximo passo, ver
+plano ativo em `C:\Users\macie\.claude\plans\jazzy-moseying-hamming.md`).
