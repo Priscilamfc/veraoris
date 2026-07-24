@@ -1743,3 +1743,47 @@ específico).
 
 Sintaxe validada (`node --check` na function + todos os blocos
 `<script>` do `index.html`). **Ainda não confirmado pela Priscila.**
+
+## Sessão 24/07/2026 (continuação 8) — dupes vazando pra Perfumaria + limpeza de marcas impossíveis
+Priscila testou de novo e achou dois problemas novos, ambos meus erros:
+
+1. **Erro real: o Achador de Dupes estava aparecendo em produtos de
+   Perfumaria também** — decisão já tomada antes (sessão de planejamento)
+   era cobrir só Skincare/Maquiagem/Cabelo, porque "dupe" de perfume
+   depende do CHEIRO ser parecido (precisa curadoria manual, fora de
+   escopo). `findDupes()` (`index.html`) não tinha essa trava — como
+   perfume também usa `sub:'perfume'` compartilhado entre marcas, a
+   função encontrava "dupes" pra perfume igual às outras categorias.
+   **Corrigido**: `DUPE_ELIGIBLE_CATS=['skincare','maquiagem','cabelo']`
+   — `findDupes()` devolve lista vazia (sem link nenhum) pra qualquer
+   produto fora dessas 3 categorias. Testado com script Node direto:
+   perfumaria agora sempre vazio, skincare continua achando dupe normal.
+
+2. **Cards de Perfumaria sem preço/sem link de loja** pra Jequiti, Hinode
+   e Racco — investigado e confirmado (testei buscas reais contra
+   Americanas/Lojas Rede/Awin): essas 3 são marcas de **venda direta/
+   consultoria** (Jequiti, Hinode, Racco), nunca vendidas em loja online
+   nenhuma — não é bug, é impossível de ter comparação de preço com
+   qualquer fonte que o site tem hoje. Já Boticário/Avon (que também
+   apareceram sem comparação no print dela) têm produto de verdade
+   disponível — o problema ali é o nome do produto no catálogo ser
+   específico demais pra bater com o resultado da busca ao vivo (ex:
+   "Malbec Eau de Toilette" vs "Kit Desodorante Antitranspirante Malbec"
+   no feed) — **limitação pré-existente do site inteiro, não nova da
+   Perfumaria, não mexida nesta sessão** (fica pra investigar depois se
+   incomodar).
+
+   **Origem da pergunta "como essas marcas entraram no site"**: o
+   catálogo inteiro (~1500 produtos) foi criado bem no início do projeto
+   como conteúdo de preenchimento, antes de existir busca ao vivo — só
+   precisava ter um botão de busca da Amazon (que funciona pra qualquer
+   marca, mesmo venda direta). Isso só virou problema visível agora que
+   comparação/dupes viraram parte central da experiência.
+
+   **Corrigido**: as 6 entradas de Jequiti/Hinode/Racco dentro de
+   `cat:'perfumaria'` foram removidas do catálogo BR (as entradas dessas
+   3 marcas em skincare/maquiagem/cabelo foram mantidas — mesmo
+   problema existe lá também, mas não é o que ela reportou desta vez,
+   fora de escopo por ora). Perfumaria BR: 60→54 produtos.
+
+Sintaxe validada. **Ainda não confirmado pela Priscila.**

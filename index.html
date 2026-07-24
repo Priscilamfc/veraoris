@@ -3227,8 +3227,6 @@ var AMZ_PRODUCTS=[
 {cat:'perfumaria', sub:'perfume', brand:'Eudora', name:'Eudora Glam Eau de Parfum', srch:'Eudora Glam Perfume'},
 {cat:'perfumaria', sub:'perfume', brand:'Natura', name:'Kaiak Eau de Toilette', srch:'Natura Kaiak Perfume'},
 {cat:'perfumaria', sub:'perfume', brand:'O Boticário', name:'Glamour Eau de Toilette', srch:'O Boticário Glamour Perfume'},
-{cat:'perfumaria', sub:'perfume', brand:'Jequiti', name:'Perfume Feminino', srch:'Jequiti Perfume Feminino'},
-{cat:'perfumaria', sub:'perfume', brand:'Hinode', name:'Perfume Importado', srch:'Hinode Perfume Importado'},
 {cat:'perfumaria', sub:'perfume', brand:'Mahogany', name:'Body Splash Hidratante', srch:'Mahogany Body Splash'},
 {cat:'perfumaria', sub:'perfume', brand:'Natura', name:'Homem Eau de Toilette', srch:'Natura Homem Perfume'},
 {cat:'perfumaria', sub:'perfume', brand:'O Boticário', name:'Coffee Woman Perfume', srch:'O Boticário Coffee Woman'},
@@ -4140,8 +4138,6 @@ var AMZ_PRODUCTS=[
 {cat:'perfumaria', sub:'perfume', brand:'Avon', name:'Today Tomorrow Always', srch:'Avon Today Tomorrow Always'},
 {cat:'perfumaria', sub:'perfume', brand:'Avon', name:'Femme Eau de Parfum', srch:'Avon Femme Perfume'},
 {cat:'perfumaria', sub:'perfume', brand:'Eudora', name:'Eudora Match Perfume', srch:'Eudora Match Perfume'},
-{cat:'perfumaria', sub:'perfume', brand:'Jequiti', name:'Jequiti Match Masculino', srch:'Jequiti Match Masculino'},
-{cat:'perfumaria', sub:'perfume', brand:'Hinode', name:'Hinode Perfume Feminino Importado', srch:'Hinode Feminino Importado'},
 {cat:'perfumaria', sub:'perfume', brand:'Mahogany', name:'Body Splash Frutas Vermelhas', srch:'Mahogany Frutas Vermelhas'},
 {cat:'perfumaria', sub:'perfume', brand:'Quem disse Berenice?', name:'Body Splash Floral', srch:'Quem disse Berenice Body Splash Floral'},
 {cat:'skincare', sub:'sabonete', brand:'Granado', name:'Sabonete Líquido Phytotherapy', srch:'Granado Phytotherapy Líquido'},
@@ -5269,8 +5265,6 @@ var AMZ_PRODUCTS=[
 {cat:'perfumaria', sub:'perfume', brand:'Avon', name:'Far Away Eau de Parfum', srch:'Perfume Avon Far Away'},
 {cat:'perfumaria', sub:'perfume', brand:'Avon', name:'Attraction Eau de Parfum', srch:'Perfume Avon Attraction'},
 {cat:'perfumaria', sub:'perfume', brand:'Quem Disse Berenice', name:'Perfume Rosa Eau de Parfum', srch:'Perfume Quem Disse Berenice Rosa'},
-{cat:'perfumaria', sub:'perfume', brand:'Racco', name:'Perfume Racco Absoluto', srch:'Perfume Racco Absoluto'},
-{cat:'perfumaria', sub:'perfume', brand:'Jequiti', name:'Perfume Essence Eau de Parfum', srch:'Perfume Jequiti Essence'},
 {cat:'perfumaria', sub:'perfume', brand:'Eudora', name:'Perfume Alta Estacao', srch:'Perfume Eudora Alta Estacao'},
 {cat:'perfumaria', sub:'perfume', brand:'Victoria\'s Secret', name:'Bombshell Eau de Parfum', srch:'Perfume Victoria s Secret Bombshell'},
 {cat:'perfumaria', sub:'perfume', brand:'Carolina Herrera', name:'Good Girl Eau de Parfum', srch:'Perfume Carolina Herrera Good Girl'},
@@ -7206,8 +7200,12 @@ function getActiveProducts(){
 // de marca DIFERENTE — nunca finge ser o mesmo produto, só sugere alternativa parecida pra
 // comparar. Não busca preço de cada sugestão (evita 4x mais chamadas de API por card); o
 // preço real aparece quando a pessoa clica e vai pra busca daquele produto específico.
+// Só skincare/maquiagem/cabelo por enquanto — "dupe" de perfume depende do CHEIRO ser
+// parecido, algo que não dá pra descobrir só comparando `sub`/categoria; exigiria curadoria
+// manual (decisão da Priscila), fora de escopo por enquanto.
+var DUPE_ELIGIBLE_CATS=['skincare','maquiagem','cabelo'];
 function findDupes(p){
-  if(!p || !p.sub) return [];
+  if(!p || !p.sub || DUPE_ELIGIBLE_CATS.indexOf(p.cat)<0) return [];
   var pool=getActiveProducts();
   var out=[], seen={};
   var pBrand=(p.brand||'').toLowerCase(), pName=(p.name||'').toLowerCase();
