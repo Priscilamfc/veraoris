@@ -1457,8 +1457,22 @@ tentar achar a causa exata sem conseguir ver o layout ao vivo):
 qualquer texto do site (não só esse parágrafo) de vazar pra fora do
 elemento, em qualquer navegador, futuro ou não. Sintaxe validada.
 
-**Ainda não confirmado pela Priscila se resolveu de vez.** Se persistir,
-o próximo passo é usar a extensão "Claude in Chrome" (já instalada dela,
-ver sessão anterior) pra inspecionar o layout ao vivo e achar a causa
-exata, já que análise estática do código sem ver o DOM renderizado tem
-limite.
+**Causa raiz real encontrada** (não por mim — pela Priscila usando o
+painel "Claude in Chrome" pra inspecionar de verdade, forçando um iframe
+de 412px e lendo o DOM ao vivo): bug clássico de flexbox. `.hero` é
+`display:flex`, e seu filho `.hero-in` (que leva o padding/conteúdo do
+hero inteiro) é um item flex dentro dele — por padrão, item flex tem
+`min-width:auto`, ou seja, o navegador não deixa ele encolher abaixo da
+largura mínima intrínseca do próprio conteúdo (o título grande + o
+parágrafo). Nos 412px de largura testados, essa largura mínima calculada
+ficou ~422px — 28px maior que o espaço disponível, cortados em silêncio
+pelo `overflow-x:hidden` já existente (sem barra de rolagem pra avisar).
+Chrome/Blink (Android) e Safari/WebKit (iPhone) calculam essa largura
+mínima de forma ligeiramente diferente — no Safari cabia, no Chrome não,
+por isso o bug era só Android.
+
+**Corrigido de vez**: `min-width:0` adicionado à regra `.hero-in`
+(`index.html`) — permite o item flex encolher normalmente, resolvendo a
+causa raiz (a rede de segurança `overflow-wrap:break-word` da correção
+anterior continua no lugar como camada extra, não removida). Sintaxe
+validada. **Ainda não confirmado pela Priscila se resolveu de vez.**
