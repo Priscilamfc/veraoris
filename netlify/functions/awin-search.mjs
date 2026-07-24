@@ -1,8 +1,11 @@
-const zlib = require('zlib');
+import zlib from 'zlib';
 
 // Cada loja aprovada na Awin com feed de produtos entra aqui como uma variável de ambiente
 // nova no Netlify. Todas são buscadas e combinadas — não precisa mexer no resto do código
 // pra adicionar mais uma loja, só configurar a variável correspondente no Netlify.
+//
+// MIGRADA (24/07/2026) pro runtime moderno do Netlify Functions — ver epoca-search.mjs pro
+// contexto completo (elimina o limite de 4KB de variáveis de ambiente do modo antigo).
 //
 // Eudora OCULTA (22/07/2026, decisão da Priscila): mesmo com feed novo, o link direto de
 // produto continua quebrado na prática (confirmado por teste manual dela) — problema
@@ -131,13 +134,6 @@ const LINK_CHECK_ENABLED = false;
 // pessoa — sem depender de nenhuma requisição extra (a checagem via servidor mostrou falso
 // positivo por bloqueio anti-bot, ver LINK_CHECK_ENABLED acima). Remover cada loja da lista
 // quando o link dela voltar a ser confiável na prática.
-// Ama Beleza removida em 22/07/2026: gerou feed novo na Awin, testado (2 produtos reais,
-// diferentes) e os dois foram pro produto certo (um em estoque, outro esgotado mas página certa).
-// Ama Beleza de volta pra cá (24/07/2026): agora que o feed é buscado de verdade (nome da
-// variável corrigido), a Priscila testou 11 produtos reais e só 4 funcionaram — os outros 7
-// caíram em "produto não encontrado"/"não disponível" (feed desatualizado em relação ao
-// catálogo ao vivo da loja, mesma categoria de problema que a Eudora já tem). Link direto não
-// é confiável o bastante; cai no fallback de busca nativa do site (VTEX_SEARCH_DOMAINS).
 const UNRELIABLE_LINK_STORES = ['eudora', 'amobeleza'];
 function hasUnreliableLink(storeName) {
   var s = (storeName || '').toLowerCase();
@@ -181,26 +177,26 @@ async function fetchFeed() {
   return products;
 }
 
-exports.handler = async (event) => {
+export default async (request) => {
   const headers = {
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Headers': 'Content-Type',
     'Content-Type': 'application/json'
   };
 
-  if (event.httpMethod === 'OPTIONS') {
-    return { statusCode: 200, headers, body: '' };
+  if (request.method === 'OPTIONS') {
+    return new Response('', { status: 200, headers });
   }
 
   try {
     if (!FEED_URLS.length) {
-      return { statusCode: 200, headers, body: JSON.stringify({ results: [], error: 'Nenhum feed da Awin configurado no Netlify.' }) };
+      return new Response(JSON.stringify({ results: [], error: 'Nenhum feed da Awin configurado no Netlify.' }), { status: 200, headers });
     }
 
-    const params = event.queryStringParameters || {};
-    const query = (params.query || '').toLowerCase().trim();
+    const url = new URL(request.url);
+    const query = (url.searchParams.get('query') || '').toLowerCase().trim();
     if (!query) {
-      return { statusCode: 200, headers, body: JSON.stringify({ results: [] }) };
+      return new Response(JSON.stringify({ results: [] }), { status: 200, headers });
     }
 
     const products = await fetchFeed();
@@ -258,8 +254,10 @@ exports.handler = async (event) => {
     }));
 
     console.log('AWIN busca "' + query + '" ->', matches.length, 'resultado(s), lojas:', matches.map((m) => m.store).join(', '), '|', placeholderCount, 'imagem(ns) placeholder,', deadLinkCount, 'link(s) morto(s) descartado(s)');
-    return { statusCode: 200, headers, body: JSON.stringify({ results: matches }) };
+    return new Response(JSON.stringify({ results: matches }), { status: 200, headers });
   } catch (error) {
-    return { statusCode: 200, headers, body: JSON.stringify({ results: [], error: error.message }) };
+    return new Response(JSON.stringify({ results: [], error: error.message }), { status: 200, headers });
   }
 };
+
+export const config = { path: '/.netlify/functions/awin-search' };
