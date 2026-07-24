@@ -1973,4 +1973,22 @@ Sessão com muitas idas e voltas e usuária muito frustrada (chegou a
 ameaçar cancelar) — as duas correções foram testadas com dado real
 (`curl` nas functions + script Node com a função extraída do arquivo)
 antes de publicar, não só teoria, dado o histórico do dia. Sintaxe
-validada, publicado. **Ainda não confirmado por ela.**
+validada, publicado.
+
+## Sessão 24/07/2026 (continuação 13) — Perfumaria só buscava por "perfume", perdia a WePink inteira
+Priscila reparou que só ~56 produtos apareciam na Perfumaria e nenhum da
+WePink. Testei a function dela direto: buscar "perfume" na WePink
+devolve vazio, mas buscar "colônia" ou "body splash" traz dezenas de
+produtos reais — a WePink nomeia tudo "Desodorante Colônia X" ou "Body
+Splash X", nunca usa a palavra "perfume" no título. O fallback de busca
+ao vivo da Perfumaria (sessão anterior) só buscava pelo termo genérico
+"perfume", então a WePink inteira ficava de fora — não por não vender,
+por causa da palavra escolhida.
+
+**Corrigido**: nova função `liveMultiTermSearch(terms, callback)` (perto
+de `liveMultiSourceSearch`) — roda a busca combinada de todas as fontes
+pra VÁRIOS termos ao mesmo tempo e junta o resultado sem duplicar. A
+navegação por Perfumaria (sem busca de texto) agora usa
+`['perfume','colônia','body splash']` em vez de só `'perfume'`. Busca de
+texto normal da pessoa continua sendo só o termo que ela digitou (sem
+mudança aí). Sintaxe validada. **Ainda não confirmado pela Priscila.**

@@ -1053,6 +1053,29 @@ function liveMultiSourceSearch(query, callback){
   wepinkSearchPrices(query, function(r){ done(r,'wepink'); });
   lojasredeSearchPrices(query, function(r){ done(r,'lojasrede'); });
 }
+// Roda liveMultiSourceSearch pra VÁRIOS termos ao mesmo tempo e junta tudo num resultado só,
+// sem duplicar (usado quando um termo sozinho não cobre como cada loja nomeia o produto — ex:
+// "perfume" não bate com "Desodorante Colônia" da WePink, precisa buscar os dois).
+function liveMultiTermSearch(terms, callback){
+  var all=[], waiting=terms.length;
+  if(!waiting){ callback([]); return; }
+  terms.forEach(function(term){
+    liveMultiSourceSearch(term, function(results){
+      all = all.concat(results||[]);
+      waiting--;
+      if(waiting<=0){
+        var seen={}, deduped=[];
+        all.forEach(function(r){
+          var key=(r.store||'')+'|'+(r.link||r.title);
+          if(seen[key]) return;
+          seen[key]=true;
+          deduped.push(r);
+        });
+        callback(deduped);
+      }
+    });
+  });
+}
 // ── MERCADO LIVRE (via Apify) — DESLIGADO (22/07/2026) ──
 // O ator usado (karamelo/mercadolivre-scraper-brasil-portugues) exige no mínimo 100s de
 // execução (navegador completo via xvfb-run); o timeout de 25s da function sempre corta
@@ -1761,13 +1784,16 @@ function finishRenderProds(pool, g){
   // e uma marca que só existe numa loja parceira (ex: "Redken") aparece mesmo sem estar
   // pré-cadastrada no catálogo.
   // Também dispara ao só NAVEGAR por uma categoria estreita (sem digitar nada) — Perfumaria
-  // tem poucos produtos no catálogo fixo (54), mas Boticário/Natura/WePink têm muito mais
-  // perfume de verdade nas lojas parceiras; sem isso a categoria parecia vazia.
-  var searchedTerm = srch || (cat==='perfumaria' ? 'perfume' : '');
-  if(searchedTerm && region==='BR'){
+  // tem poucos produtos no catálogo fixo, mas Boticário/Natura/WePink têm muito mais perfume
+  // de verdade nas lojas parceiras; sem isso a categoria parecia vazia.
+  // Perfumaria precisa de VÁRIOS termos, não só "perfume" — a WePink, por exemplo, nomeia todo
+  // produto "Desodorante Colônia" ou "Body Splash", nunca com a palavra "perfume" no título, e
+  // uma busca só por "perfume" nunca achava nada dela (confirmado testando a function ao vivo).
+  var browseTerms = (!srch && cat==='perfumaria') ? ['perfume','colônia','body splash'] : (srch ? [srch] : []);
+  if(browseTerms.length && region==='BR'){
     var snapSrch=srch, snapCat=cat;
     var hadCatalogResults=pool.length>0;
-    liveMultiSourceSearch(searchedTerm, function(results){
+    liveMultiTermSearch(browseTerms, function(results){
       if(srch!==snapSrch || cat!==snapCat) return; // a pessoa já mudou busca/categoria, descarta
       // "hidratante" etc. são adjetivos de marketing usados em categorias bem diferentes
       // (batom hidratante, loção corporal hidratante...) — quando há um filtro de categoria
