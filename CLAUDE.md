@@ -1597,3 +1597,15 @@ mesmo espaço), vale investigar se o Netlify permite limitar quais
 variáveis vão pra quais funções específicas (reduzir o que cada function
 individual recebe) — não confirmado se essa opção existe na conta dela,
 não pesquisado ainda nesta sessão.
+
+**Achado bônus, direto do log de erro do Netlify**: a "Resolved config" do
+erro listou o nome real de cada variável configurada — e
+`AWIN_AMOBELEZA_FEED_URL` ("AMO", igual ao domínio real `amobeleza.com.br`)
+é o nome verdadeiro no Netlify, mas `netlify/functions/awin-search.js`
+lia `AWIN_AMABELEZA_FEED_URL` ("AMA") — nome errado, sempre `undefined`.
+**Essa pode ser a causa raiz real do mistério "Ama Beleza nunca tem
+produto nenhum"** de sessões anteriores — não era o feed dela que tinha
+problema, o código nunca estava buscando o feed de verdade. Corrigido
+(2 ocorrências trocadas de AMABELEZA→AMOBELEZA). `AMABELEZA_ENABLED`
+continua `false` por enquanto — reativar pra testar só depois que o
+deploy voltar a funcionar (bloqueado pelo limite de 4KB, ver acima).
