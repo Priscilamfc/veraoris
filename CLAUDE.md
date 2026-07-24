@@ -1699,3 +1699,47 @@ consultar os detalhes técnicos de novo.
 **Pendência real**: confirmar com a Priscila que o site em produção
 continua funcionando normalmente depois de toda essa troca (ela ainda
 não testou navegando no site de verdade depois da migração completa).
+
+Priscila confirmou logo depois: **site funcionando normal após a
+migração**. Ela religou a Eudora pra testar de novo (feed novo gerado) —
+**continua com link quebrado na prática**, então voltou pra
+`EUDORA_ENABLED=false` (`awin-search.mjs`). Novidade: a **Beleza na Web
+confirmou** (respondendo ao e-mail pendente) que sabe do problema e disse
+que deve resolver em breve pelo suporte da Awin — aguardando.
+
+## Sessão 24/07/2026 (continuação 7) — bug real na categoria Perfumaria + dupes pouco visíveis
+Priscila testou a categoria Perfumaria nova e reportou que aparecia
+shampoo, creme e batom junto com os perfumes — não só perfume. Também
+não estava achando o link do Achador de Dupes.
+
+**Causa raiz do bug de Perfumaria**: `conflictsWithCategory()`
+(`index.html`) usava a mesma lógica pras 4 categorias — rejeitar um
+resultado só se ele contém palavra EXCLUSIVA de OUTRA categoria (ex:
+rejeita de "skincare" se tiver "shampoo" ou "batom"). Isso funciona bem
+pras 3 categorias antigas (são guarda-chuvas amplos, a lista de exclusão
+cobre bem o que não deveria entrar) mas quebra pra Perfumaria, que é uma
+categoria ESTREITA — um "Creme Nutritivo" ou "Óleo Reparador" qualquer
+não contém nenhuma palavra das listas de exclusão (não é "shampoo" nem
+"batom" literal), então passava despercebido mesmo não sendo perfume.
+**Corrigido**: regra invertida só pra perfumaria — em vez de "rejeitar se
+parece outra categoria", agora é "só aceitar se REALMENTE parece
+perfume" (exige palavra de `PERFUME_ONLY_NOUNS`). Testado com script Node
+direto contra a função real: shampoo/creme/batom agora rejeitados,
+perfume/colônia aceitos, outras 3 categorias sem mudança de
+comportamento.
+
+**Achador de Dupes**: código conferido, parece correto (`amzCard()`
+calcula `findDupes(p)` e monta o link em todo card do catálogo, nos dois
+lugares que renderizam produto — `renderProdsPage` e `renderAmzPage`).
+Suspeita mais provável: o link (`.cpc-dupes-link`) era texto pequeno
+(11px) sem destaque visual, fácil de passar despercebido no meio do
+card cheio de informação. **Ajustado**: agora tem aparência de botão
+(fundo dourado claro, borda tracejada, mesmo estilo visual do botão
+"Comparar preços em outras lojas" já existente) — deve chamar mais
+atenção. Não foi encontrado bug de lógica que impedisse o link de
+aparecer — se depois desse ajuste visual a Priscila ainda não achar,
+precisa investigar mais a fundo (talvez pedir print de um card
+específico).
+
+Sintaxe validada (`node --check` na function + todos os blocos
+`<script>` do `index.html`). **Ainda não confirmado pela Priscila.**

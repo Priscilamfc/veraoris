@@ -259,8 +259,8 @@ footer{background:linear-gradient(135deg,#FFF5F0,#FFE8F0);padding:40px 40px 24px
 .cpc-compare-btn:hover{background:var(--gold3);border-color:var(--gold)}
 .cpc-pr.best .cpc-buy{background:var(--ok);color:white}
 .cpc-save{background:var(--okbg);color:var(--ok);font-size:11px;font-weight:700;padding:6px 12px;border-radius:8px;margin-bottom:10px;border:1px solid rgba(42,107,10,.15)}
-.cpc-dupes-link{display:block;font-size:11px;font-weight:700;color:var(--gold5);cursor:pointer;text-align:center;padding:6px 0;margin-top:2px}
-.cpc-dupes-link:hover{text-decoration:underline}
+.cpc-dupes-link{display:block;width:100%;background:var(--gold4);border:1.5px dashed var(--border);border-radius:8px;font-size:12px;font-weight:700;color:var(--gold5);cursor:pointer;text-align:center;padding:8px 12px;margin-top:6px;transition:all .2s}
+.cpc-dupes-link:hover{background:var(--gold3);border-color:var(--gold)}
 .cpc-dupes-box{display:flex;flex-direction:column;gap:5px;margin-top:2px;padding-top:8px;border-top:1px dashed var(--marble3)}
 .cpc-dupes-hint{font-size:10px;color:var(--muted);margin-bottom:2px}
 .cpc-dupe-item{display:flex;flex-direction:column;background:var(--marble);border-radius:8px;padding:7px 10px;cursor:pointer;transition:all .2s}
@@ -1179,7 +1179,11 @@ function conflictsWithCategory(cat, title){
   if(cat==='skincare') return has(MAKEUP_ONLY_NOUNS) || has(HAIR_ONLY_NOUNS) || has(PERFUME_ONLY_NOUNS);
   if(cat==='maquiagem') return has(SKINCARE_ONLY_NOUNS) || has(HAIR_ONLY_NOUNS) || has(PERFUME_ONLY_NOUNS);
   if(cat==='cabelo') return has(MAKEUP_ONLY_NOUNS) || has(SKINCARE_ONLY_NOUNS) || has(PERFUME_ONLY_NOUNS);
-  if(cat==='perfumaria') return has(MAKEUP_ONLY_NOUNS) || has(SKINCARE_ONLY_NOUNS) || has(HAIR_ONLY_NOUNS);
+  // Perfumaria é diferente das outras 3: é uma categoria estreita (só perfume/colônia/body
+  // splash), não um guarda-chuva amplo. Excluir só o que "parece outra categoria" não basta —
+  // sobra qualquer creme/máscara/tratamento que não menciona nenhuma palavra das listas de
+  // exclusão. Aqui a regra é ao contrário: só aceita se REALMENTE parecer perfume.
+  if(cat==='perfumaria') return !has(PERFUME_ONLY_NOUNS);
   return false;
 }
 // Best-effort category guess from free text, used when we don't have a structured cat (ex: promos)
