@@ -10,15 +10,20 @@ const zlib = require('zlib');
 // de verdade, ela fica fora da comparação inteira (preço/foto/link), não só com o link
 // marcado como não confiável. Reversível: trocar EUDORA_ENABLED de volta pra true.
 const EUDORA_ENABLED = false;
+// Ama Beleza OCULTA (24/07/2026, decisão da Priscila): feed nunca traz produto nenhum na
+// prática ("nunca tem nenhum produto") — sinal de que o feed dela está com problema do lado
+// deles. Mesmo padrão reversível da Eudora: trocar AMABELEZA_ENABLED de volta pra true se o
+// feed voltar a funcionar.
+const AMABELEZA_ENABLED = false;
 const FEED_URLS = [
   EUDORA_ENABLED ? process.env.AWIN_EUDORA_FEED_URL : null,
   process.env.AWIN_LOCCITANE_FEED_URL,
-  process.env.AWIN_AMABELEZA_FEED_URL,
+  AMABELEZA_ENABLED ? process.env.AWIN_AMABELEZA_FEED_URL : null,
   process.env.AWIN_NATURA_FEED_URL,
   process.env.AWIN_FOREVERLISS_FEED_URL,
   process.env.AWIN_BOTICARIO_FEED_URL
 ].filter(Boolean);
-console.log('AWIN variáveis configuradas -> Eudora:', EUDORA_ENABLED ? !!process.env.AWIN_EUDORA_FEED_URL : 'OCULTA (EUDORA_ENABLED=false)', '| L\'Occitane:', !!process.env.AWIN_LOCCITANE_FEED_URL, '| Ama Beleza:', !!process.env.AWIN_AMABELEZA_FEED_URL, '| Natura:', !!process.env.AWIN_NATURA_FEED_URL, '| Forever Liss:', !!process.env.AWIN_FOREVERLISS_FEED_URL, '| Boticário:', !!process.env.AWIN_BOTICARIO_FEED_URL, '| total feeds:', FEED_URLS.length);
+console.log('AWIN variáveis configuradas -> Eudora:', EUDORA_ENABLED ? !!process.env.AWIN_EUDORA_FEED_URL : 'OCULTA (EUDORA_ENABLED=false)', '| L\'Occitane:', !!process.env.AWIN_LOCCITANE_FEED_URL, '| Ama Beleza:', AMABELEZA_ENABLED ? !!process.env.AWIN_AMABELEZA_FEED_URL : 'OCULTA (AMABELEZA_ENABLED=false)', '| Natura:', !!process.env.AWIN_NATURA_FEED_URL, '| Forever Liss:', !!process.env.AWIN_FOREVERLISS_FEED_URL, '| Boticário:', !!process.env.AWIN_BOTICARIO_FEED_URL, '| total feeds:', FEED_URLS.length);
 const CACHE_TTL_MS = 30 * 60 * 1000; // 30 minutos
 
 let cache = { data: null, fetchedAt: 0 };

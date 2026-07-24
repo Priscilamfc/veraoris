@@ -1265,3 +1265,35 @@ Sintaxe validada com `node --check`. **Commitado e enviado, mas ainda não
 confirmado pela Priscila se resolveu de vez** — pedido pra ela retestar e,
 se persistir, mandar print de tela (não consigo reproduzir/depurar isso
 sem ver acontecer, ambiente sem navegador nesta sessão).
+
+## Sessão 23-24/07/2026 — bug do debounce CONFIRMADO resolvido + extensão "Claude in Chrome" instalada
+Priscila testou em produção (busca "hidratante", 271 resultados, trocando
+entre "Maior preço"/"Menor preço"): **cards continuam todos visíveis**,
+só a ordem muda — contagem "18 de 271" mantida, sem sumiço. O debounce de
+200ms (`scheduleSortOrder`, sessão anterior) resolveu o bug de vez.
+
+**Extensão "Claude in Chrome" instalada e confirmada funcionando** — mas
+importante entender o que ela é de fato: é um **painel separado dentro do
+próprio Chrome**, com sua própria conversa (mesmo modelo, Sonnet 5), que
+consegue navegar/clicar no site de verdade. **Não é a mesma sessão** do
+Claude Code daqui do terminal, e não vira ferramenta de navegador
+automática pra mim — ela não apareceu no `ToolSearch` mesmo depois da
+instalação/ativação confirmadas. Ou seja, o plano combinado (tentado numa
+sessão anterior) de "conectar a extensão pra eu ganhar acesso a navegador"
+**não é como essa extensão funciona** — ela é uma ferramenta paralela, não
+um plugin desta sessão.
+
+**Uso prático combinado com a Priscila**: quando precisar verificar um bug
+visual (algo que só aparece olhando a tela renderizada, não dá pra ver
+lendo código), o fluxo é: (1) ela mesma testa no site normalmente e me
+descreve o que viu — mais simples, funcionou bem nesta sessão; ou (2) ela
+abre o painel "Claude in Chrome" e pede pra ele navegar/testar e descrever
+o que viu, depois cola a resposta dele aqui pra mim corrigir. Esse painel
+**não corrige código nem faz push** (sem acesso ao repositório/arquivos)
+— só descreve o que vê. Quem corrige continua sendo o Claude daqui.
+
+**Nota de comunicação**: a Priscila é leiga em programação e se frustra
+rápido com instruções técnicas em texto ("popup", "ícone da extensão",
+etc.) — funcionou muito melhor pedir print de tela passo a passo (ela
+consegue arrastar a imagem pra dentro da conversa) e ir um clique de
+cada vez, em vez de explicar vários passos de uma vez.

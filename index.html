@@ -1073,8 +1073,13 @@ function mlProcessQueue(){
 // deixava card esperando muito tempo mostrando só 2 opções (Ama Beleza + Amazon) até a
 // Americanas responder. Ator não usa navegador (só 512MB por execução), suporta mais
 // concorrência com folga do que o antigo Mercado Livre suportava.
+// DESLIGADA (24/07/2026): créditos grátis do Apify acabaram — Priscila pediu pra ocultar
+// enquanto decide se vale pagar. Flag reversível, mesmo padrão do EPOCA_ENABLED/ML_ENABLED —
+// reativar trocando pra true quando o crédito voltar (comprado ou renovado).
+var AM_ENABLED=false;
 var AM_MAX_CONCURRENT=5, AM_ACTIVE=0, AM_QUEUE=[];
 function americanasSearchPrices(query, callback){
+  if(!AM_ENABLED){ callback([]); return; }
   AM_QUEUE.push({query:query, callback:callback});
   amProcessQueue();
 }
