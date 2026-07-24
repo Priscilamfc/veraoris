@@ -3,6 +3,9 @@
 // autenticação nem pagamento, igual às outras duas — não precisa mais de ator pago aqui.
 // Substitui a versão anterior (ator gio21/americanas-product-scraper via Apify), abandonada
 // porque os créditos grátis do Apify acabaram.
+//
+// MIGRADA (24/07/2026) pro runtime moderno do Netlify Functions — ver epoca-search.mjs pro
+// contexto completo (elimina o limite de 4KB de variáveis de ambiente do modo antigo).
 const CACHE_TTL_MS = 30 * 60 * 1000; // 30 minutos, mesmo padrão das outras fontes
 const FETCH_TIMEOUT_MS = 8000;
 const API_URL = 'https://www.americanas.com.br/api/catalog_system/pub/products/search';
@@ -99,28 +102,30 @@ async function fetchFeed(query) {
   return products;
 }
 
-exports.handler = async (event) => {
+export default async (request) => {
   const headers = {
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Headers': 'Content-Type',
     'Content-Type': 'application/json'
   };
 
-  if (event.httpMethod === 'OPTIONS') {
-    return { statusCode: 200, headers, body: '' };
+  if (request.method === 'OPTIONS') {
+    return new Response('', { status: 200, headers });
   }
 
   try {
-    const params = event.queryStringParameters || {};
-    const query = (params.query || '').trim();
+    const url = new URL(request.url);
+    const query = (url.searchParams.get('query') || '').trim();
     if (!query) {
-      return { statusCode: 200, headers, body: JSON.stringify({ results: [] }) };
+      return new Response(JSON.stringify({ results: [] }), { status: 200, headers });
     }
 
     const products = await fetchFeed(query);
-    return { statusCode: 200, headers, body: JSON.stringify({ results: products }) };
+    return new Response(JSON.stringify({ results: products }), { status: 200, headers });
   } catch (error) {
     console.log('AMERICANAS erro:', error.message);
-    return { statusCode: 200, headers, body: JSON.stringify({ results: [], error: error.message }) };
+    return new Response(JSON.stringify({ results: [], error: error.message }), { status: 200, headers });
   }
 };
+
+export const config = { path: '/.netlify/functions/americanas-search' };

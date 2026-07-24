@@ -3,6 +3,9 @@
 // não precisa do filtro de categoria pesado que a Americanas (marketplace geral) precisa.
 // Link direto TESTADO E CONFIRMADO pela Priscila (24/07/2026, busca "hidratante") — foi pro
 // produto certo, então não precisa do `linkOk:false` cautelar que outras fontes novas recebem.
+//
+// MIGRADA (24/07/2026) pro runtime moderno do Netlify Functions — ver epoca-search.mjs pro
+// contexto completo (elimina o limite de 4KB de variáveis de ambiente do modo antigo).
 const CACHE_TTL_MS = 30 * 60 * 1000; // 30 minutos, mesmo padrão das outras fontes
 const FETCH_TIMEOUT_MS = 8000;
 const API_URL = 'https://www.lojasrede.com.br/api/catalog_system/pub/products/search';
@@ -79,28 +82,30 @@ async function fetchFeed(query) {
   return products;
 }
 
-exports.handler = async (event) => {
+export default async (request) => {
   const headers = {
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Headers': 'Content-Type',
     'Content-Type': 'application/json'
   };
 
-  if (event.httpMethod === 'OPTIONS') {
-    return { statusCode: 200, headers, body: '' };
+  if (request.method === 'OPTIONS') {
+    return new Response('', { status: 200, headers });
   }
 
   try {
-    const params = event.queryStringParameters || {};
-    const query = (params.query || '').trim();
+    const url = new URL(request.url);
+    const query = (url.searchParams.get('query') || '').trim();
     if (!query) {
-      return { statusCode: 200, headers, body: JSON.stringify({ results: [] }) };
+      return new Response(JSON.stringify({ results: [] }), { status: 200, headers });
     }
 
     const products = await fetchFeed(query);
-    return { statusCode: 200, headers, body: JSON.stringify({ results: products }) };
+    return new Response(JSON.stringify({ results: products }), { status: 200, headers });
   } catch (error) {
     console.log('LOJASREDE erro:', error.message);
-    return { statusCode: 200, headers, body: JSON.stringify({ results: [], error: error.message }) };
+    return new Response(JSON.stringify({ results: [], error: error.message }), { status: 200, headers });
   }
 };
+
+export const config = { path: '/.netlify/functions/lojasrede-search' };
