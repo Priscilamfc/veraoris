@@ -1297,3 +1297,33 @@ rápido com instruções técnicas em texto ("popup", "ícone da extensão",
 etc.) — funcionou muito melhor pedir print de tela passo a passo (ela
 consegue arrastar a imagem pra dentro da conversa) e ir um clique de
 cada vez, em vez de explicar vários passos de uma vez.
+
+## Sessão 24/07/2026 — Americanas e Ama Beleza ocultadas
+Priscila recebeu notificação do Apify que os créditos grátis acabaram.
+Confirmado no código: das fontes possíveis, **só a Americanas** ainda
+consumia crédito do Apify de verdade (Mercado Livre já tinha sido
+desligado numa sessão anterior, `ML_ENABLED=false`, e nunca voltou a
+gastar crédito). As outras lojas (Awin: L'Occitane/Natura/Forever Liss/
+Ama Beleza/Boticário; API direta: Época [já desligada]/WePink) não usam
+Apify, não são afetadas pelo crédito zerado.
+
+Priscila decidiu ocultar duas fontes por enquanto (até decidir se paga o
+Apify) e por feed com problema:
+1. **Americanas** — `AM_ENABLED=false` (`index.html`), mesmo padrão de
+   flag reversível das outras fontes (`ML_ENABLED`/`EPOCA_ENABLED`/
+   `EUDORA_ENABLED`). Reativar trocando pra `true` quando decidir pagar
+   o Apify (ou se ele renovar crédito grátis).
+2. **Ama Beleza** — Priscila relatou que o feed dela "nunca tem nenhum
+   produto" (achado, não teoria — ela usa o site com frequência).
+   `AMABELEZA_ENABLED=false` (`netlify/functions/awin-search.js`), mesmo
+   padrão da Eudora (`EUDORA_ENABLED`) — sai do array `FEED_URLS`, nem é
+   buscada. Reversível se o feed dela voltar a funcionar do lado deles.
+
+Sintaxe validada (`node --check` na function + todos os blocos `<script>`
+do `index.html` extraídos e testados com `new Function()`). Commit
+`2786b87`, enviado.
+
+**Lojas parceiras efetivamente ativas depois desta sessão**: L'Occitane,
+Natura, Forever Liss, Boticário (Awin) + WePink (API direta). Eudora,
+Ama Beleza, Época (Awin/API direta) e Americanas, Mercado Livre (Apify)
+estão todas ocultas por flag reversível — nenhuma foi removida do código.
