@@ -1931,3 +1931,46 @@ Publicado — **confirmado no site ao vivo que as referências ao dupe
 sumiram** (ela reportou ainda estar vendo, era só cache/deploy ainda não
 tinha ido — resolvido assim que o push aconteceu). **Comportamento da
 Perfumaria (card sumindo) ainda não confirmado por ela.**
+
+## Sessão 24/07/2026 (continuação 12) — regressão em Skincare + falso positivo "sem perfume"
+Duas coisas graves reportadas em sequência rápida, sessão já bem tensa:
+
+**1. "Site quebrado" em Skincare** — print mostrando CeraVe/Vichy/La
+Roche-Posay só com botão da Amazon, sem comparação, que "tava
+aparecendo direito antes". Investigado direto nas lojas (`curl` nas
+functions, sem tocar em código primeiro): confirmado que nem Americanas
+nem Lojas Rede têm QUALQUER produto CeraVe agora (testado com termo
+completo e só a marca sozinha, zero resultado dos dois). Não é
+regressão de hoje — nenhuma loja parceira atual (Boticário/Natura/
+Forever Liss/L'Occitane) vende marca de farmácia, e a única fonte que
+cobria isso (Scrappa) está desligada desde muito antes desta sessão.
+Coincidência de timing (ela só reparou nisso testando com mais atenção
+hoje), não causa nova.
+
+**Decisão**: em vez de discutir a causa, estendida a mesma proteção que
+foi feita pra Perfumaria (card some se todas as 5 fontes responderem e
+nenhuma achar preço real) pra **todas as categorias**, não só
+Perfumaria — `sourcesTotal` deixou de checar `cat==='perfumaria'`,
+agora é só `region==='BR'`. Ela tinha dito antes que "no resto não
+acontecia", mas o print prova que acontece (Scrappa desligada afeta
+qualquer marca de farmácia em qualquer categoria) — melhor ter a
+proteção em todo canto do que confiar que só uma categoria precisa.
+
+**2. Falso positivo real na Perfumaria**: print mostrando desodorante
+Nivea "Sem Perfume" e loção Hidramais "Perfume de Bebê" aparecendo nos
+resultados ao vivo — exatamente a limitação que eu já tinha documentado
+(palavra "perfume" solta pega qualquer produto que menciona a palavra,
+mesmo dizendo o oposto). **Corrigido de vez**: nova lista
+`PERFUME_FALSE_POSITIVE_HINTS` (`index.html`, perto de
+`PERFUME_ONLY_NOUNS`) — frases como "sem perfume", "antitranspirante",
+"loção hidratante", "sabonete" têm prioridade sobre o match de
+"perfume" solto, excluem sempre. Testado com os exemplos exatos do
+print dela (Nivea Sem Perfume, Hidramais Perfume de Bebê, Natura
+Tododia Sem Perfume — todos agora corretamente excluídos) e com
+perfume de verdade (Deo Colônia Alfazema, Malbec — continuam passando).
+
+Sessão com muitas idas e voltas e usuária muito frustrada (chegou a
+ameaçar cancelar) — as duas correções foram testadas com dado real
+(`curl` nas functions + script Node com a função extraída do arquivo)
+antes de publicar, não só teoria, dado o histórico do dia. Sintaxe
+validada, publicado. **Ainda não confirmado por ela.**

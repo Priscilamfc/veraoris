@@ -1165,6 +1165,11 @@ var MAKEUP_ONLY_NOUNS=['batom','gloss','sombra','delineador','rímel','rimel','b
 var SKINCARE_ONLY_NOUNS=['hidratante facial','hidratante corporal','sérum','serum','protetor solar','esfoliante facial','água micelar','agua micelar','sabonete facial'];
 var HAIR_ONLY_NOUNS=['shampoo','condicionador','leave-in','leave in','óleo capilar','oleo capilar','máscara capilar','mascara capilar','tônico capilar','tonico capilar','ampola capilar'];
 var PERFUME_ONLY_NOUNS=['perfume','colônia','colonia','eau de parfum','eau de toilette','eau de cologne','body splash','deo colônia','deo colonia'];
+// "perfume" aparece em MUITO produto que não é perfume — desodorante antitranspirante "sem
+// perfume" (ou seja, sem fragrância nenhuma), loção corporal com aroma tipo "perfume de bebê",
+// sabonete perfumado. Essas frases têm prioridade sobre o match de PERFUME_ONLY_NOUNS: se
+// aparecerem, é sempre exclusão, mesmo contendo a palavra "perfume" em algum lugar.
+var PERFUME_FALSE_POSITIVE_HINTS=['sem perfume','sem fragrância','sem fragrancia','antitranspirante','loção hidratante','locao hidratante','hidratante corporal','sabonete'];
 function conflictsWithCategory(cat, title){
   var t=(title||'').toLowerCase();
   var has=function(list){ return list.some(function(w){ return t.indexOf(w)>=0; }); };
@@ -1174,8 +1179,9 @@ function conflictsWithCategory(cat, title){
   // Perfumaria é diferente das outras 3: é uma categoria estreita (só perfume/colônia/body
   // splash), não um guarda-chuva amplo. Excluir só o que "parece outra categoria" não basta —
   // sobra qualquer creme/máscara/tratamento que não menciona nenhuma palavra das listas de
-  // exclusão. Aqui a regra é ao contrário: só aceita se REALMENTE parecer perfume.
-  if(cat==='perfumaria') return !has(PERFUME_ONLY_NOUNS);
+  // exclusão. Aqui a regra é ao contrário: só aceita se REALMENTE parecer perfume — e mesmo
+  // assim, se bater uma frase de falso-positivo (ex: "sem perfume"), exclui de qualquer jeito.
+  if(cat==='perfumaria') return has(PERFUME_FALSE_POSITIVE_HINTS) || !has(PERFUME_ONLY_NOUNS);
   return false;
 }
 // Best-effort category guess from free text, used when we don't have a structured cat (ex: promos)
@@ -7536,14 +7542,13 @@ function loadComparison(cardId, searchTerm, brand, name, fallbackLink, sub, cat)
   // um scraper de verdade e pode demorar bem mais; é tratado como um complemento que atualiza
   // o card depois, se/quando chegar, sem nunca atrasar a exibição inicial.
   var pending = (region==='BR') ? 1 : (SCRAPPA_ENABLED ? 1 : 0);
-  // Priscila (24/07/2026): na Perfumaria especificamente, produto sem preço real de loja
-  // parceira nenhuma não pode ficar na tela só com o botão da Amazon — some da grade em vez
-  // de aparentar resultado de verdade. Só remove depois que TODAS as fontes ao vivo já
-  // responderam (nunca no meio do caminho, senão apagaria card que ia achar preço um instante
-  // depois). Restrito a `cat==='perfumaria'` de propósito — nas outras categorias (skincare/
-  // maquiagem/cabelo) esse problema não acontece na prática (catálogo bem mais estabelecido,
-  // testado há semanas), então o comportamento delas fica exatamente como sempre foi.
-  var sourcesTotal = (region==='BR' && cat==='perfumaria') ? 5 : 0; // awin, americanas, epoca, wepink, lojasrede
+  // Priscila (24/07/2026): produto sem preço real de loja parceira nenhuma não pode ficar na
+  // tela só com o botão da Amazon — some da grade em vez de aparentar resultado de verdade.
+  // Só remove depois que TODAS as fontes ao vivo já responderam (nunca no meio do caminho,
+  // senão apagaria card que ia achar preço um instante depois). Estendido pra TODAS as
+  // categorias (não só Perfumaria) — confirmado que marca de farmácia (CeraVe, Vichy...) sem
+  // Scrappa também cai nesse mesmo problema em Skincare.
+  var sourcesTotal = region==='BR' ? 5 : 0; // awin, americanas, epoca, wepink, lojasrede
   var sourcesDone = 0;
   function renderCombined(){
     var el=document.getElementById(cardId);
