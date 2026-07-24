@@ -1893,3 +1893,41 @@ tipo de bug que causava "só 1 produto no total" (esse já está corrigido).
 Mesma categoria de limitação que "hidratante" já tinha antes.
 
 Sintaxe validada. **Ainda não confirmado pela Priscila.**
+
+## Sessão 24/07/2026 (continuação 11) — card sem preço na Perfumaria some da grade
+Ainda na mesma sessão, Priscila mandou print mostrando vários produtos
+de Perfumaria (Avon, Quem Disse Berenice, Mahogany...) sem preço nem
+botão de loja, só Amazon — e foi taxativa: **"não é pra aparecer coisa
+sem preço e sem botão de loja"**. Também confirmou que esse problema **só
+acontece na Perfumaria**, não no resto do site (skincare/maquiagem/
+cabelo já são estáveis há semanas).
+
+**Investigação rápida** (`curl` direto nas functions ao vivo, testando
+cada marca que sobrou no catálogo de Perfumaria): confirmado que Natura,
+O Boticário, Eudora, Dior, Carolina Herrera, Granado, Phebo, Victoria's
+Secret, YSL, Armani, Calvin Klein, Hugo Boss e Jean Paul Gaultier TÊM
+produto real disponível nas lojas parceiras (Awin ou Lojas Rede). Avon,
+Quem Disse Berenice, Mahogany, Água de Cheiro e Chanel **não** retornaram
+nenhum resultado real em nenhuma fonte testada.
+
+**Implementado, restrito a `cat==='perfumaria'`**: `loadComparison()`
+agora conta quantas das 5 fontes ao vivo (Awin, Americanas, Época,
+WePink, Lojas Rede) já responderam (`sourcesDone`/`sourcesTotal=5`,
+incrementado em cada callback). Só depois que TODAS já responderam — pra
+nunca remover um card que ia achar preço um instante depois — se
+`combined.length` continuar zero (nenhuma bateu a marca de verdade), o
+card inteiro é removido da grade (`cardEl.remove()`) em vez de ficar
+mostrando só o botão da Amazon fingindo ser resultado. Escopo
+propositalmente limitado à Perfumaria — as outras 3 categorias
+continuam exatamente com o comportamento de sempre (Amazon como opção
+garantida), porque ela confirmou que ali não é um problema. Isso
+resolve o caso das marcas sem match automaticamente (Avon, Quem Disse
+Berenice etc. simplesmente não aparecem mais), sem precisar remover
+cada uma manualmente do catálogo.
+
+Sintaxe validada, commit único junto com a remoção do Achador de Dupes
+(pedido explícito dela, ver seção acima) e a correção de `goCat()`.
+Publicado — **confirmado no site ao vivo que as referências ao dupe
+sumiram** (ela reportou ainda estar vendo, era só cache/deploy ainda não
+tinha ido — resolvido assim que o push aconteceu). **Comportamento da
+Perfumaria (card sumindo) ainda não confirmado por ela.**
