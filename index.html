@@ -1065,21 +1065,16 @@ function mlProcessQueue(){
     });
   }
 }
-// ── AMERICANAS (via Apify, API VTEX direta — sem navegador, rápido) ──
+// ── AMERICANAS (API VTEX pública, chamada direta — sem Apify, sem custo) ──
 // Segunda fonte multimarca (Camada 2), pro catálogo achar preço/foto fiel em marcas que
-// as lojas parceiras da Awin não vendem. Mesmo padrão de fila da Mercado Livre.
-// Concorrência subida de 3 pra 5 (23/07/2026): cada chamada individual demora uns 5s (overhead
-// do próprio ator, medido em produção) e com vários cards na tela ao mesmo tempo a fila de 3
-// deixava card esperando muito tempo mostrando só 2 opções (Ama Beleza + Amazon) até a
-// Americanas responder. Ator não usa navegador (só 512MB por execução), suporta mais
-// concorrência com folga do que o antigo Mercado Livre suportava.
-// DESLIGADA (24/07/2026): créditos grátis do Apify acabaram — Priscila pediu pra ocultar
-// enquanto decide se vale pagar. Flag reversível, mesmo padrão do EPOCA_ENABLED/ML_ENABLED —
-// reativar trocando pra true quando o crédito voltar (comprado ou renovado).
-var AM_ENABLED=false;
+// as lojas parceiras da Awin não vendem.
+// REESCRITA (24/07/2026): antes usava o ator gio21/americanas-product-scraper via Apify,
+// desligado quando os créditos grátis do Apify acabaram. Descoberto que a Americanas roda
+// em VTEX igual Época/WePink e expõe a mesma API pública de catálogo, sem autenticação nem
+// custo — trocado pra chamada direta, mesmo padrão de `epoca-search.js`/`wepink-search.js`.
+// Fila de concorrência mantida (não é mais necessária pra limitar uso do Apify, mas não atrapalha).
 var AM_MAX_CONCURRENT=5, AM_ACTIVE=0, AM_QUEUE=[];
 function americanasSearchPrices(query, callback){
-  if(!AM_ENABLED){ callback([]); return; }
   AM_QUEUE.push({query:query, callback:callback});
   amProcessQueue();
 }

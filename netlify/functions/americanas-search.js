@@ -1,16 +1,17 @@
-const APIFY_TOKEN = process.env.APIFY_TOKEN;
-const ACTOR_ID = 'gio21~americanas-product-scraper';
-const CACHE_TTL_MS = 30 * 60 * 1000; // 30 minutos, mesmo padrão do awin-search.js/mercadolivre-search.js
-// Ator usa a API VTEX Catalog diretamente (sem navegador) — bem mais rápido que o antigo
-// ator do Mercado Livre (que exigia navegador completo e >=100s), por isso um timeout curto
-// já é suficiente aqui.
-const RUN_TIMEOUT_SECS = 20;
+// Americanas — chamada DIRETA na API pública do VTEX (mesma tecnologia da Época/WePink),
+// sem passar pelo Apify: descoberto em 24/07/2026 que a API de catálogo dela responde sem
+// autenticação nem pagamento, igual às outras duas — não precisa mais de ator pago aqui.
+// Substitui a versão anterior (ator gio21/americanas-product-scraper via Apify), abandonada
+// porque os créditos grátis do Apify acabaram.
+const CACHE_TTL_MS = 30 * 60 * 1000; // 30 minutos, mesmo padrão das outras fontes
+const FETCH_TIMEOUT_MS = 8000;
+const API_URL = 'https://www.americanas.com.br/api/catalog_system/pub/products/search';
 
 let cache = {}; // { [query]: { data, fetchedAt } }
 
 // Americanas é marketplace geral (vende de tudo), então a busca por palavra livre da VTEX
 // devolve muito ruído fora de beleza — testado com "batom": chocolate "Baton", lapiseira/
-// caneta formato batom, kit escolar, boneca Barbie. O campo `category` da própria API já
+// caneta formato batom, kit escolar, boneca Barbie. O campo `categories` da própria API já
 // classifica isso certinho (ex: "/Beleza e perfumaria/Maquiagem/Batom/" vs "/Papelaria/...",
 // "/Alimentos e bebidas/...", "/Brinquedos/..."), então filtramos por ele em vez de tentar
 // adivinhar toda palavra de exclusão possível (impossível de enumerar).
@@ -20,42 +21,46 @@ const BEAUTY_CATEGORY_PREFIX = '/beleza e perfumaria';
 // Maquiagem/") — rede de segurança extra pelo título.
 const NON_BEAUTY_TITLE_HINTS = ['infantil', 'brinquedo', 'faz de conta'];
 
-function isRealBeautyProduct(it) {
-  const cat = (it.category || '').toLowerCase();
-  if (!cat.startsWith(BEAUTY_CATEGORY_PREFIX)) return false;
-  const t = (it.name || '').toLowerCase();
+function isRealBeautyProduct(p) {
+  const cats = (p.categories || []).map((c) => c.toLowerCase());
+  if (!cats.some((c) => c.startsWith(BEAUTY_CATEGORY_PREFIX))) return false;
+  const t = (p.productName || '').toLowerCase();
   return !NON_BEAUTY_TITLE_HINTS.some((h) => t.indexOf(h) >= 0);
 }
 
-function normalizeItems(items) {
-  return (items || [])
-    .filter(isRealBeautyProduct)
-    .map((it) => {
-      const title = it.name;
-      const price = typeof it.price === 'string' ? parseFloat(it.price.replace(/[^\d,.-]/g, '').replace(',', '.')) : it.price;
-      const link = it.url;
-      if (!title || !price || !link) return null;
-      return { title, price, store: 'Americanas', link, image: it.imageUrl || null, brand: it.brand || null };
-    })
-    .filter(Boolean);
+function bestAvailablePrice(product) {
+  let best = null;
+  (product.items || []).forEach((item) => {
+    (item.sellers || []).forEach((seller) => {
+      const offer = seller.commertialOffer || {};
+      if (offer.IsAvailable && offer.Price) {
+        const price = offer.Price;
+        if (!best || price < best) best = price;
+      }
+    });
+  });
+  return best;
 }
 
-async function runActor(input) {
-  // Sem navegador (API VTEX direta) — memória baixa é suficiente, diferente do que precisou
-  // pro ator antigo do Mercado Livre.
-  const url = `https://api.apify.com/v2/acts/${ACTOR_ID}/run-sync-get-dataset-items?token=${APIFY_TOKEN}&timeout=${RUN_TIMEOUT_SECS}&memory=512`;
-  const res = await fetch(url, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(input)
-  });
-  const items = await res.json();
-  if (!Array.isArray(items)) {
-    console.log('AMERICANAS resposta não é uma lista — status HTTP:', res.status);
-    console.log('AMERICANAS corpo da resposta:', JSON.stringify(items));
-    return [];
-  }
-  return items;
+function normalizeItems(raw) {
+  return (raw || [])
+    .filter(isRealBeautyProduct)
+    .map((p) => {
+      const price = bestAvailablePrice(p);
+      if (!price || !p.productName || !p.linkText) return null; // sem estoque em nenhum vendedor
+      const firstItem = (p.items || [])[0];
+      const image = firstItem && firstItem.images && firstItem.images[0] && firstItem.images[0].imageUrl;
+      const brand = (p.brand && p.brand !== 'Não Disponível') ? p.brand : null;
+      return {
+        title: p.productName,
+        price,
+        store: 'Americanas',
+        link: p.link || ('https://www.americanas.com.br/' + encodeURIComponent(p.linkText) + '/p'),
+        image: image || null,
+        brand
+      };
+    })
+    .filter(Boolean);
 }
 
 async function fetchFeed(query) {
@@ -65,15 +70,31 @@ async function fetchFeed(query) {
     return cached.data;
   }
 
-  // maxItems reduzido de 20 pra 10 (23/07/2026): loadComparison só usa os top 3 diversificados
-  // por loja mesmo, e um payload menor ajuda a resposta chegar um pouco mais rápido — o grosso
-  // da demora (~5s) é overhead fixo do próprio ator/Apify, não o tamanho do resultado.
-  const raw = await runActor({ searchTerm: query, maxItems: 10, onlyAvailable: true });
-  console.log('AMERICANAS itens brutos:', raw.length);
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
+  let raw = [];
+  try {
+    const res = await fetch(API_URL + '?ft=' + encodeURIComponent(query), {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0 Safari/537.36',
+        'Accept': 'application/json'
+      },
+      signal: controller.signal
+    });
+    if (res.ok) {
+      const parsed = await res.json();
+      if (Array.isArray(parsed)) raw = parsed;
+    } else {
+      console.log('AMERICANAS resposta não-OK, status:', res.status);
+    }
+  } catch (err) {
+    console.log('AMERICANAS fetch falhou:', err.message);
+  } finally {
+    clearTimeout(timer);
+  }
 
   const products = normalizeItems(raw);
-  console.log('AMERICANAS produtos válidos após normalizar:', products.length, '/', raw.length);
-
+  console.log('AMERICANAS produtos válidos:', products.length, '/', raw.length);
   cache[query] = { data: products, fetchedAt: now };
   return products;
 }
@@ -90,10 +111,6 @@ exports.handler = async (event) => {
   }
 
   try {
-    if (!APIFY_TOKEN) {
-      return { statusCode: 200, headers, body: JSON.stringify({ results: [], error: 'APIFY_TOKEN não configurada no Netlify.' }) };
-    }
-
     const params = event.queryStringParameters || {};
     const query = (params.query || '').trim();
     if (!query) {

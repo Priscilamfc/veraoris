@@ -1325,5 +1325,39 @@ do `index.html` extraídos e testados com `new Function()`). Commit
 
 **Lojas parceiras efetivamente ativas depois desta sessão**: L'Occitane,
 Natura, Forever Liss, Boticário (Awin) + WePink (API direta). Eudora,
-Ama Beleza, Época (Awin/API direta) e Americanas, Mercado Livre (Apify)
-estão todas ocultas por flag reversível — nenhuma foi removida do código.
+Ama Beleza, Época (Awin/API direta) e Mercado Livre (Apify) estão todas
+ocultas por flag reversível — nenhuma foi removida do código.
+
+## Sessão 24/07/2026 (continuação) — Americanas migrada de Apify pra chamada direta (sem custo)
+Priscila perguntou se existia plataforma melhor que Scrappa/Apify. Antes
+de responder, testei (via `WebFetch`) se a Americanas também roda em VTEX
+como a Época e a WePink — **confirmado que sim**: a API pública de
+catálogo dela (`/api/catalog_system/pub/products/search`) responde sem
+autenticação nem custo, mesmo formato de dados das outras duas
+(`productName`, `categories[]`, `items[].sellers[].commertialOffer`).
+Também testei a **Beleza na Web** pela mesma via — devolveu **HTTP 403**
+(bloqueada/não é VTEX acessível assim), então essa continua dependendo só
+do feed da Awin (ainda não chegou).
+
+**Implementado**: `netlify/functions/americanas-search.js` reescrita do
+zero, trocando a chamada ao ator `gio21/americanas-product-scraper`
+(Apify, pago) por chamada HTTP direta na API VTEX da Americanas — mesmo
+padrão de `epoca-search.js`. O filtro de categoria de beleza (que já
+existia, pra não deixar passar chocolate/brinquedo/material escolar que
+batem "batom" por palavra) foi adaptado pro campo `categories` (array de
+caminhos) que a API VTEX devolve nativamente, em vez do campo `category`
+(string única) que só existia no formato de saída do ator antigo do
+Apify. `AM_ENABLED=false` (que tinha acabado de ser criado nesta mesma
+sessão pra ocultar a Americanas) foi **removido** — não faz mais sentido,
+a fonte não depende mais de crédito nenhum.
+
+**Resultado prático**: a Americanas volta a funcionar imediatamente, sem
+custo, sem depender de decisão sobre pagar o Apify. `APIFY_TOKEN` só seria
+necessário de novo se algum dia precisarmos de outra loja que exija
+navegador/scraping de verdade (não é o caso de nenhuma fonte ativa hoje).
+
+Sintaxe validada (`node --check` na function + todos os blocos `<script>`
+do `index.html`). **Ainda não testado em produção nem confirmado pela
+Priscila** — pedir pra ela testar uma busca (ex: "hidratante" ou "batom")
+depois do deploy e confirmar se a Americanas volta a aparecer com preço/
+foto/link certos.
