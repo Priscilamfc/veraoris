@@ -1471,8 +1471,23 @@ Chrome/Blink (Android) e Safari/WebKit (iPhone) calculam essa largura
 mínima de forma ligeiramente diferente — no Safari cabia, no Chrome não,
 por isso o bug era só Android.
 
-**Corrigido de vez**: `min-width:0` adicionado à regra `.hero-in`
-(`index.html`) — permite o item flex encolher normalmente, resolvendo a
-causa raiz (a rede de segurança `overflow-wrap:break-word` da correção
-anterior continua no lugar como camada extra, não removida). Sintaxe
-validada. **Ainda não confirmado pela Priscila se resolveu de vez.**
+**Primeira tentativa insuficiente**: `min-width:0` só em `.hero-in` não
+resolveu — Priscila testou e continuou igual. Motivo: o mesmo bug se
+repete em CADA nível de flex/grid aninhado, não só no primeiro. A árvore
+real é `.hero` (flex) > `.hero-in` (flex, já corrigido) > `.hero-intro`
+(child de `.hero-in`, portanto TAMBÉM item flex, sem `min-width:0`) >
+`.hero-h1`/`.hero-desc` (o texto que estoura). Corrigir só o primeiro
+nível não adianta — o segundo nível (`.hero-intro`) ainda tinha
+`min-width:auto` por padrão, recriando o mesmo travamento de largura um
+passo mais fundo.
+
+**Corrigido de verdade**: `min-width:0` adicionado também em
+`.hero-intro` (o nível que realmente continha o título+parágrafo
+problemáticos). Como prevenção do mesmo bug reaparecer em outro canto do
+hero, também adicionado em `.hero-block` (item de grid dentro de
+`.hero-split`, mesma categoria de bug em grid — grid items têm
+`min-width:auto` por padrão igual flex items). A rede de segurança
+`overflow-wrap:break-word` da correção anterior continua no lugar como
+camada extra. Sintaxe validada. **Ainda não confirmado pela Priscila se
+resolveu de vez** — se persistir, o padrão a procurar é sempre o mesmo:
+achar QUAL nível aninhado de flex/grid ainda não tem `min-width:0`.
