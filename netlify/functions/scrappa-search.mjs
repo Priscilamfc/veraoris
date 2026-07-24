@@ -1,27 +1,29 @@
+// MIGRADA (24/07/2026) pro runtime moderno do Netlify Functions — ver epoca-search.mjs pro
+// contexto completo (elimina o limite de 4KB de variáveis de ambiente do modo antigo).
 const SCRAPPA_KEY = process.env.SCRAPPA_KEY;
 
-exports.handler = async (event) => {
+export default async (request) => {
   const headers = {
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Headers': 'Content-Type',
     'Content-Type': 'application/json'
   };
 
-  if (event.httpMethod === 'OPTIONS') {
-    return { statusCode: 200, headers, body: '' };
+  if (request.method === 'OPTIONS') {
+    return new Response('', { status: 200, headers });
   }
 
   try {
     if (!SCRAPPA_KEY) {
-      return { statusCode: 200, headers, body: JSON.stringify({ merged: [], error: 'SCRAPPA_KEY não configurada no Netlify.' }) };
+      return new Response(JSON.stringify({ merged: [], error: 'SCRAPPA_KEY não configurada no Netlify.' }), { status: 200, headers });
     }
 
-    const params = event.queryStringParameters || {};
-    const query = params.query || '';
-    const gl = params.gl || 'br';
-    const url = 'https://scrappa.co/api/search-advanced?query=' + encodeURIComponent(query) + '&gl=' + encodeURIComponent(gl) + '&search_type=shop';
+    const url = new URL(request.url);
+    const query = url.searchParams.get('query') || '';
+    const gl = url.searchParams.get('gl') || 'br';
+    const scrappaUrl = 'https://scrappa.co/api/search-advanced?query=' + encodeURIComponent(query) + '&gl=' + encodeURIComponent(gl) + '&search_type=shop';
 
-    const res = await fetch(url, { headers: { 'X-API-KEY': SCRAPPA_KEY } });
+    const res = await fetch(scrappaUrl, { headers: { 'X-API-KEY': SCRAPPA_KEY } });
     const data = await res.json();
 
     const products = data.popular_products || [];
@@ -43,8 +45,10 @@ exports.handler = async (event) => {
     }
     console.log('SCRAPPA products with direct link:', merged.filter(function(m){return m.link;}).length, '/', merged.length);
 
-    return { statusCode: 200, headers, body: JSON.stringify({ merged }) };
+    return new Response(JSON.stringify({ merged }), { status: 200, headers });
   } catch (error) {
-    return { statusCode: 200, headers, body: JSON.stringify({ merged: [], error: error.message }) };
+    return new Response(JSON.stringify({ merged: [], error: error.message }), { status: 200, headers });
   }
 };
+
+export const config = { path: '/.netlify/functions/scrappa-search' };

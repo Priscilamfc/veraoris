@@ -1,3 +1,5 @@
+// MIGRADA (24/07/2026) pro runtime moderno do Netlify Functions — ver epoca-search.mjs pro
+// contexto completo (elimina o limite de 4KB de variáveis de ambiente do modo antigo).
 const CLIENT_ID = process.env.ML_CLIENT_ID;
 const CLIENT_SECRET = process.env.ML_CLIENT_SECRET;
 
@@ -14,29 +16,34 @@ async function getToken() {
   return data.access_token;
 }
 
-exports.handler = async (event) => {
+export default async (request) => {
   const headers = {
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Headers': 'Content-Type',
     'Content-Type': 'application/json'
   };
 
-  if (event.httpMethod === 'OPTIONS') {
-    return { statusCode: 200, headers, body: '' };
+  if (request.method === 'OPTIONS') {
+    return new Response('', { status: 200, headers });
   }
 
   try {
     if (!CLIENT_ID || !CLIENT_SECRET) {
-      return {
-        statusCode: 200,
-        headers,
-        body: JSON.stringify({ error: 'Variáveis de ambiente ML_CLIENT_ID / ML_CLIENT_SECRET não configuradas no Netlify.' })
-      };
+      return new Response(JSON.stringify({ error: 'Variáveis de ambiente ML_CLIENT_ID / ML_CLIENT_SECRET não configuradas no Netlify.' }), { status: 200, headers });
     }
 
-    const params = event.queryStringParameters || {};
-    const { skin, hair_type, concern, hair_concern, maq_area, maq_prod,
-            skin_prod, hair_prod, budget, cat } = params;
+    const reqUrl = new URL(request.url);
+    const params = reqUrl.searchParams;
+    const skin = params.get('skin');
+    const hair_type = params.get('hair_type');
+    const concern = params.get('concern');
+    const hair_concern = params.get('hair_concern');
+    const maq_area = params.get('maq_area');
+    const maq_prod = params.get('maq_prod');
+    const skin_prod = params.get('skin_prod');
+    const hair_prod = params.get('hair_prod');
+    const budget = params.get('budget');
+    const cat = params.get('cat');
 
     let queries = [];
 
@@ -107,14 +114,10 @@ exports.handler = async (event) => {
     const data = await res.json();
 
     if (!res.ok) {
-      return {
-        statusCode: 200,
-        headers,
-        body: JSON.stringify({
-          error: 'Mercado Livre API: ' + (data.message || data.error || ('HTTP ' + res.status)),
-          debug: data
-        })
-      };
+      return new Response(JSON.stringify({
+        error: 'Mercado Livre API: ' + (data.message || data.error || ('HTTP ' + res.status)),
+        debug: data
+      }), { status: 200, headers });
     }
 
     const results = data.results || [];
@@ -146,21 +149,15 @@ exports.handler = async (event) => {
       sold: p.sold_quantity
     }));
 
-    return {
-      statusCode: 200,
-      headers,
-      body: JSON.stringify({
-        query: query,
-        total: products.length,
-        products: products
-      })
-    };
+    return new Response(JSON.stringify({
+      query: query,
+      total: products.length,
+      products: products
+    }), { status: 200, headers });
 
   } catch (error) {
-    return {
-      statusCode: 200,
-      headers,
-      body: JSON.stringify({ error: error.message })
-    };
+    return new Response(JSON.stringify({ error: error.message }), { status: 200, headers });
   }
 };
+
+export const config = { path: '/.netlify/functions/search' };
