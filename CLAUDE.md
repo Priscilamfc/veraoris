@@ -1409,3 +1409,33 @@ tiveram até confirmação manual da Priscila.
 Sintaxe validada (`node --check` na function + todos os blocos `<script>`
 do `index.html`). **Ainda não testado em produção nem confirmado pela
 Priscila.**
+
+## Sessão 24/07/2026 (continuação 3) — Lojas Rede confirmada + link direto liberado + bug de mobile Android
+Priscila testou "hidratante" no site em produção: **Americanas e Lojas
+Rede apareceram e ambas levaram pro produto certo**. As outras 4 lojas
+parceiras (L'Occitane/Natura/Forever Liss/Boticário) não apareceram nessa
+busca — testei a function `awin-search` direto e confirmei que ela
+devolve 10 produtos reais dessas 4 lojas certinho, então o problema não é
+falta de dado do servidor. Não cheguei a uma causa confirmada (perguntei
+se ela tinha alguma aba de categoria selecionada e se rolou a página, mas
+a conversa seguiu pra outro assunto antes de eu receber a resposta) —
+**investigação em aberto, retomar se ela trouxer o caso de novo.**
+
+Como o link da Lojas Rede foi confirmado funcionando de verdade,
+`netlify/functions/lojasrede-search.js` teve o `linkOk:false` cautelar
+removido — passa a usar o link direto normalmente, mesmo tratamento que
+WePink/Americanas já têm.
+
+**Bug de mobile reportado**: site aparece "desfocado"/cortado em Android
+(celular dela E tablet do marido), mas certinho no iPhone. Prints
+comparados: no Android o texto está visivelmente maior, com palavra
+cortada na borda direita ("num só lugar" virando "num só luga") — sinal
+de que o navegador Android estava aumentando a fonte automaticamente
+(recurso de acessibilidade de alguns navegadores/tablets Android, que o
+Safari do iPhone não faz da mesma forma), estourando o layout puxado pro
+tamanho original. **Corrigido**: `-webkit-text-size-adjust:100%;
+text-size-adjust:100%` adicionado à regra `html{}` (`index.html`) —
+desliga esse ajuste automático, texto passa a respeitar o tamanho
+definido no CSS em qualquer navegador. Sintaxe validada. **Ainda não
+confirmado pela Priscila se resolveu** — pedir pra ela testar de novo no
+Android do marido depois do deploy.

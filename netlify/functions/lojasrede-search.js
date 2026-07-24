@@ -1,8 +1,8 @@
 // Lojas Rede — chamada DIRETA na API pública do VTEX, mesmo padrão da Época/WePink/Americanas.
 // Loja focada em beleza (categorias testadas em 24/07/2026 só devolveram "Maquiagem/..."),
 // não precisa do filtro de categoria pesado que a Americanas (marketplace geral) precisa.
-// Link direto ainda não testado clicando de verdade (só a API) — `linkOk:false` por segurança,
-// mesmo tratamento inicial que Eudora/Ama Beleza/Época tiveram até confirmação manual.
+// Link direto TESTADO E CONFIRMADO pela Priscila (24/07/2026, busca "hidratante") — foi pro
+// produto certo, então não precisa do `linkOk:false` cautelar que outras fontes novas recebem.
 const CACHE_TTL_MS = 30 * 60 * 1000; // 30 minutos, mesmo padrão das outras fontes
 const FETCH_TIMEOUT_MS = 8000;
 const API_URL = 'https://www.lojasrede.com.br/api/catalog_system/pub/products/search';
@@ -37,8 +37,7 @@ function normalizeItems(raw) {
         store: 'Lojas Rede',
         link: p.link || ('https://www.lojasrede.com.br/' + encodeURIComponent(p.linkText) + '/p'),
         image: image || null,
-        brand,
-        linkOk: false
+        brand
       };
     })
     .filter(Boolean);
