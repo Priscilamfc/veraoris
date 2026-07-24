@@ -1488,6 +1488,66 @@ hero, também adicionado em `.hero-block` (item de grid dentro de
 `.hero-split`, mesma categoria de bug em grid — grid items têm
 `min-width:auto` por padrão igual flex items). A rede de segurança
 `overflow-wrap:break-word` da correção anterior continua no lugar como
-camada extra. Sintaxe validada. **Ainda não confirmado pela Priscila se
-resolveu de vez** — se persistir, o padrão a procurar é sempre o mesmo:
-achar QUAL nível aninhado de flex/grid ainda não tem `min-width:0`.
+camada extra. Sintaxe validada. **Confirmado pela Priscila: resolvido.**
+
+## Sessão 24/07/2026 (continuação 4) — quarta categoria (Perfumaria) + Achador de Dupes
+Conversa estratégica: Priscila pediu sugestão pra diferenciar o VERAORIS
+de comparadores genéricos. Pesquisa (WebSearch) confirmou "dupe"
+(alternativa mais barata de outra marca) como tendência forte de beleza
+em 2026 no TikTok — destaque especial pra perfume (conversão de 7,6% no
+TikTok Shop dos EUA, a mais alta do segmento; 57% da Geração Z "compra
+pela fórmula, não pelo logo"). Combinado com a cultura brasileira já
+estabelecida de "perfume contratipo", foi o ângulo escolhido.
+
+**Decisões tomadas com ela antes de implementar**: Perfumaria não entra
+no quiz (só navegação/catálogo); usar imagem gerada por ela (Gemini) como
+ícone padrão; Achador de Dupes cobre só Skincare/Maquiagem/Cabelo por
+enquanto (dupe de perfume depende de cheiro, precisa de curadoria manual
+futura); dupes aparecem como link/seção dentro de cada card existente,
+não como página nova. Sessão passou por `/plan` (EnterPlanMode) antes de
+mexer no código, dado o escopo (nova categoria toca ~10 pontos do
+`index.html` + feature nova).
+
+**Achado que economizou bastante trabalho**: o catálogo já tinha 74
+produtos de perfume reais (O Boticário, Natura, Eudora, Avon, Quem Disse
+Berenice, Granado, Jequiti, Racco + designers internacionais: Chanel,
+Dior, YSL, Armani, Carolina Herrera, Lancôme, Calvin Klein, Hugo Boss,
+Paco Rabanne, Jean Paul Gaultier, Victoria's Secret) — só estavam
+classificados por engano como `cat:'skincare'` (não havia categoria
+própria antes). Bastou recategorizar (`cat:'skincare', sub:'perfume'` →
+`cat:'perfumaria', sub:'perfume'`, replace_all), não precisou escrever
+catálogo do zero.
+
+**Implementado**:
+1. **Categoria Perfumaria**: `IPERF` (novo, base64 JPEG comprimido a
+   partir da imagem gerada pela Priscila, redimensionada de 616KB PNG
+   pra ~44KB JPEG via `System.Drawing`/PowerShell antes de embutir —
+   mesmo padrão de `ISKIN`/`IMAQ`/`ICAB`). `getIco()` ganhou 4º ramo.
+   `PERFUME_ONLY_NOUNS` nova lista (perfume, colônia, eau de parfum/
+   toilette/cologne, body splash) — `conflictsWithCategory()`/
+   `inferCat()` estendidos simetricamente aos outros 3. Nav (`goCat`),
+   card de categoria na home (cor dourada própria, `.cat-card.pf`),
+   rodapé, filtro de pílulas da página Comparar (`renderCats()`,
+   `cats-grid` de 3→4 colunas), painel admin (`prodCat`/`promoCat`
+   selects, `catLbl`/`cl` maps) — todos os ~10 pontos do padrão de
+   categoria atualizados. Nav ganhou um item a mais: ids `nl5`/`nl6`/
+   `nl7` renumerados (Perfumaria entrou como `nl5`, "Como Funciona"/
+   "Sobre" empurrados pra `nl6`/`nl7`) pra manter o array `nl:[]` de
+   tradução PT/EN consistente.
+2. **Achador de Dupes**: `findDupes(p)` (novo, perto de
+   `getActiveProducts()`) — acha até 4 produtos do catálogo do MESMO
+   `sub` (tipo) e MESMA `cat`, marca diferente, sem duplicar. Reaproveita
+   100% dado que já existia no catálogo, sem precisar de fonte nova.
+   Testado direto contra o catálogo real (script Node avulso, não fica
+   no repo) — resultados sensatos nas 3 categorias (ex: hidratante CeraVe
+   → Neutrogena/La Roche-Posay/Vichy/Nivea; batom Maybelline → L'Oréal/
+   NYX/Ruby Rose/Vult). `amzCard()` ganhou link "🔍 Ver alternativas
+   parecidas" que expande uma lista (`goSearchTerm()`, novo, navega pra
+   busca daquele produto específico — preço real só aparece ao clicar,
+   não busca preço de toda sugestão antecipadamente). Rótulo sempre
+   "alternativas parecidas, marca diferente" — nunca "mesmo produto",
+   pra não repetir o problema que a decisão D3 já identificou.
+
+Sintaxe validada (`node --check` + todos os blocos `<script>` do
+`index.html` com `new Function()`). **Ainda não testado em produção nem
+confirmado pela Priscila.**
