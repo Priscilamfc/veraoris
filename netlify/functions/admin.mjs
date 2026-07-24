@@ -1,3 +1,5 @@
+// MIGRADA (24/07/2026) pro runtime moderno do Netlify Functions — ver epoca-search.mjs pro
+// contexto completo (elimina o limite de 4KB de variáveis de ambiente do modo antigo).
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY;
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
@@ -10,7 +12,7 @@ const ALLOWED = {
   promos: ['select', 'insert', 'update', 'delete']
 };
 
-exports.handler = async (event) => {
+export default async (request) => {
   const headers = {
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Headers': 'Content-Type',
@@ -18,40 +20,37 @@ exports.handler = async (event) => {
     'Content-Type': 'application/json'
   };
 
-  if (event.httpMethod === 'OPTIONS') {
-    return { statusCode: 200, headers, body: '' };
+  if (request.method === 'OPTIONS') {
+    return new Response('', { status: 200, headers });
   }
-  if (event.httpMethod !== 'POST') {
-    return { statusCode: 405, headers, body: JSON.stringify({ ok: false, error: 'Method not allowed' }) };
+  if (request.method !== 'POST') {
+    return new Response(JSON.stringify({ ok: false, error: 'Method not allowed' }), { status: 405, headers });
   }
 
   if (!ADMIN_PASSWORD || !SUPABASE_URL || !SUPABASE_SERVICE_KEY) {
-    return {
-      statusCode: 200,
-      headers,
-      body: JSON.stringify({ ok: false, error: 'Servidor não configurado: ADMIN_PASSWORD / SUPABASE_URL / SUPABASE_SERVICE_KEY em falta no Netlify.' })
-    };
+    return new Response(JSON.stringify({ ok: false, error: 'Servidor não configurado: ADMIN_PASSWORD / SUPABASE_URL / SUPABASE_SERVICE_KEY em falta no Netlify.' }), { status: 200, headers });
   }
 
   let body;
   try {
-    body = JSON.parse(event.body || '{}');
+    const text = await request.text();
+    body = JSON.parse(text || '{}');
   } catch (e) {
-    return { statusCode: 400, headers, body: JSON.stringify({ ok: false, error: 'JSON inválido' }) };
+    return new Response(JSON.stringify({ ok: false, error: 'JSON inválido' }), { status: 400, headers });
   }
 
   const { password, action, table, id, data } = body;
 
   if (password !== ADMIN_PASSWORD) {
-    return { statusCode: 401, headers, body: JSON.stringify({ ok: false, error: 'Password incorreta' }) };
+    return new Response(JSON.stringify({ ok: false, error: 'Password incorreta' }), { status: 401, headers });
   }
 
   if (action === 'verify') {
-    return { statusCode: 200, headers, body: JSON.stringify({ ok: true }) };
+    return new Response(JSON.stringify({ ok: true }), { status: 200, headers });
   }
 
   if (!table || !ALLOWED[table] || !ALLOWED[table].includes(action)) {
-    return { statusCode: 400, headers, body: JSON.stringify({ ok: false, error: 'Ação não permitida para esta tabela' }) };
+    return new Response(JSON.stringify({ ok: false, error: 'Ação não permitida para esta tabela' }), { status: 400, headers });
   }
 
   const sbHeaders = {
@@ -64,7 +63,7 @@ exports.handler = async (event) => {
     if (action === 'select') {
       const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}?select=*&order=data_hora.desc&limit=500`, { headers: sbHeaders });
       const rows = await res.json();
-      return { statusCode: 200, headers, body: JSON.stringify({ ok: res.ok, data: rows }) };
+      return new Response(JSON.stringify({ ok: res.ok, data: rows }), { status: 200, headers });
     }
 
     if (action === 'insert') {
@@ -73,30 +72,30 @@ exports.handler = async (event) => {
         headers: { ...sbHeaders, Prefer: 'return=minimal' },
         body: JSON.stringify(data || {})
       });
-      return { statusCode: 200, headers, body: JSON.stringify({ ok: res.ok }) };
+      return new Response(JSON.stringify({ ok: res.ok }), { status: 200, headers });
     }
 
     if (action === 'update') {
       if (id === undefined || id === null) {
-        return { statusCode: 400, headers, body: JSON.stringify({ ok: false, error: 'id em falta' }) };
+        return new Response(JSON.stringify({ ok: false, error: 'id em falta' }), { status: 400, headers });
       }
       const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}?id=eq.${encodeURIComponent(id)}`, {
         method: 'PATCH',
         headers: { ...sbHeaders, Prefer: 'return=minimal' },
         body: JSON.stringify(data || {})
       });
-      return { statusCode: 200, headers, body: JSON.stringify({ ok: res.ok }) };
+      return new Response(JSON.stringify({ ok: res.ok }), { status: 200, headers });
     }
 
     if (action === 'delete') {
       if (id === undefined || id === null) {
-        return { statusCode: 400, headers, body: JSON.stringify({ ok: false, error: 'id em falta' }) };
+        return new Response(JSON.stringify({ ok: false, error: 'id em falta' }), { status: 400, headers });
       }
       const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}?id=eq.${encodeURIComponent(id)}`, {
         method: 'DELETE',
         headers: { ...sbHeaders, Prefer: 'return=minimal' }
       });
-      return { statusCode: 200, headers, body: JSON.stringify({ ok: res.ok }) };
+      return new Response(JSON.stringify({ ok: res.ok }), { status: 200, headers });
     }
 
     if (action === 'deleteAll') {
@@ -104,11 +103,13 @@ exports.handler = async (event) => {
         method: 'DELETE',
         headers: { ...sbHeaders, Prefer: 'return=minimal' }
       });
-      return { statusCode: 200, headers, body: JSON.stringify({ ok: res.ok }) };
+      return new Response(JSON.stringify({ ok: res.ok }), { status: 200, headers });
     }
 
-    return { statusCode: 400, headers, body: JSON.stringify({ ok: false, error: 'Ação desconhecida' }) };
+    return new Response(JSON.stringify({ ok: false, error: 'Ação desconhecida' }), { status: 400, headers });
   } catch (error) {
-    return { statusCode: 200, headers, body: JSON.stringify({ ok: false, error: error.message }) };
+    return new Response(JSON.stringify({ ok: false, error: error.message }), { status: 200, headers });
   }
 };
+
+export const config = { path: '/.netlify/functions/admin' };
