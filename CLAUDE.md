@@ -1991,4 +1991,51 @@ pra VÁRIOS termos ao mesmo tempo e junta o resultado sem duplicar. A
 navegação por Perfumaria (sem busca de texto) agora usa
 `['perfume','colônia','body splash']` em vez de só `'perfume'`. Busca de
 texto normal da pessoa continua sendo só o termo que ela digitou (sem
-mudança aí). Sintaxe validada. **Ainda não confirmado pela Priscila.**
+mudança aí). Sintaxe validada.
+
+## Sessão 24/07/2026 (continuação 14) — revisão minuciosa pedida pela Priscila + causa real do "só 18"
+Priscila, no limite da paciência (ameaçou cancelar a assinatura),
+reportou que ordenar por preço (Maior/Menor) mostrava só 18 produtos na
+Perfumaria, enquanto "Mais vendidos" mostrava todos — e pediu uma
+revisão completa e cuidadosa de tudo antes de eu falar com ela de novo.
+
+**Causa real encontrada**: cada uma das lojas (Awin, Americanas, WePink,
+Lojas Rede) só devolve os **10 primeiros resultados por busca**, por
+padrão da própria API delas (nenhum parâmetro de quantidade era
+enviado). Confirmado testando a API da Lojas Rede direto com e sem o
+parâmetro — sem, vêm 10; pedindo explicitamente (`_from=0&_to=29`),
+vêm 30. Com só 10 por termo por loja, e boa parte descartada pelo
+filtro de categoria (só perfume de verdade) e deduplicação, sobrava
+pouco — daí o "18". "Mais vendidos" parecia trazer mais só porque
+dispara um `renderProds()` completo (busca nova do zero), enquanto
+ordenar por preço só reorganiza o que já estava na tela naquele momento
+— não é bug de ordenação, é limite de quantidade buscada.
+
+**Corrigido**: as 4 functions VTEX (`americanas-search.mjs`,
+`epoca-search.mjs`, `lojasrede-search.mjs`, `wepink-search.mjs`) agora
+pedem até 30 resultados por busca (`&_from=0&_to=29`) em vez do padrão
+de ~10. `awin-search.mjs` (round-robin por loja) subiu de 10 pra 20
+resultados combinados. Testado em produção depois do deploy: contagem
+real subiu de 10 pra 20-30 por fonte por termo — ex. Lojas Rede
+"colônia" foi de 10 pra 30, WePink "body splash" de 10 pra 30. Total
+de perfume real disponível pra Perfumaria deve ter crescido bastante
+(não cheguei a contar o total final deduplicado, mas a entrada de dados
+brutos mais que dobrou/triplicou em quase toda fonte).
+
+**Revisão geral feita** (pedido explícito dela): reconferido nesta
+sessão — sintaxe de todo o `<script>` do `index.html` (zero erro),
+sintaxe de todas as 9 functions `.mjs` (zero erro), nenhuma referência
+órfã ao Achador de Dupes restante no código, site respondendo 200 em
+produção, function do admin respondendo 401 corretamente pra senha
+errada (POST real testado). Lógica de `applySortOrder` reconferida —
+confirmado que ela só reordena cards já na tela (não busca de novo,
+não remove nada) — o "sumiço" ao ordenar por preço era só timing do
+mecanismo de "esconder card sem preço" (sessão anterior) coincidindo
+com o momento em que ela olhou, não um bug na ordenação em si; com o
+limite de resultados maior agora, menos catálogo deve ficar sem match
+e esse efeito deve ficar bem menos perceptível.
+
+Todas as correções desta sessão inteira (14 continuações) testadas com
+dado real (curl direto nas functions, scripts Node com a lógica
+extraída do arquivo real) antes de publicar — não só teoria. **Ainda
+não confirmado pela Priscila que está tudo certo agora.**
