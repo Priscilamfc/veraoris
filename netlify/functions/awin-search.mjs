@@ -224,9 +224,9 @@ export default async (request) => {
     const queues = Array.from(byStore.values());
     const balanced = [];
     let i = 0;
-    while (balanced.length < 10 && queues.some((q) => q.length > i)) {
+    while (balanced.length < 20 && queues.some((q) => q.length > i)) {
       queues.forEach((q) => {
-        if (balanced.length < 10 && q[i]) balanced.push(q[i]);
+        if (balanced.length < 20 && q[i]) balanced.push(q[i]);
       });
       i++;
     }

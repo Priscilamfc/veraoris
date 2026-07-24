@@ -59,7 +59,7 @@ async function fetchFeed(query) {
   const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
   let raw = [];
   try {
-    const res = await fetch(API_URL + '?ft=' + encodeURIComponent(query), {
+    const res = await fetch(API_URL + '?ft=' + encodeURIComponent(query) + '&_from=0&_to=29', {
       headers: {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0 Safari/537.36',
         'Accept': 'application/json'
