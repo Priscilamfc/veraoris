@@ -7574,7 +7574,13 @@ function loadComparison(cardId, searchTerm, brand, name, fallbackLink, sub, cat)
   // senão apagaria card que ia achar preço um instante depois). Estendido pra TODAS as
   // categorias (não só Perfumaria) — confirmado que marca de farmácia (CeraVe, Vichy...) sem
   // Scrappa também cai nesse mesmo problema em Skincare.
-  var sourcesTotal = region==='BR' ? 5 : 0; // awin, americanas, epoca, wepink, lojasrede
+  // Revertido pra só Perfumaria (24/07/2026, mesma sessão): estender pra todas as categorias
+  // quebrou algo pior em Skincare/Maquiagem/Cabelo — catálogos enormes (900+ produtos), boa
+  // parte de marca que nenhuma loja parceira vende, então dezenas de cards sumiam aos poucos
+  // conforme cada comparação terminava, mas o texto "Mostrando X de Y" nunca acompanhava,
+  // ficando mentiroso ("mostrando 54" com só 16 visíveis de verdade). Perfumaria tem catálogo
+  // pequeno e curado (~60 produtos), o mesmo problema não se repete na mesma escala ali.
+  var sourcesTotal = (region==='BR' && cat==='perfumaria') ? 5 : 0; // awin, americanas, epoca, wepink, lojasrede
   var sourcesDone = 0;
   function renderCombined(){
     var el=document.getElementById(cardId);
@@ -7657,8 +7663,24 @@ function loadComparison(cardId, searchTerm, brand, name, fallbackLink, sub, cat)
     // Perfumaria: se já ouvimos de todas as fontes e nenhuma achou o produto de verdade, o
     // card some da grade — nunca fica só com o botão da Amazon fingindo ser um resultado.
     if(sourcesTotal>0 && sourcesDone>=sourcesTotal && !combined.length){
+      var gridForCount=el.closest('.cmp-grid');
       var cardToRemove=el.closest('.cpc');
       if(cardToRemove) cardToRemove.remove();
+      // Bug real (24/07/2026): "Mostrando X de Y produtos" nunca acompanhava quando um card
+      // sumia — ficava mostrando um número maior do que o que realmente estava na tela.
+      // Recalcula os dois textos de contagem (cabeçalho + botão "ver mais") a partir da
+      // contagem de verdade de cards ainda na grade, em vez de tentar remendar texto antigo.
+      if(gridForCount){
+        var visibleNow=gridForCount.querySelectorAll('.cpc').length;
+        var cntEl=document.getElementById('resultCount');
+        if(cntEl && /\d+\s*(de|of)\s*\d+/.test(cntEl.textContent)){
+          cntEl.textContent=cntEl.textContent.replace(/\d+(?=\s*(de|of)\s*\d+)/, String(visibleNow));
+        }
+        var vmCntEl=document.getElementById(gridForCount.id==='resultsGrid'?'vmCount':'prodVmCount');
+        if(vmCntEl && /\d+\s*(de|of)\s*\d+/.test(vmCntEl.textContent)){
+          vmCntEl.textContent=vmCntEl.textContent.replace(/\d+(?=\s*(de|of)\s*\d+)/, String(visibleNow));
+        }
+      }
       return;
     }
     // Always include the Amazon affiliate button as the guaranteed purchase option

@@ -2039,3 +2039,34 @@ Todas as correções desta sessão inteira (14 continuações) testadas com
 dado real (curl direto nas functions, scripts Node com a lógica
 extraída do arquivo real) antes de publicar — não só teoria. **Ainda
 não confirmado pela Priscila que está tudo certo agora.**
+
+## Sessão 24/07/2026 (continuação 15) — "Mostrando 54 de 909" mentindo + revertido escopo global
+Priscila reportou "Mostrando 54 de 909 produtos" no topo, mas contou só
+16 cards de verdade na tela depois de clicar em ordenar.
+
+**Causa raiz**: efeito colateral direto da minha correção da continuação
+12 (estender "esconder card sem preço" pra TODAS as categorias, não só
+Perfumaria). Skincare/Maquiagem/Cabelo têm catálogo de 900+ produtos,
+boa parte marca de farmácia que nenhuma loja parceira vende — então
+dezenas de cards sumiam aos poucos (cada um removido assim que a
+comparação dele terminava, de forma assíncrona), mas o texto "Mostrando
+X de Y" só era escrito UMA VEZ no carregamento inicial e nunca
+atualizado — ficava mostrando um número bem maior que a realidade.
+
+**Corrigido em duas partes**:
+1. **Revertido o escopo pra só Perfumaria** (`var sourcesTotal = (region==='BR'
+   && cat==='perfumaria') ? 5 : 0`) — catálogo pequeno e curado (~60
+   produtos), o mesmo problema de escala não se repete lá. Skincare/
+   Maquiagem/Cabelo voltam ao comportamento de sempre (Amazon como
+   opção garantida quando não acha comparação) — o mesmo que ela já
+   tinha confirmado estar bem antes de eu mexer nisso.
+2. **Contador corrigido pra nunca mais mentir**, mesmo em Perfumaria:
+   toda vez que um card é removido por falta de preço, os textos
+   "Mostrando X de Y" (cabeçalho E botão "ver mais") são recalculados a
+   partir da contagem REAL de cards ainda na grade (`querySelectorAll`),
+   em vez de deixar o texto antigo intacto. Testado com script Node a
+   lógica do regex de substituição contra os formatos reais de texto
+   usados no site — confirma que só o número certo é trocado, resto
+   preservado.
+
+Sintaxe validada, publicado. **Ainda não confirmado pela Priscila.**
