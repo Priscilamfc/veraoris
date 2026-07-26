@@ -1649,7 +1649,7 @@ function renderFeatured(){
     +'<button class="btn-caq" style="margin:0 auto" onclick="startQuiz()"><span class="ico">✦</span><span>'+btn+'</span></button>'
     +'</div>';
 }
-var prodResultsAll=[],prodPage=1,prodPS=18;
+var prodResultsAll=[],prodPage=1,prodPS=18,prodRenderedIdx=0;
 function renderProds(){
   var g=document.getElementById('productGrid');if(!g)return;
 
@@ -1761,6 +1761,7 @@ function liveResultCard(g){
 function finishRenderProds(pool, g){
   prodResultsAll=pool;
   prodPage=1;
+  prodRenderedIdx=0;
 
   var wrap=document.getElementById('prodVmWrap');
   var cnt0=document.getElementById('resultCount');
@@ -1896,7 +1897,19 @@ function renderProdsPage(){
   var shown=prodResultsAll.slice(0,prodPage*prodPS);
   var hasMore=prodResultsAll.length>shown.length;
 
-  g.innerHTML=shown.map(function(p,i){return amzCard(p,i<AUTO_LOAD_COUNT);}).join('');
+  // Bug real (26/07/2026): "Ver mais" chamava isto com `g.innerHTML=...` de novo, recriando
+  // TODOS os cards do zero (inclusive os que já tinham preço carregado) — perdia o progresso
+  // e cada card recomeçava a comparação. Agora só acrescenta os itens NOVOS no final
+  // (`insertAdjacentHTML`), sem tocar nos cards que já estavam na tela. Usa um índice dedicado
+  // (`prodRenderedIdx`), não a contagem de cards na tela — na Perfumaria um card pode já ter
+  // sido removido por falta de preço, e contar pela tela duplicaria item ao "ver mais".
+  if(prodPage<=1 || !prodRenderedIdx){
+    g.innerHTML=shown.map(function(p,i){return amzCard(p,i<AUTO_LOAD_COUNT);}).join('');
+  } else {
+    var newItems=prodResultsAll.slice(prodRenderedIdx, shown.length);
+    g.insertAdjacentHTML('beforeend', newItems.map(function(p){return amzCard(p,false);}).join(''));
+  }
+  prodRenderedIdx=shown.length;
 
   var cnt=document.getElementById('resultCount');
   if(cnt)cnt.textContent=(lang==='pt'?shown.length+' de '+prodResultsAll.length+' produtos':shown.length+' of '+prodResultsAll.length+' products');
@@ -7295,7 +7308,7 @@ function matchScore(p){
   return score;
 }
 
-var amzResultsAll=[],amzPage=1,amzPS=6;
+var amzResultsAll=[],amzPage=1,amzPS=6,amzRenderedIdx=0;
 
 function renderAmazonResults(){
   var pb=document.getElementById('profBox');
@@ -7312,6 +7325,7 @@ function renderAmazonResults(){
   // Shuffle within same score tier slightly for variety, but keep best matches first
   amzResultsAll=pool;
   amzPage=1;
+  amzRenderedIdx=0;
 
   if(pb){
     var tags=[];
@@ -7391,7 +7405,17 @@ function renderAmzPage(){
   var shown=amzResultsAll.slice(0,amzPage*amzPS);
   var hasMore=amzResultsAll.length>shown.length;
 
-  if(grid)grid.innerHTML=shown.map(function(p,i){return amzCard(p,i<AUTO_LOAD_COUNT);}).join('');
+  // Mesmo bug e mesma correção do renderProdsPage (26/07/2026): "Ver mais" só acrescenta os
+  // itens novos, sem recriar (e perder o preço já carregado) dos que já estavam na tela.
+  if(grid){
+    if(amzPage<=1 || !amzRenderedIdx){
+      grid.innerHTML=shown.map(function(p,i){return amzCard(p,i<AUTO_LOAD_COUNT);}).join('');
+    } else {
+      var newItems=amzResultsAll.slice(amzRenderedIdx, shown.length);
+      grid.insertAdjacentHTML('beforeend', newItems.map(function(p){return amzCard(p,false);}).join(''));
+    }
+    amzRenderedIdx=shown.length;
+  }
 
   if(wrap){
     if(hasMore){

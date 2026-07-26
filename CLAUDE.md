@@ -2070,3 +2070,36 @@ atualizado — ficava mostrando um número bem maior que a realidade.
    preservado.
 
 Sintaxe validada, publicado. **Ainda não confirmado pela Priscila.**
+
+## Sessão 26/07/2026 — "Ver mais" recriava a página inteira, perdendo os preços já carregados
+Priscila buscou "sombras de olhos" em Maquilhagem: 6 cards apareceram
+com preço real (Vult/Eudora via AMOBELEZA), clicou "Ver mais" e os
+primeiros sumiram — sobrou só card novo sem preço (Maybelline/NYX só
+com Amazon) e cards repetidos com a foto ilustrativa. Pediu
+explicitamente: "Ver mais" tem que continuar os que já estão e só
+colocar novos, nunca recriar.
+
+**Causa raiz confirmada lendo o código**: `renderProdsPage()` (página
+Comparar) e `renderAmzPage()` (resultados do quiz) faziam
+`g.innerHTML = shown.map(...)` toda vez — inclusive ao clicar "Ver
+mais" — recriando TODOS os cards do zero (não só os novos). Isso
+destruía o DOM dos cards já comparados, forçando cada um (mesmo os que
+já tinham preço real) a refazer a busca de preço do zero, e durante
+esse intervalo mostravam Amazon/foto ilustrativa como se fossem
+produto novo sem comparação.
+
+**Corrigido nas duas funções** (mesmo padrão): só a primeira renderização
+(`prodPage<=1`/`amzPage<=1`) recria tudo; "Ver mais" agora só acrescenta
+os itens NOVOS no final via `insertAdjacentHTML('beforeend', ...)`,
+nunca mexendo nos cards que já estavam na tela. Rastreio de quantos
+itens já foram renderizados usa uma variável dedicada
+(`prodRenderedIdx`/`amzRenderedIdx`), não a contagem de cards na tela —
+importante porque na Perfumaria um card pode ter sido removido por
+falta de preço (correção de sessão anterior), e contar pela tela nesse
+caso duplicaria item ao clicar "Ver mais" de novo. Testado com
+simulação em Node (3 cliques seguidos de "ver mais") — cada clique
+acrescenta exatamente os itens novos, sem repetir nem pular nenhum.
+
+Sintaxe validada, publicado. **Ainda não confirmado pela Priscila** —
+ela fechou a aba antes de eu terminar; correção já está no ar pra
+quando ela testar de novo.
