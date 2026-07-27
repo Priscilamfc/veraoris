@@ -1185,8 +1185,15 @@ function looseTypeMatch(searchTerm, title){
 // let us hard-reject a match whenever it clearly belongs to a different category than the one
 // we're searching in, no matter which adjectives it also shares with the search term.
 var MAKEUP_ONLY_NOUNS=['batom','gloss','sombra','delineador','rímel','rimel','base líquida','base liquida','corretivo','pó compacto','po compacto','pó solto','po solto','blush','bronzer','iluminador','contorno','bb cream','paleta','lápis de olho','lapis de olho','máscara de cílios','mascara de cilios','esmalte'];
-var SKINCARE_ONLY_NOUNS=['hidratante facial','hidratante corporal','sérum','serum','protetor solar','esfoliante facial','água micelar','agua micelar','sabonete facial'];
-var HAIR_ONLY_NOUNS=['shampoo','condicionador','leave-in','leave in','óleo capilar','oleo capilar','máscara capilar','mascara capilar','tônico capilar','tonico capilar','ampola capilar'];
+// Achado real (27/07/2026): as frases compostas exatas ("hidratante facial") quase nunca
+// aparecem literalmente em título de produto de verdade — as lojas escrevem "Leite Hidratante
+// Rosto e Corpo", "Fluído Hidratante Relaxante", "Creme de Barbear Hidratante" etc., nenhuma
+// bate a frase exata, então passavam despercebidos pelos filtros de Maquiagem/Cabelo (achado
+// testando busca real "hidratante pele oleosa" com o filtro de categoria ativo). Ampliado com
+// os padrões reais mais comuns, sem virar "hidratante" solto (isso reintroduziria o problema
+// oposto, rejeitar "batom hidratante" de Maquiagem por engano).
+var SKINCARE_ONLY_NOUNS=['hidratante facial','hidratante corporal','sérum','serum','protetor solar','esfoliante facial','água micelar','agua micelar','sabonete facial','sabonete','leite hidratante','fluido hidratante','fluído hidratante','creme hidratante','loção hidratante','locao hidratante','gel hidratante','barbear','desodorante'];
+var HAIR_ONLY_NOUNS=['shampoo','condicionador','leave-in','leave in','óleo capilar','oleo capilar','máscara capilar','mascara capilar','tônico capilar','tonico capilar','ampola capilar','cabelo'];
 var PERFUME_ONLY_NOUNS=['perfume','colônia','colonia','eau de parfum','eau de toilette','eau de cologne','body splash','deo colônia','deo colonia'];
 // "perfume" aparece em MUITO produto que não é perfume — desodorante antitranspirante "sem
 // perfume" (ou seja, sem fragrância nenhuma), loção corporal com aroma tipo "perfume de bebê",

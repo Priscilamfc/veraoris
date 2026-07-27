@@ -2103,3 +2103,38 @@ acrescenta exatamente os itens novos, sem repetir nem pular nenhum.
 Sintaxe validada, publicado. **Ainda não confirmado pela Priscila** —
 ela fechou a aba antes de eu terminar; correção já está no ar pra
 quando ela testar de novo.
+
+## Sessão 27/07/2026 — filtro de categoria (pílulas) não excluía produto de outra categoria
+Priscila buscou "hidratante pele oleosa" (busca geral) e clicou nas
+pílulas de categoria (Maquilhagem, Cabelo, Perfumaria) pra filtrar —
+Maquilhagem e Cabelo continuavam mostrando os mesmos produtos de
+skincare/corpo (leite hidratante, sabonete, creme de barbear), só
+Perfumaria filtrava certo (0 produtos, correto pra essa busca).
+
+**Causa raiz confirmada testando a função real com os títulos exatos do
+print dela**: `SKINCARE_ONLY_NOUNS`/`HAIR_ONLY_NOUNS` só reconheciam
+frases compostas EXATAS ("hidratante facial", "máscara capilar") — e
+produto de verdade quase nunca escreve assim: "Leite Hidratante Rosto e
+Corpo", "Fluído Hidratante Relaxante", "Creme de Barbear Hidratante",
+"Máscara Ultra Hidratante...Cabelo" — nenhuma dessas bate a frase exata,
+então passavam pelos filtros de Maquilhagem/Cabelo sem serem
+rejeitadas.
+
+**Corrigido**: as duas listas ganharam os padrões reais mais comuns —
+`SKINCARE_ONLY_NOUNS` ganhou `sabonete` (solto), `leite/fluido/creme/
+loção hidratante`, `barbear`, `desodorante`; `HAIR_ONLY_NOUNS` ganhou
+`cabelo` (solto). Cuidado tomado pra não reintroduzir o problema oposto
+(rejeitar "Batom Hidratante" de Maquiagem por engano) — por isso não
+usei "hidratante" solto, só os padrões compostos reais. Testado com
+script Node contra os 6 exemplos exatos do print dela (todos agora
+corretamente excluídos) E contra 5 casos que precisavam continuar
+passando (batom hidratante, paleta de sombras, shampoo, desodorante
+colônia em perfumaria, creme hidratante facial em skincare — todos
+continuam certos).
+
+**Sobre "não apareceu nada da WePink"**: não é bug — a WePink só vende
+maquiagem de lábios (linha Welips), não vende hidratante/creme facial
+nenhum, então é esperado ela não aparecer numa busca de "hidratante
+pele oleosa".
+
+Sintaxe validada, publicado. **Ainda não confirmado pela Priscila.**
