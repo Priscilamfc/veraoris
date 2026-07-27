@@ -7362,15 +7362,25 @@ function renderAmazonResults(){
 // específicos. Complementa com uma busca ao vivo pelos tipos de produto escolhidos no quiz
 // (mesmas lojas parceiras reais), igual ao que já existe na busca de produtos.
 function quizSearchTerms(){
-  var subs=[];
-  if(qD.cat==='skincare') subs=qD.skin_prod||[];
-  else if(qD.cat==='cabelo') subs=qD.hair_prod||[];
-  else if(qD.cat==='maquiagem') subs=qD.maq_prod||[];
+  // "Avançar" não exige seleção nenhuma — se a pessoa pular a etapa de produto específico,
+  // maq_prod/hair_prod/skin_prod ficam vazios. Usa o que existir (funciona também pra
+  // cat==='todos', que preenche skin_prod pelo mesmo passo do skincare).
+  var subs = (qD.maq_prod&&qD.maq_prod.length) ? qD.maq_prod
+    : (qD.hair_prod&&qD.hair_prod.length) ? qD.hair_prod
+    : (qD.skin_prod&&qD.skin_prod.length) ? qD.skin_prod
+    : [];
   var terms=[];
   subs.forEach(function(sub){
     var kws=subKeywords(sub);
     if(kws[0] && terms.indexOf(kws[0])<0) terms.push(kws[0]);
   });
+  if(!terms.length){
+    // Nenhum tipo específico escolhido — termo genérico da categoria, pra nunca ficar sem
+    // nenhuma busca ao vivo (mesmo padrão já usado na navegação por Perfumaria).
+    if(qD.cat==='cabelo') terms=['shampoo','condicionador'];
+    else if(qD.cat==='maquiagem') terms=['batom','base'];
+    else terms=['hidratante','protetor solar'];
+  }
   return terms.slice(0,3);
 }
 function renderLiveQuizResults(){
