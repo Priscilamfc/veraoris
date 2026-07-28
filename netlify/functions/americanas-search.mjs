@@ -18,7 +18,12 @@ let cache = {}; // { [query]: { data, fetchedAt } }
 // classifica isso certinho (ex: "/Beleza e perfumaria/Maquiagem/Batom/" vs "/Papelaria/...",
 // "/Alimentos e bebidas/...", "/Brinquedos/..."), então filtramos por ele em vez de tentar
 // adivinhar toda palavra de exclusão possível (impossível de enumerar).
-const BEAUTY_CATEGORY_PREFIX = '/beleza e perfumaria';
+// IMPORTANTE (auditoria 27/07/2026): a Americanas trata "Cabelos" como departamento PRÓPRIO,
+// separado de "Beleza e perfumaria" (confirmado testando shampoo/condicionador/máscara
+// capilar/leave-in/tintura — 100% caem em "/Cabelos/...", nenhum em "/Beleza e perfumaria/").
+// Sem essa categoria na lista, a busca de cabelo inteira ficava praticamente vazia (ex:
+// "shampoo" caía de ~80 produtos reais pra 1). Duas categorias-raiz aceitas agora.
+const BEAUTY_CATEGORY_PREFIXES = ['/beleza e perfumaria', '/cabelos'];
 // Mesmo dentro de "Beleza e perfumaria" aparece brinquedo de maquiagem infantil mal
 // categorizado (ex: "Kit de Maquiagem Infantil Angel Coroa... /Beleza e perfumaria/
 // Maquiagem/") — rede de segurança extra pelo título.
@@ -26,7 +31,7 @@ const NON_BEAUTY_TITLE_HINTS = ['infantil', 'brinquedo', 'faz de conta'];
 
 function isRealBeautyProduct(p) {
   const cats = (p.categories || []).map((c) => c.toLowerCase());
-  if (!cats.some((c) => c.startsWith(BEAUTY_CATEGORY_PREFIX))) return false;
+  if (!cats.some((c) => BEAUTY_CATEGORY_PREFIXES.some((prefix) => c.startsWith(prefix)))) return false;
   const t = (p.productName || '').toLowerCase();
   return !NON_BEAUTY_TITLE_HINTS.some((h) => t.indexOf(h) >= 0);
 }

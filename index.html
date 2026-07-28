@@ -1021,8 +1021,14 @@ function wepinkSearchPrices(query, callback){
 }
 // ── LOJAS REDE (API VTEX pública, chamada direta — sem Apify, sem custo) ──
 // Loja de beleza multimarca (vende marca de farmácia tipo Neutrogena, testado 24/07/2026).
-// Link direto ainda não testado clicando de verdade — sai com linkOk:false até confirmação.
+// DESLIGADA (auditoria 27/07/2026): testando a API dela direto, agora devolve challenge do
+// Cloudflare ("Just a moment...", HTTP 403) — mudança do lado deles, não é bug daqui. Sem a
+// flag, toda busca do site (produto, quiz, Perfumaria) ficava esperando ~8s à toa por uma
+// fonte que nunca mais vai responder com produto. Flag reversível, mesmo padrão de
+// SCRAPPA_ENABLED/ML_ENABLED/EUDORA_ENABLED/EPOCA_ENABLED — reativar só se o bloqueio passar.
+var LOJASREDE_ENABLED=false;
 function lojasredeSearchPrices(query, callback){
+  if(!LOJASREDE_ENABLED){ callback([]); return; }
   var url = '/.netlify/functions/lojasrede-search?query='+encodeURIComponent(query);
   fetch(url)
   .then(function(r){ return r.json(); })
@@ -1149,9 +1155,23 @@ var SUB_KEYWORDS={
   limpeza:['limpeza','sabonete','micelar'],hidratante:['hidratante'],serum:['sérum','serum'],
   solar:['solar','fps'],esfoliante:['esfoliante'],mascara_facial:['máscara facial','máscara de argila'],
   olhos:['olheiras','área dos olhos'],labios:['labial'],base:['base'],bb_cream:['bb cream'],
+  // As 6 chaves abaixo (base_liq, base_po, agua_mic, mascara_f, creme_olhos, serum_cap) faltavam
+  // aqui mas são os códigos de verdade usados no quiz (MAQ_R/SKIN_P/HAIR_P) — sem elas,
+  // subKeywords() caía no fallback genérico (`sub` com "_"→" ") e virava termo de busca sem
+  // sentido tipo "base liq"/"agua mic"/"mascara f"/"serum cap", que não só não achava nada
+  // como às vezes batia por coincidência de letras em produto totalmente errado (achado na
+  // auditoria de 27/07/2026, ex: "mascara f" batendo "química" por conter "mic"). Termos reais
+  // testados direto contra a busca ao vivo antes de entrar aqui.
+  base_liq:['base líquida'],base_po:['base em pó','base compacta'],agua_mic:['água micelar'],
+  mascara_f:['máscara facial','máscara de argila'],creme_olhos:['creme para olhos','área dos olhos'],
+  serum_cap:['sérum capilar','ampola capilar'],
   primer:['primer'],corretivo:['corretivo'],po_compacto:['pó compacto'],po_solto:['pó solto'],
   bronzer:['bronzer','bronzeador'],blush:['blush'],iluminador:['iluminador'],contorno:['contorno'],
-  sombra:['sombra'],rimel:['rímel','máscara de cílios'],delineador:['delineador'],
+  sombra:['sombra'],
+  // "rímel" na 1ª posição não bate nenhum produto real (lojas BR usam "máscara de cílios") —
+  // quizSearchTerms() sempre usa kws[0] como termo de busca, então a ordem importa (achado na
+  // auditoria de 27/07/2026, testado direto contra a busca ao vivo).
+  rimel:['máscara de cílios','rímel'],delineador:['delineador'],
   lapis_olho:['lápis de olho'],primer_olho:['primer de olhos'],batom:['batom'],gloss:['gloss'],
   lip_liner:['lápis labial'],lip_balm:['balm labial','protetor labial'],
   lapis_sb:['lápis de sobrancelha'],gel_sb:['gel de sobrancelha'],pomada_sb:['pomada de sobrancelha'],
@@ -1192,7 +1212,12 @@ var MAKEUP_ONLY_NOUNS=['batom','gloss','sombra','delineador','rímel','rimel','b
 // testando busca real "hidratante pele oleosa" com o filtro de categoria ativo). Ampliado com
 // os padrões reais mais comuns, sem virar "hidratante" solto (isso reintroduziria o problema
 // oposto, rejeitar "batom hidratante" de Maquiagem por engano).
-var SKINCARE_ONLY_NOUNS=['hidratante facial','hidratante corporal','sérum','serum','protetor solar','esfoliante facial','água micelar','agua micelar','sabonete facial','sabonete','leite hidratante','fluido hidratante','fluído hidratante','creme hidratante','loção hidratante','locao hidratante','gel hidratante','barbear','desodorante'];
+// "sérum"/"serum" soltos SAÍRAM desta lista (achado na auditoria de 27/07/2026): as lojas
+// parceiras usam a palavra pra sérum CAPILAR (Kérastase, Forever Liss, Davines) e até sérum de
+// unha/mão, não só facial — bare "sérum" rejeitava produto real de cabelo (ex: "Sérum Capilar
+// Redutor de Oleosidade Vichy") do filtro de categoria Cabelo, quebrando justamente a opção
+// "Sérum Capilar" do quiz. "sérum facial" continua aqui como frase composta seletiva.
+var SKINCARE_ONLY_NOUNS=['hidratante facial','hidratante corporal','sérum facial','soro facial','protetor solar','esfoliante facial','água micelar','agua micelar','sabonete facial','sabonete','leite hidratante','fluido hidratante','fluído hidratante','creme hidratante','loção hidratante','locao hidratante','gel hidratante','barbear','desodorante'];
 var HAIR_ONLY_NOUNS=['shampoo','condicionador','leave-in','leave in','óleo capilar','oleo capilar','máscara capilar','mascara capilar','tônico capilar','tonico capilar','ampola capilar','cabelo'];
 var PERFUME_ONLY_NOUNS=['perfume','colônia','colonia','eau de parfum','eau de toilette','eau de cologne','body splash','deo colônia','deo colonia'];
 // "perfume" aparece em MUITO produto que não é perfume — desodorante antitranspirante "sem
