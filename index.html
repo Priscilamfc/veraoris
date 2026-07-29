@@ -1204,7 +1204,11 @@ function looseTypeMatch(searchTerm, title){
 // alone is not enough — a lipstick can legitimately contain the word "hidratante". These lists
 // let us hard-reject a match whenever it clearly belongs to a different category than the one
 // we're searching in, no matter which adjectives it also shares with the search term.
-var MAKEUP_ONLY_NOUNS=['batom','gloss','sombra','delineador','rímel','rimel','base líquida','base liquida','corretivo','pó compacto','po compacto','pó solto','po solto','blush','bronzer','iluminador','contorno','bb cream','paleta','lápis de olho','lapis de olho','máscara de cílios','mascara de cilios','esmalte'];
+// "labial" entrou depois de achar ao vivo (28/07/2026, testado no navegador): "Hidratante
+// Labial Carmed..." (um balm de lábio, maquiagem) aparecia dentro do filtro de Cabelo, porque
+// nenhuma palavra da lista batia — "labial" sozinho é sempre produto de lábio/maquiagem, nunca
+// skincare/cabelo/perfume.
+var MAKEUP_ONLY_NOUNS=['batom','gloss','sombra','delineador','rímel','rimel','base líquida','base liquida','corretivo','pó compacto','po compacto','pó solto','po solto','blush','bronzer','iluminador','contorno','bb cream','paleta','lápis de olho','lapis de olho','máscara de cílios','mascara de cilios','esmalte','labial','lip balm','lip gloss'];
 // Achado real (27/07/2026): as frases compostas exatas ("hidratante facial") quase nunca
 // aparecem literalmente em título de produto de verdade — as lojas escrevem "Leite Hidratante
 // Rosto e Corpo", "Fluído Hidratante Relaxante", "Creme de Barbear Hidratante" etc., nenhuma
@@ -1217,8 +1221,14 @@ var MAKEUP_ONLY_NOUNS=['batom','gloss','sombra','delineador','rímel','rimel','b
 // unha/mão, não só facial — bare "sérum" rejeitava produto real de cabelo (ex: "Sérum Capilar
 // Redutor de Oleosidade Vichy") do filtro de categoria Cabelo, quebrando justamente a opção
 // "Sérum Capilar" do quiz. "sérum facial" continua aqui como frase composta seletiva.
-var SKINCARE_ONLY_NOUNS=['hidratante facial','hidratante corporal','sérum facial','soro facial','protetor solar','esfoliante facial','água micelar','agua micelar','sabonete facial','sabonete','leite hidratante','fluido hidratante','fluído hidratante','creme hidratante','loção hidratante','locao hidratante','gel hidratante','barbear','desodorante'];
-var HAIR_ONLY_NOUNS=['shampoo','condicionador','leave-in','leave in','óleo capilar','oleo capilar','máscara capilar','mascara capilar','tônico capilar','tonico capilar','ampola capilar','cabelo'];
+// "Corporal" também entra em ordem invertida ("Óleo Corporal Hidratante", não só "Hidratante
+// Corporal") — achado ao vivo (28/07/2026): esse produto passava batido pro filtro de
+// Maquiagem porque só a ordem "hidratante corporal" estava coberta.
+var SKINCARE_ONLY_NOUNS=['hidratante facial','hidratante corporal','corporal hidratante','óleo corporal','oleo corporal','loção corporal','locao corporal','creme corporal','sérum facial','soro facial','protetor solar','esfoliante facial','água micelar','agua micelar','sabonete facial','sabonete','leite hidratante','fluido hidratante','fluído hidratante','creme hidratante','loção hidratante','locao hidratante','gel hidratante','barbear','desodorante'];
+// "raiz oleosa"/"pontas secas" são vocabulário de cabelo mesmo sem dizer "capilar"/"cabelo"
+// literalmente (achado ao vivo, 28/07/2026: "Máscara de Tratamento... Niely Gold Detox Raiz
+// Oleosa e Pontas Secas" passava batido pro filtro de Maquiagem).
+var HAIR_ONLY_NOUNS=['shampoo','condicionador','leave-in','leave in','óleo capilar','oleo capilar','máscara capilar','mascara capilar','tônico capilar','tonico capilar','ampola capilar','cabelo','raiz oleosa','pontas secas'];
 var PERFUME_ONLY_NOUNS=['perfume','colônia','colonia','eau de parfum','eau de toilette','eau de cologne','body splash','deo colônia','deo colonia'];
 // "perfume" aparece em MUITO produto que não é perfume — desodorante antitranspirante "sem
 // perfume" (ou seja, sem fragrância nenhuma), loção corporal com aroma tipo "perfume de bebê",
