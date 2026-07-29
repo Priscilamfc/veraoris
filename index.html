@@ -7658,6 +7658,7 @@ function loadComparison(cardId, searchTerm, brand, name, fallbackLink, sub, cat)
   // pequeno e curado (~60 produtos), o mesmo problema não se repete na mesma escala ali.
   var sourcesTotal = (region==='BR' && cat==='perfumaria') ? 5 : 0; // awin, americanas, epoca, wepink, lojasrede
   var sourcesDone = 0;
+  var fallbackTried = false;
   function renderCombined(){
     var el=document.getElementById(cardId);
     if(!el) return; // card may no longer be on screen
@@ -7689,6 +7690,34 @@ function loadComparison(cardId, searchTerm, brand, name, fallbackLink, sub, cat)
       if(sub) return kws0.some(function(k){return t.indexOf(k.toLowerCase())>=0;});
       return true;
     });
+    // Achado ao vivo (28/07/2026): buscar pelo nome COMPLETO do produto (ex: "Aussie Leave-in
+    // 3 Minutos Milagrosos") às vezes confunde a busca por relevância da loja — ela prioriza
+    // outro produto que bate mais palavras (ex: um condicionador Pantene que também se chama
+    // "3 Minutos Milagrosos") e o item real da marca pesquisada nem aparece nos resultados,
+    // mesmo a loja vendendo essa marca de verdade (confirmado testando ao vivo: a Americanas
+    // vende Skala, Tresemmé e Aussie, mas o nome completo não achava nenhum). Se nenhuma fonte
+    // achou nada, tenta de novo com um termo mais simples (marca + tipo genérico do produto,
+    // sem a parte específica do nome) — o filtro de marca+tipo (D3) acima continua exatamente
+    // igual, só muda o texto de busca. Só tenta uma vez por card, e só depois que todas as 5
+    // fontes já responderam com o nome completo (nunca no meio do caminho).
+    if(!combined.length && sub && brand && region==='BR' && sourcesDone>=5 && !fallbackTried){
+      var kwsFb=subKeywords(sub);
+      var fallbackTerm=(brand+' '+(kwsFb[0]||'')).trim();
+      if(fallbackTerm && fallbackTerm.toLowerCase()!==searchTerm.toLowerCase()){
+        fallbackTried=true;
+        var onFallback=function(results, source){
+          (results||[]).forEach(function(r){ r._source=source; });
+          rawCombined = rawCombined.concat(results||[]);
+          renderCombined();
+        };
+        awinSearchPrices(fallbackTerm, function(r){ onFallback(r,'awin'); });
+        americanasSearchPrices(fallbackTerm, function(r){ onFallback(r,'americanas'); });
+        epocaSearchPrices(fallbackTerm, function(r){ onFallback(r,'epoca'); });
+        wepinkSearchPrices(fallbackTerm, function(r){ onFallback(r,'wepink'); });
+        lojasredeSearchPrices(fallbackTerm, function(r){ onFallback(r,'lojasrede'); });
+        return; // espera as respostas do termo mais simples antes de decidir remover/renderizar
+      }
+    }
     if(combined.length){
       // Sort so results with a TRUSTED real direct link always win — Awin (Eudora feed) and
       // Mercado Livre (Apify) links point straight to the product; Scrappa's "link" field, even
