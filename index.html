@@ -7537,7 +7537,7 @@ function amzCard(p, auto){
     setTimeout(function(){ registerLazyCompare(cardId, searchTerm, safeBrand, safeName, link, p.sub, p.cat); }, 50);
   }
 
-  return '<div class="cpc">'
+  return '<div class="cpc cpc-catalog">'
     +'<div class="cpc-img" style="background:var(--gold4)">'
     +'<div class="cpc-cat">'+(catLbl||p.cat)+'</div>'
     +'<span id="'+badgeId+'"></span>'
@@ -7746,8 +7746,15 @@ function loadComparison(cardId, searchTerm, brand, name, fallbackLink, sub, cat)
       // sumia — ficava mostrando um número maior do que o que realmente estava na tela.
       // Recalcula os dois textos de contagem (cabeçalho + botão "ver mais") a partir da
       // contagem de verdade de cards ainda na grade, em vez de tentar remendar texto antigo.
+      // Bug real #2 (28/07/2026, achado testando Perfumaria ao vivo no navegador): a contagem
+      // "X de Y" é sobre o CATÁLOGO (Y é sempre o total do catálogo, ex: 54 em Perfumaria) —
+      // mas o seletor `.cpc` pega TAMBÉM os cards ao vivo (liveResultCard usa a mesma classe),
+      // que não têm nenhuma relação com o total do catálogo. Numa categoria com muitos
+      // resultados ao vivo (Perfumaria, WePink/Awin sozinhos já passam de 70), isso produzia
+      // "130 de 54 produtos" — número maior que o total, sem sentido. `.cpc-catalog` (só nos
+      // cards do catálogo, amzCard) restringe a contagem à métrica certa.
       if(gridForCount){
-        var visibleNow=gridForCount.querySelectorAll('.cpc').length;
+        var visibleNow=gridForCount.querySelectorAll('.cpc-catalog').length;
         var cntEl=document.getElementById('resultCount');
         if(cntEl && /\d+\s*(de|of)\s*\d+/.test(cntEl.textContent)){
           cntEl.textContent=cntEl.textContent.replace(/\d+(?=\s*(de|of)\s*\d+)/, String(visibleNow));
