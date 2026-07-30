@@ -2137,4 +2137,199 @@ maquiagem de lábios (linha Welips), não vende hidratante/creme facial
 nenhum, então é esperado ela não aparecer numa busca de "hidratante
 pele oleosa".
 
-Sintaxe validada, publicado. **Ainda não confirmado pela Priscila.**
+Sintaxe validada, publicado. **Confirmado pela Priscila em sessão
+seguinte** (ver 28/07/2026 abaixo).
+
+## Sessão 27-28/07/2026 — quiz sem comparação quando etapa de produto específico é pulada
+Continuação da sessão anterior. Investigado por que o quiz (categoria
+Maquilhagem, pele normal, orçamento "Todos") mostrava 12 cards com só 2
+tendo comparação real — o resto só Amazon.
+
+**Causa raiz confirmada lendo o código**: o botão "Avançar" do quiz
+(`qNext()`) nunca exigiu nenhuma seleção — dá pra pular a etapa "que
+produto específico" (passo 4/5) sem escolher nada. Quando isso acontece,
+`qD.maq_prod`/`hair_prod`/`skin_prod` ficam vazios, `quizSearchTerms()`
+retorna lista vazia, e `renderLiveQuizResults()` simplesmente não faz
+NENHUMA busca ao vivo nas lojas parceiras — mesmo havendo produto real
+disponível (confirmado testando `awin-search?query=maquiagem` ao vivo:
+retorna produtos reais da Natura/Boticário/AMOBELEZA).
+
+**Corrigido**: `quizSearchTerms()` (`index.html`) agora cai em termos
+genéricos por categoria quando nada foi escolhido (`['batom','base']`
+maquiagem, `['shampoo','condicionador']` cabelo, `['hidratante','protetor
+solar']` skincare/todos) — também corrige o caso `cat==='todos'`, que
+antes nunca era coberto porque a checagem original comparava só contra
+`qD.cat==='skincare'` literal. Testado com curl direto nas functions
+antes de publicar (termos genéricos confirmados trazendo produto real).
+Commit `e061860`.
+
+## Sessão 28/07/2026 — varredura completa do site (auditoria a pedido da Priscila)
+Priscila, muito frustrada com o volume de bugs aparecendo um de cada vez
+ao longo de uma sessão já muito longa, pediu uma varredura COMPLETA e
+minuciosa em cada botão/card/função do site, autorizando de antemão
+qualquer correção encontrada. Rodei isso como um agente em segundo
+plano (fork), testando cada function em produção com `curl` e scripts
+Node com a lógica real extraída do arquivo, cruzando com todo o
+histórico de bugs já documentado neste arquivo.
+
+**O processo travou uma vez** (600s sem progresso, watchdog não
+recuperou) no meio de uma correção — resumido de onde parou com
+instrução pra fechar mais rápido. Terminou e entregou relatório
+completo, commit `8c41da6` (local, revisado antes de eu publicar):
+
+1. **Americanas perdia quase todo produto de cabelo**: ela trata
+   "Cabelos" como departamento PRÓPRIO, separado de "Beleza e
+   perfumaria" — o filtro de categoria (`americanas-search.mjs`) só
+   aceitava o segundo, então shampoo/condicionador/leave-in caíam de
+   ~80 produtos reais pra 1. Corrigido: allowlist aceita os dois
+   departamentos-raiz agora.
+2. **Lojas Rede bloqueada por Cloudflare**: a API dela (integrada há
+   poucos dias) passou a devolver challenge JS (403, "Just a
+   moment...") — mudança do lado deles, não bug nosso, mas fazia toda
+   busca do site esperar ~8s à toa por uma fonte que nunca mais
+   responde com produto real. **Desativada** por flag
+   (`LOJASREDE_ENABLED=false`, `index.html`), mesmo padrão reversível
+   de Eudora/Época/Scrappa/Mercado Livre.
+3. **6 códigos de produto do quiz sem termo de busca configurado**
+   (`base_liq`, `base_po`, `agua_mic`, `mascara_f`, `creme_olhos`,
+   `serum_cap`) caíam num fallback genérico que às vezes batia produto
+   errado por coincidência de letras — `SUB_KEYWORDS` ganhou as 6
+   chaves reais. "Rímel" também trocado de posição (usava a palavra
+   errada como termo, 0 resultado real; "máscara de cílios" funciona).
+4. **Falso conflito de categoria em "sérum"**: a palavra solta
+   "sérum"/"serum" em `SKINCARE_ONLY_NOUNS` rejeitava produto real de
+   Cabelo (Sérum Capilar Vichy/Kérastase) e de Maquiagem (sérum de
+   cílios) — mesmo tipo de problema já resolvido antes pra
+   "hidratante", mas não replicado aqui. Corrigido pra frase composta
+   ("sérum facial"/"soro facial").
+
+Testado ao vivo depois do push: `americanas-search?query=shampoo`
+voltou a trazer produto real de cabelo. **Confirmado pela Priscila.**
+
+## Sessão 28/07/2026 (continuação) — vazamento de categoria confirmado ao vivo no navegador
+Mesmo dia, a Priscila mandou prints mostrando "Hidratante Labial"
+(balm de lábio, maquiagem) e óleo corporal/máscara capilar aparecendo
+dentro dos filtros de Maquilhagem E Cabelo ao mesmo tempo — nenhum dos
+dois certo. Desta vez usei acesso real ao navegador (extensão "Claude
+in Chrome", conectada nesta sessão) pra reproduzir de verdade em vez de
+só ler código: busquei "hidratante" na página Comparar e confirmei
+"Hidratante Labial Carmed..." aparecendo dentro do filtro Cabelo.
+
+**Causa raiz**: `conflictsWithCategory()` funciona por lista de
+exclusão (rejeita se o título contém palavra exclusiva de OUTRA
+categoria) — um produto cuja categoria real não aparece literalmente no
+título (ex: "labial" nunca listado, "Óleo Corporal Hidratante" com a
+ordem das palavras invertida em relação à frase já cadastrada) passa
+batido em QUALQUER categoria, já que nada o exclui. **Corrigido**:
+`MAKEUP_ONLY_NOUNS` ganhou `labial`/`lip balm`/`lip gloss`;
+`SKINCARE_ONLY_NOUNS` ganhou a ordem invertida ("corporal hidratante")
+e variantes de óleo/loção/creme corporal; `HAIR_ONLY_NOUNS` ganhou
+"raiz oleosa"/"pontas secas" (vocabulário real de cabelo sem dizer
+"capilar"). Testado com script Node contra os títulos reais que
+vazaram, e reconfirmado ao vivo no navegador depois do push (Cabelo:
+"14 de 14" produtos, todos de cabelo de verdade). Commit `63dbd04`.
+
+**Segundo bug achado no mesmo teste**: contador "Mostrando X de Y
+produtos" mostrando **mais que o total** (ex: "130 de 54" em
+Perfumaria) — o recálculo do contador (mecanismo de esconder card sem
+preço, só Perfumaria) usava `querySelectorAll('.cpc')` pra saber quantos
+cards restavam, mas os cards de resultado AO VIVO (`liveResultCard`)
+usam a MESMA classe `.cpc`, sem nenhuma relação com o total do
+catálogo. Corrigido: cards do catálogo (`amzCard`) ganharam uma classe
+própria (`cpc-catalog`), recálculo restrito a ela. Reconfirmado ao vivo
+("16 de 54", nunca mais que o total). Commit `14f236d`.
+
+**Terceiro bug investigado**: por que, depois de uma certa quantidade
+de cards, só aparece Amazon (ex: leave-in de Aussie/Skala/Tresemmé).
+Confirmado com curl que essas marcas EXISTEM de verdade na Americanas —
+o problema é que buscar pelo NOME COMPLETO do catálogo (ex: "Aussie
+Leave-in 3 Minutos Milagrosos") às vezes confunde a busca por relevância
+da própria loja, que prioriza outro produto batendo mais palavras (ex:
+um condicionador Pantene que também se chama "3 Minutos Milagrosos") e
+o item real da marca pesquisada nem aparece nos resultados retornados.
+**Corrigido**: `loadComparison()` (`index.html`) tenta uma segunda busca
+— só quando a primeira não achou nada em nenhuma das 5 fontes — com um
+termo mais simples (marca + tipo genérico do produto, sem a parte
+específica do nome). O filtro de marca+tipo (D3) continua exatamente
+igual, só muda o texto de busca, sem risco de aceitar produto errado.
+Não é garantia universal (testado também com Skala, que não melhorou —
+depende de como cada loja indexa o produto), mas nunca piora nada, só
+tenta mais uma vez quando a primeira busca já tinha falhado. Confirmado
+ao vivo no navegador: card da Aussie passou a mostrar 🏆 Americanas
+R$39,90 depois da correção. Commit `684ef59`.
+
+**Loja desativada nesta sessão**: Lojas Rede (`LOJASREDE_ENABLED=false`,
+motivo no item 2 da auditoria acima) — bloqueio anti-bot do lado deles.
+
+## Sessão 28-30/07/2026 — nova identidade visual: paleta rosa-framboesa
+Priscila mostrou o site da WePink (rosa vibrante, "chamativo") e
+perguntou se dava pra deixar o VERAORIS mais parecido — avisando de
+início que era só ideia, sem mudar nada ainda. Discutido o trade-off:
+visual atual (coral/ferrugem + serifa Cormorant Garamond) passa
+"comparador premium confiável"; o rosa puro da WePink é mais "loja
+jovem direto ao consumidor" e podia destoar do posicionamento que ela
+vem construindo.
+
+**Processo em duas etapas de artefato, ambas aprovadas por ela antes de
+mexer no site de verdade**:
+1. Um moodboard (paleta + títulos lado a lado "hoje vs proposta") com
+   uma ideia de meio-termo: rosa-framboesa mais vibrante que o coral
+   atual, mas mais fechado que o rosa puro da WePink — dourado do selo
+   "melhor preço" mantido intocado, serifa itálica nos títulos mantida.
+   Ela gostou ("tem razão, o da WePink é muito jovem").
+2. A pedido dela ("como realmente vai ficar"), um SEGUNDO artefato bem
+   mais fiel — mesmo HTML/CSS real do site (nav, hero com a MESMA foto
+   real do hero extraída do `index.html`, categorias, seção "Compare
+   Aqui", card de produto real), com um botão pra alternar ao vivo entre
+   "Hoje"/"Proposta" na mesma tela. Ela pediu pra manter a foto de fundo
+   do hero (a primeira versão tinha só o degradê, sem a foto) — corrigido
+   extraindo o JPEG base64 real do hero direto do arquivo (sem nunca
+   passar o base64 gigante pela conversa, só manipulação via script) e
+   embutindo no artefato. Aprovada: "é isso, gostei mais assim".
+
+**Aplicado de verdade no site** (`index.html`) depois da aprovação:
+troca sistemática de todos os hex/rgba da família coral/ferrugem antiga
+(`--gold` #E8907A→#E6407D, `--gold5` #9A4835→#A31256, `--gold2`
+#F0AA90→#F0629D, `--gold3` #FFD5C5→#FFCFE0, `--gold4` #FFF0EC→#FFF0F5,
+`--border` #F0C8BC→#F5B8D2, `--muted` #6A5A40→#7A5568, mais
+`#B05C42`/`#C97A5F`/`#D4908A` e os `rgba(232,144,122,·)`/
+`rgba(154,72,53,·)`/`rgba(200,146,42,·)` usados soltos em vários
+lugares) por uma família rosa-framboesa, feito com script Node (mapa
+old→new, substituição num único passe pra nunca haver colisão entre
+regras) — só depois conferido manualmente por 2 ocorrências que ficaram
+de fora do bloco `<style>` (cor do rodapé, cor da função de estrelas).
+Também recoloridos os gradientes de fundo mais claros usados em várias
+seções (topo da página, "Compare Aqui", benefícios, rodapé, promoções,
+"Dica da Semana"). **Mantido de propósito, sem mexer**: `--night`
+(azul-marinho), verde semântico de "melhor preço" (`--ok`/`--okbg`),
+vermelho semântico do selo de desconto (`#E63946`), blobs decorativos
+de fundo, e a cor própria de cada card de categoria (Skincare
+dourado-creme, Maquilhagem lavanda, Cabelo verde, Perfumaria dourado) —
+nenhuma dessas faz parte da identidade principal.
+
+Testado localmente antes de publicar: um servidor estático Node
+temporário + navegador real (Claude in Chrome), conferindo hero, "Dica
+da Semana", promoções, "Compare Aqui", categorias e a página Comparar
+com cards reais. Sintaxe (`node --check` equivalente nos blocos
+`<script>`) validada. Commit `b056569`, publicado e **confirmado ao
+vivo em produção**.
+
+**Continuação no mesmo dia**: Priscila pediu pra recolorir também a
+logo (o beija-flor + "VERAORIS", uma imagem estática, não CSS) e o
+texto do menu de navegação, que tinham ficado pra trás (ainda no tom
+antigo). Texto do menu (`.nav-links a`) trocado de `var(--muted)` pra
+`var(--gold5)` (mesma família rosa). A logo (imagem JPEG/PNG
+embutida, não dá pra recolorir editando CSS de cor de texto) ganhou um
+filtro CSS `filter:hue-rotate(321deg) saturate(1.25)` — calculado a
+partir do matiz da cor antiga (~11°, ferrugem) pro matiz da cor nova
+(~332°, rosa-framboesa), aplicado tanto no logo do menu quanto no do
+rodapé. Testado visualmente antes de publicar (zoom no navegador
+confirmando o tom batendo com o resto da paleta). Commit `10ec669`,
+**confirmado ao vivo em produção** (print da Priscila + reconferência
+minha depois do push).
+
+**Nota**: durante esta sessão houve um incidente real do lado da
+Anthropic ("Elevated errors across all models", investigando, sem
+relação com o site) que assustou a Priscila achando que algo tinha
+quebrado — confirmado via `status.claude.com` e esclarecido; nada
+relacionado ao VERAORIS.
