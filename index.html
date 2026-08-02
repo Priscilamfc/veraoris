@@ -1041,13 +1041,90 @@ function lojasredeSearchPrices(query, callback){
     callback([]);
   });
 }
-// Combina Awin + Americanas + Época + WePink + Lojas Rede numa única busca — usado em
-// qualquer lugar que precise de preço/foto ao vivo de mais de uma fonte parceira (busca de
-// produtos, quiz, foto de promoções), pra não repetir a mesma lógica de "esperar todas as
-// fontes responderem" em cada lugar. Cada resultado já sai marcado com `_source` pra quem
-// precisar diferenciar.
+// ── MAHOGANY (API VTEX pública, chamada direta — sem Apify, sem custo) ──
+// Marca própria de cosméticos (perfumaria, corpo e banho, cabelo) desde 1991. Achada e testada
+// ao vivo em 01/08/2026 a pedido da Priscila (aumentar quantidade de lojas/produtos do site,
+// mesmo sem comissão de afiliado — decisão dela: cobertura importa mais que monetização por
+// enquanto). Catálogo inteiro é beleza, sem risco de produto fora do tema.
+function mahoganySearchPrices(query, callback){
+  var url = '/.netlify/functions/mahogany-search?query='+encodeURIComponent(query);
+  fetch(url)
+  .then(function(r){ return r.json(); })
+  .then(function(data){
+    callback(data.results || []);
+  })
+  .catch(function(err){
+    console.log('Mahogany search failed:', err);
+    callback([]);
+  });
+}
+// ── LOJAS POMPÉIA (API VTEX pública, chamada direta — sem Apify, sem custo) ──
+// Rede de lojas de departamento (vende Vult, Payot, Eudora, Siàge, Australian Gold...). Achada
+// e testada ao vivo em 01/08/2026, mesmo pedido acima. Loja de departamento geral — filtro de
+// categoria (prefixo "/Beleza") já aplicado do lado da function, mesma proteção que a
+// Americanas usa.
+function pompeiaSearchPrices(query, callback){
+  var url = '/.netlify/functions/pompeia-search?query='+encodeURIComponent(query);
+  fetch(url)
+  .then(function(r){ return r.json(); })
+  .then(function(data){
+    callback(data.results || []);
+  })
+  .catch(function(err){
+    console.log('Lojas Pompéia search failed:', err);
+    callback([]);
+  });
+}
+// ── EXTRAFARMA, DROGARIA VENÂNCIO, DROGAL (farmácias, API VTEX pública direta) ──
+// Achadas e testadas ao vivo em 01/08/2026, mesmo pedido acima. Catálogos enormes (2000+
+// resultados pra termos genéricos) e finalmente trazem marca de farmácia que nenhuma loja
+// parceira vendia (CeraVe, La Roche-Posay, Vichy, Neutrogena — confirmado testando as três).
+// Cada uma filtra pelo campo `categories` do lado da function (prefixo próprio de cada
+// farmácia), mesma proteção que a Americanas/Lojas Pompéia usam, pra não misturar remédio/
+// fralda/alimento (farmácia vende de tudo, não só beleza).
+function extrafarmaSearchPrices(query, callback){
+  var url = '/.netlify/functions/extrafarma-search?query='+encodeURIComponent(query);
+  fetch(url)
+  .then(function(r){ return r.json(); })
+  .then(function(data){
+    callback(data.results || []);
+  })
+  .catch(function(err){
+    console.log('Extrafarma search failed:', err);
+    callback([]);
+  });
+}
+function venancioSearchPrices(query, callback){
+  var url = '/.netlify/functions/venancio-search?query='+encodeURIComponent(query);
+  fetch(url)
+  .then(function(r){ return r.json(); })
+  .then(function(data){
+    callback(data.results || []);
+  })
+  .catch(function(err){
+    console.log('Drogaria Venâncio search failed:', err);
+    callback([]);
+  });
+}
+function drogalSearchPrices(query, callback){
+  var url = '/.netlify/functions/drogal-search?query='+encodeURIComponent(query);
+  fetch(url)
+  .then(function(r){ return r.json(); })
+  .then(function(data){
+    callback(data.results || []);
+  })
+  .catch(function(err){
+    console.log('Drogal search failed:', err);
+    callback([]);
+  });
+}
+// Combina Awin + Americanas + Época + WePink + Lojas Rede + Mahogany + Lojas Pompéia +
+// Extrafarma + Drogaria Venâncio + Drogal numa única busca — usado em qualquer lugar que
+// precise de preço/foto ao vivo de mais de uma fonte parceira (busca de produtos, quiz, foto
+// de promoções), pra não repetir a mesma lógica de "esperar todas as fontes responderem" em
+// cada lugar. Cada resultado já sai marcado com `_source` pra quem precisar diferenciar.
 function liveMultiSourceSearch(query, callback){
-  var results=[], waiting=5;
+  var results=[], waiting=10;
   function done(list, source){
     (list||[]).forEach(function(r){ r._source=source; });
     results = results.concat(list||[]);
@@ -1059,6 +1136,11 @@ function liveMultiSourceSearch(query, callback){
   epocaSearchPrices(query, function(r){ done(r,'epoca'); });
   wepinkSearchPrices(query, function(r){ done(r,'wepink'); });
   lojasredeSearchPrices(query, function(r){ done(r,'lojasrede'); });
+  mahoganySearchPrices(query, function(r){ done(r,'mahogany'); });
+  pompeiaSearchPrices(query, function(r){ done(r,'pompeia'); });
+  extrafarmaSearchPrices(query, function(r){ done(r,'extrafarma'); });
+  venancioSearchPrices(query, function(r){ done(r,'venancio'); });
+  drogalSearchPrices(query, function(r){ done(r,'drogal'); });
 }
 // Roda liveMultiSourceSearch pra VÁRIOS termos ao mesmo tempo e junta tudo num resultado só,
 // sem duplicar (usado quando um termo sozinho não cobre como cada loja nomeia o produto — ex:
@@ -7657,7 +7739,7 @@ function loadComparison(cardId, searchTerm, brand, name, fallbackLink, sub, cat)
   // conforme cada comparação terminava, mas o texto "Mostrando X de Y" nunca acompanhava,
   // ficando mentiroso ("mostrando 54" com só 16 visíveis de verdade). Perfumaria tem catálogo
   // pequeno e curado (~60 produtos), o mesmo problema não se repete na mesma escala ali.
-  var sourcesTotal = (region==='BR' && cat==='perfumaria') ? 5 : 0; // awin, americanas, epoca, wepink, lojasrede
+  var sourcesTotal = (region==='BR' && cat==='perfumaria') ? 10 : 0; // awin, americanas, epoca, wepink, lojasrede, mahogany, pompeia, extrafarma, venancio, drogal
   var sourcesDone = 0;
   var fallbackTried = false;
   function renderCombined(){
@@ -7681,10 +7763,10 @@ function loadComparison(cardId, searchTerm, brand, name, fallbackLink, sub, cat)
     var kws0=subKeywords(sub);
     var effCat0=cat||inferCat(searchTerm);
     // D3 se aplica a qualquer fonte de marketplace multimarca (Awin, Americanas, Época,
-    // Lojas Rede) — só não se aplica ao Scrappa (já desligado) porque ele nunca teve esse
-    // tratamento e não é prioridade de desenvolvimento no momento.
+    // Lojas Rede, Mahogany, Lojas Pompéia) — só não se aplica ao Scrappa (já desligado) porque
+    // ele nunca teve esse tratamento e não é prioridade de desenvolvimento no momento.
     combined = combined.filter(function(r){
-      if(r._source!=='awin' && r._source!=='americanas' && r._source!=='epoca' && r._source!=='wepink' && r._source!=='lojasrede') return true;
+      if(r._source!=='awin' && r._source!=='americanas' && r._source!=='epoca' && r._source!=='wepink' && r._source!=='lojasrede' && r._source!=='mahogany' && r._source!=='pompeia' && r._source!=='extrafarma' && r._source!=='venancio' && r._source!=='drogal') return true;
       var t=(r.title||'').toLowerCase();
       if(brandLower && t.indexOf(brandLower)<0 && normBrand(r.store).indexOf(brandNorm0)<0) return false;
       if(effCat0 && conflictsWithCategory(effCat0, r.title)) return false;
@@ -7701,7 +7783,7 @@ function loadComparison(cardId, searchTerm, brand, name, fallbackLink, sub, cat)
     // sem a parte específica do nome) — o filtro de marca+tipo (D3) acima continua exatamente
     // igual, só muda o texto de busca. Só tenta uma vez por card, e só depois que todas as 5
     // fontes já responderam com o nome completo (nunca no meio do caminho).
-    if(!combined.length && sub && brand && region==='BR' && sourcesDone>=5 && !fallbackTried){
+    if(!combined.length && sub && brand && region==='BR' && sourcesDone>=10 && !fallbackTried){
       var kwsFb=subKeywords(sub);
       var fallbackTerm=(brand+' '+(kwsFb[0]||'')).trim();
       if(fallbackTerm && fallbackTerm.toLowerCase()!==searchTerm.toLowerCase()){
@@ -7716,6 +7798,11 @@ function loadComparison(cardId, searchTerm, brand, name, fallbackLink, sub, cat)
         epocaSearchPrices(fallbackTerm, function(r){ onFallback(r,'epoca'); });
         wepinkSearchPrices(fallbackTerm, function(r){ onFallback(r,'wepink'); });
         lojasredeSearchPrices(fallbackTerm, function(r){ onFallback(r,'lojasrede'); });
+        mahoganySearchPrices(fallbackTerm, function(r){ onFallback(r,'mahogany'); });
+        pompeiaSearchPrices(fallbackTerm, function(r){ onFallback(r,'pompeia'); });
+        extrafarmaSearchPrices(fallbackTerm, function(r){ onFallback(r,'extrafarma'); });
+        venancioSearchPrices(fallbackTerm, function(r){ onFallback(r,'venancio'); });
+        drogalSearchPrices(fallbackTerm, function(r){ onFallback(r,'drogal'); });
         return; // espera as respostas do termo mais simples antes de decidir remover/renderizar
       }
     }
@@ -7758,7 +7845,7 @@ function loadComparison(cardId, searchTerm, brand, name, fallbackLink, sub, cat)
       // brand+type identity check already happened above when filtering `combined`, so any
       // awin/americanas/epoca entry that made it into `top` is already confirmed to be the
       // same product (decision D3).
-      var withPhoto=top.find(function(r){ return r.image && (r._source==='awin'||r._source==='americanas'||r._source==='epoca'||r._source==='wepink'||r._source==='lojasrede'); });
+      var withPhoto=top.find(function(r){ return r.image && (r._source==='awin'||r._source==='americanas'||r._source==='epoca'||r._source==='wepink'||r._source==='lojasrede'||r._source==='mahogany'||r._source==='pompeia'||r._source==='extrafarma'||r._source==='venancio'||r._source==='drogal'); });
       if(withPhoto){
         var imgEl=document.getElementById(cardId+'_img');
         if(imgEl){ imgEl.src=withPhoto.image; imgEl.style.padding='0'; }
@@ -7861,6 +7948,41 @@ function loadComparison(cardId, searchTerm, brand, name, fallbackLink, sub, cat)
   // Lojas Rede: mesmo tratamento — complemento não-bloqueante.
   if(region==='BR') lojasredeSearchPrices(searchTerm, function(results){
     (results||[]).forEach(function(r){ r._source = 'lojasrede'; });
+    rawCombined = rawCombined.concat(results||[]);
+    sourcesDone++;
+    if(pending<=0) renderCombined();
+  });
+  // Mahogany: mesmo tratamento — complemento não-bloqueante.
+  if(region==='BR') mahoganySearchPrices(searchTerm, function(results){
+    (results||[]).forEach(function(r){ r._source = 'mahogany'; });
+    rawCombined = rawCombined.concat(results||[]);
+    sourcesDone++;
+    if(pending<=0) renderCombined();
+  });
+  // Lojas Pompéia: mesmo tratamento — complemento não-bloqueante.
+  if(region==='BR') pompeiaSearchPrices(searchTerm, function(results){
+    (results||[]).forEach(function(r){ r._source = 'pompeia'; });
+    rawCombined = rawCombined.concat(results||[]);
+    sourcesDone++;
+    if(pending<=0) renderCombined();
+  });
+  // Extrafarma: mesmo tratamento — complemento não-bloqueante.
+  if(region==='BR') extrafarmaSearchPrices(searchTerm, function(results){
+    (results||[]).forEach(function(r){ r._source = 'extrafarma'; });
+    rawCombined = rawCombined.concat(results||[]);
+    sourcesDone++;
+    if(pending<=0) renderCombined();
+  });
+  // Drogaria Venâncio: mesmo tratamento — complemento não-bloqueante.
+  if(region==='BR') venancioSearchPrices(searchTerm, function(results){
+    (results||[]).forEach(function(r){ r._source = 'venancio'; });
+    rawCombined = rawCombined.concat(results||[]);
+    sourcesDone++;
+    if(pending<=0) renderCombined();
+  });
+  // Drogal: mesmo tratamento — complemento não-bloqueante.
+  if(region==='BR') drogalSearchPrices(searchTerm, function(results){
+    (results||[]).forEach(function(r){ r._source = 'drogal'; });
     rawCombined = rawCombined.concat(results||[]);
     sourcesDone++;
     if(pending<=0) renderCombined();
