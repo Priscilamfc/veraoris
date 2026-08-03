@@ -3,19 +3,20 @@
 // e testada ao vivo em 01/08/2026, mesmo pedido da Priscila (aumentar quantidade de lojas/
 // produtos, mesmo sem comissão de afiliado). Catálogo grande (2200+ pra "hidratante") e traz
 // marca de farmácia (CeraVe testado ao vivo, resultado real).
-// Farmácia (vende de tudo) — filtra pelo campo `categories`: produto de beleza real testado
-// veio com prefixo "/Beleza/" (confirmado com batom — Vult, Ruby Rose, sem nada fora do tema).
-const CACHE_TTL_MS = 30 * 60 * 1000;
-const FETCH_TIMEOUT_MS = 8000;
-const API_URL = 'https://www.drogal.com.br/api/catalog_system/pub/products/search';
-
-const BEAUTY_CATEGORY_PREFIX = '/beleza';
+// Farmácia (vende de tudo) — filtra pelo campo `categories`. Achado testando mais termos
+// (02/08/2026): diferente de Americanas/Lojas Pompéia/Extrafarma/Venâncio, a Drogal NÃO usa um
+// único guarda-chuva "/Beleza/" pra tudo — maquiagem fica em "/Beleza/", mas hidratante/
+// protetor solar ficam em "/Cuidados com a Pele/", shampoo em "/Cuidados com o Cabelo/" e marca
+// de farmácia (CeraVe etc.) em "/Dermocosméticos/". Com só "/Beleza/" na lista, a busca de
+// "hidratante" (e de qualquer skincare/cabelo) voltava vazia. Ampliado pras 4 categorias reais
+// de beleza dela — "Farmácia em Casa", "Higiene Íntima" etc. continuam de fora de propósito.
+const BEAUTY_CATEGORY_PREFIXES = ['/beleza', '/cuidados com a pele', '/cuidados com o cabelo', '/dermocosméticos'];
 
 let cache = {}; // { [query]: { data, fetchedAt } }
 
 function isRealBeautyProduct(p) {
   const cats = (p.categories || []).map((c) => c.toLowerCase());
-  return cats.some((c) => c.startsWith(BEAUTY_CATEGORY_PREFIX));
+  return cats.some((c) => BEAUTY_CATEGORY_PREFIXES.some((prefix) => c.startsWith(prefix)));
 }
 
 function bestAvailablePrice(product) {

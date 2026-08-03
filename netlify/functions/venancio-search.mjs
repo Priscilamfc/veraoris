@@ -3,19 +3,24 @@
 // testada ao vivo em 01/08/2026, mesmo pedido da Priscila (aumentar quantidade de lojas/
 // produtos, mesmo sem comissão de afiliado). Também traz marca de farmácia (CeraVe, La
 // Roche-Posay, Vichy testados ao vivo, todas com resultado real).
-// Farmácia (vende de tudo) — filtra pelo campo `categories`: produto de beleza real testado
-// veio com prefixo "/Dermocosméticos/" (confirmado com cerave, hidratante, batom).
-const CACHE_TTL_MS = 30 * 60 * 1000;
-const FETCH_TIMEOUT_MS = 8000;
-const API_URL = 'https://www.drogariavenancio.com.br/api/catalog_system/pub/products/search';
-
-const BEAUTY_CATEGORY_PREFIX = '/dermocosméticos';
+// Farmácia (vende de tudo) — filtra pelo campo `categories`. Achado testando mais termos
+// (02/08/2026): a Venâncio espalha beleza em 3 raízes — maquiagem/perfume em "/Beleza/", marca
+// de farmácia em "/Dermocosméticos/", e shampoo/protetor solar/sabonete dentro de
+// "/Higiene e Cuidados Pessoais/..." (mas essa raiz TAMBÉM tem "Higiene Oral" — escova de
+// dente — então só aceita as subcategorias reais de beleza dentro dela, nunca a raiz inteira).
+const BEAUTY_CATEGORY_PREFIXES = [
+  '/beleza',
+  '/dermocosméticos',
+  '/higiene e cuidados pessoais/cuidados cabelos',
+  '/higiene e cuidados pessoais/solar',
+  '/higiene e cuidados pessoais/banho e pós banho'
+];
 
 let cache = {}; // { [query]: { data, fetchedAt } }
 
 function isRealBeautyProduct(p) {
   const cats = (p.categories || []).map((c) => c.toLowerCase());
-  return cats.some((c) => c.startsWith(BEAUTY_CATEGORY_PREFIX));
+  return cats.some((c) => BEAUTY_CATEGORY_PREFIXES.some((prefix) => c.startsWith(prefix)));
 }
 
 function bestAvailablePrice(product) {
