@@ -2333,3 +2333,52 @@ Anthropic ("Elevated errors across all models", investigando, sem
 relação com o site) que assustou a Priscila achando que algo tinha
 quebrado — confirmado via `status.claude.com` e esclarecido; nada
 relacionado ao VERAORIS.
+
+## Sessão 01-03/08/2026 — cinco lojas novas (mesmo padrão VTEX de graça)
+Priscila pediu pra aumentar quantidade de lojas/produtos mesmo sem
+comissão de afiliado, porque cobertura importa mais que monetização pra
+poder lançar o site (feito numa sessão que não passou por aqui — commits
+diretos dela, documentando agora). Cinco lojas novas via chamada direta
+na API pública VTEX (mesmo padrão de graça de Época/WePink/Americanas,
+sem Apify, sem custo, sem afiliado):
+- **Mahogany** — marca própria (perfumaria, corpo e banho, cabelo).
+- **Lojas Pompéia** — loja de departamento (Vult, Payot, Eudora, Siage).
+- **Extrafarma** — farmácia, catálogo enorme (2700+ pra "hidratante").
+- **Drogaria Venâncio** — farmácia, catálogo grande.
+- **Drogal** — farmácia, catálogo grande.
+
+As três farmácias (Extrafarma/Venâncio/Drogal) finalmente trazem marca
+de farmácia (CeraVe etc.) que nenhuma outra loja parceira vendia até
+então. Commit `636b9ee`.
+
+**Correção seguinte** (`e653f64`, mesma leva): testado ao vivo depois de
+publicar, a Drogal e a Venâncio espalham beleza em categorias separadas
+por tipo de produto (maquiagem em `/Beleza/`, mas hidratante/protetor
+solar/shampoo em raízes diferentes: "Cuidados com a Pele", "Cuidados
+com o Cabelo", "Higiene e Cuidados Pessoais") — diferente de Americanas/
+Lojas Pompéia/Extrafarma, que usam um guarda-chuva só. Com o filtro
+antigo (só aceitava `/Beleza/`), busca de hidratante/shampoo voltava
+vazia nas duas. Corrigido ampliando a lista de categorias aceitas em
+cada uma — cuidado extra na Venâncio pra não aceitar a raiz "Higiene e
+Cuidados Pessoais" inteira (ela também contém "Higiene Oral", escova de
+dente), só as subcategorias reais de beleza dentro dela.
+
+## Sessão 04/08/2026 — Drogal e Venâncio devolviam zero resultado (bug real, corrigido)
+Ao retomar a sessão, encontrei mudança pronta mas nunca commitada: os
+arquivos `drogal-search.mjs` e `venancio-search.mjs`, do jeito que
+tinham sido publicados no commit `e653f64` acima, usavam
+`CACHE_TTL_MS`, `FETCH_TIMEOUT_MS` e `API_URL` dentro de `fetchFeed()`
+sem NUNCA declarar essas constantes — `ReferenceError` em toda chamada,
+capturado em silêncio pelo try/catch do handler (devolvia
+`{results:[], error:"...is not defined"}` sem quebrar o site, só sem
+trazer produto nenhum). As duas lojas ficaram invisíveis nos resultados
+desde que esse commit foi ao ar, mesmo aparecendo "funcionando" (sem
+erro visível pra quem usa o site).
+
+A correção (as 3 constantes declaradas no topo de cada arquivo) já
+estava escrita localmente, só não tinha sido commitada nem enviada —
+finalizado: sintaxe validada (`node --check`), commit `f319ec4`,
+publicado. **Confirmado ao vivo em produção** (`WebFetch` direto nas
+duas functions, com parâmetro extra pra furar o cache de 15min do
+WebFetch): Drogal devolveu 20 resultados reais pra "hidratante" (ex.
+Sérum Hidratante Corporal Dove), Venâncio devolveu 15, nenhuma com erro.
