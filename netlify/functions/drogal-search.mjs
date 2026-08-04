@@ -10,6 +10,9 @@
 // de farmácia (CeraVe etc.) em "/Dermocosméticos/". Com só "/Beleza/" na lista, a busca de
 // "hidratante" (e de qualquer skincare/cabelo) voltava vazia. Ampliado pras 4 categorias reais
 // de beleza dela — "Farmácia em Casa", "Higiene Íntima" etc. continuam de fora de propósito.
+const CACHE_TTL_MS = 30 * 60 * 1000;
+const FETCH_TIMEOUT_MS = 8000;
+const API_URL = 'https://www.drogal.com.br/api/catalog_system/pub/products/search';
 const BEAUTY_CATEGORY_PREFIXES = ['/beleza', '/cuidados com a pele', '/cuidados com o cabelo', '/dermocosméticos'];
 
 let cache = {}; // { [query]: { data, fetchedAt } }

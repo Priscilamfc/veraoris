@@ -8,6 +8,9 @@
 // de farmácia em "/Dermocosméticos/", e shampoo/protetor solar/sabonete dentro de
 // "/Higiene e Cuidados Pessoais/..." (mas essa raiz TAMBÉM tem "Higiene Oral" — escova de
 // dente — então só aceita as subcategorias reais de beleza dentro dela, nunca a raiz inteira).
+const CACHE_TTL_MS = 30 * 60 * 1000;
+const FETCH_TIMEOUT_MS = 8000;
+const API_URL = 'https://www.drogariavenancio.com.br/api/catalog_system/pub/products/search';
 const BEAUTY_CATEGORY_PREFIXES = [
   '/beleza',
   '/dermocosméticos',
