@@ -2556,3 +2556,71 @@ entrar em ação — mesma categoria de limitação que o site já aceita há
 várias sessões (frase composta cobre a maioria dos casos reais, não
 todos). Não fica pra trás sozinho: se aparecer com produto real, é
 achar a frase exata e ajustar a guarda.
+
+## Sessão 05/08/2026 — pedido de revisão minuciosa completa + 2 bugs reais de vazamento de categoria
+Priscila pediu auditoria completa do site ("testa e revisa tudo,
+minuciosamente"). Rodei como agente em segundo plano (fork), mesmo
+processo de sessões anteriores — testou as 18 fontes ao vivo (todas
+OK, sem contaminação de categoria nos termos testados), conferiu a
+fiação de cada fonte em todos os pontos do `index.html` (nenhuma
+esquecida), validou sintaxe de tudo, e achou + corrigiu 2 bugs reais
+navegando de verdade no site: (1) hidratante corporal/facial vazando
+pro filtro de Maquilhagem/Cabelo (`e5d5de8`, `593e9ec`); (2) pílulas de
+categoria da página de resultados do quiz sem nenhum efeito, bug antigo
+não relacionado a hoje (`86cf3fb`). Documentado em `41e77de`.
+
+**Logo depois, a própria Priscila achou um bug real que a auditoria não
+pegou** (print de tela): buscar "hidratante pele oleosa" na busca
+geral, filtrar por Skincare e ordenar por Maior preço mostrava perfume
+(Drogaria Venâncio: "Devotion...Dolce & Gabbana Parfum Masculino",
+"Versace Man Eau Fraiche" etc.) misturado nos resultados de Skincare.
+
+**1ª causa encontrada e corrigida**: `PERFUME_ONLY_NOUNS`
+(`index.html`) só reconhecia grafia portuguesa ("perfume", "colônia")
+— títulos com grafia francesa/inglesa ("Parfum Masculino", "Eau
+Fraiche", "Extrait De Parfum") não batiam nenhuma palavra da lista,
+então `conflictsWithCategory('skincare', titulo)` não detectava o
+conflito. Adicionado `'parfum'`/`'eau fraiche'` à lista. Testado com
+os 4 títulos exatos do print antes de publicar (`b36b131`).
+
+**2ª causa, mais profunda, encontrada testando de novo no navegador**:
+mesmo com a correção acima, "Cool Water De Zino Davidoff Masculino"
+(Drogaria Venâncio) continuava vazando — esse título não tem NENHUMA
+palavra de perfume, só o nome da fragrância + gênero. Não tem como um
+filtro de texto pegar isso por mais completa que a lista fique.
+Investigado direto na API da Venâncio: a própria loja já classifica
+esse produto certinho (`/Beleza/Fragrâncias/Perfume/`) — a informação
+correta sempre existiu, só nunca foi repassada pro site, que ficava
+adivinhando pelo título sozinho.
+
+**Correção de raiz** (`a11cc8f`): as 12 functions VTEX de farmácia/loja
+geral (Drogal, Venâncio, São João, Rosário, Pague Menos, Catarinense,
+Preço Popular, Globo, Indiana, Extrafarma, Americanas, Lojas Pompéia)
+ganharam `guessSubcat(categories)` — deriva skincare/maquiagem/cabelo/
+perfumaria do campo `categories` real da API (que essas functions já
+recebem, só usavam pra decidir "é produto de beleza?", nunca pra
+subcategorizar) — e devolvem isso no campo `category` de cada
+resultado. `conflictsWithCategory()` ganhou 3º parâmetro opcional
+`structCat`: quando a fonte manda essa informação e ela diverge do
+filtro ativo, rejeita na hora, sem depender de palavra nenhuma no
+título. A categoria Perfumaria (lógica invertida — só aceita se
+PROVAR que é perfume) também passou a aceitar a confirmação
+estruturada como prova válida. Retrocompatível: fontes sem esse dado
+(Awin, Mahogany/WePink/Payot — marca própria, sem terceiros) continuam
+usando só o título, do jeito que já era.
+
+4 pontos de chamada de `conflictsWithCategory` atualizados
+(`finishRenderProds`, quiz, filtro D3 do comparador,
+`preloadEudoraImage`). Testado com 6 casos via script Node (incluindo
+os títulos exatos do print) antes de publicar — todos corretos.
+**Confirmado ao vivo no navegador depois do deploy**: reproduzindo os
+passos exatos da Priscila (busca → filtro Skincare → Maior preço),
+zero perfume em toda a lista rolada (contador caiu de 216 pra 186
+resultados de lojas parceiras — a correção estrutural pegou mais
+vazamento do que só a correção de texto sozinha teria pego).
+
+**Lição pra sessões futuras**: sempre que uma fonte VTEX nova for
+adicionada, dar preferência a repassar o campo `categories` real da
+API (via `guessSubcat`) em vez de só confiar em `conflictsWithCategory`
+adivinhando pelo título — é estrutural, não depende de lista de
+palavra nunca ficar completa.
