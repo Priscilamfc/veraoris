@@ -1195,15 +1195,39 @@ function precopopularSearchPrices(query, callback){
     callback([]);
   });
 }
+function globoSearchPrices(query, callback){
+  var url = '/.netlify/functions/globo-search?query='+encodeURIComponent(query);
+  fetch(url)
+  .then(function(r){ return r.json(); })
+  .then(function(data){
+    callback(data.results || []);
+  })
+  .catch(function(err){
+    console.log('Drogaria Globo search failed:', err);
+    callback([]);
+  });
+}
+function indianaSearchPrices(query, callback){
+  var url = '/.netlify/functions/indiana-search?query='+encodeURIComponent(query);
+  fetch(url)
+  .then(function(r){ return r.json(); })
+  .then(function(data){
+    callback(data.results || []);
+  })
+  .catch(function(err){
+    console.log('Farmácia Indiana search failed:', err);
+    callback([]);
+  });
+}
 // Combina Awin + Americanas + Época + WePink + Lojas Rede + Mahogany + Lojas Pompéia +
 // Extrafarma + Drogaria Venâncio + Drogal + Pague Menos + Drogaria Catarinense + Farmácias São
-// João + Drogaria Rosário + Payot + Farmácia Preço Popular numa única busca — usado em
-// qualquer lugar que precise de preço/foto ao vivo de mais de uma fonte parceira (busca de
-// produtos, quiz, foto de promoções), pra não repetir a mesma lógica de "esperar todas as
-// fontes responderem" em cada lugar. Cada resultado já sai marcado com `_source` pra quem
-// precisar diferenciar.
+// João + Drogaria Rosário + Payot + Farmácia Preço Popular + Drogaria Globo + Farmácia Indiana
+// numa única busca — usado em qualquer lugar que precise de preço/foto ao vivo de mais de uma
+// fonte parceira (busca de produtos, quiz, foto de promoções), pra não repetir a mesma lógica
+// de "esperar todas as fontes responderem" em cada lugar. Cada resultado já sai marcado com
+// `_source` pra quem precisar diferenciar.
 function liveMultiSourceSearch(query, callback){
-  var results=[], waiting=16;
+  var results=[], waiting=18;
   function done(list, source){
     (list||[]).forEach(function(r){ r._source=source; });
     results = results.concat(list||[]);
@@ -1226,6 +1250,8 @@ function liveMultiSourceSearch(query, callback){
   rosarioSearchPrices(query, function(r){ done(r,'rosario'); });
   payotSearchPrices(query, function(r){ done(r,'payot'); });
   precopopularSearchPrices(query, function(r){ done(r,'precopopular'); });
+  globoSearchPrices(query, function(r){ done(r,'globo'); });
+  indianaSearchPrices(query, function(r){ done(r,'indiana'); });
 }
 // Roda liveMultiSourceSearch pra VÁRIOS termos ao mesmo tempo e junta tudo num resultado só,
 // sem duplicar (usado quando um termo sozinho não cobre como cada loja nomeia o produto — ex:
@@ -7824,7 +7850,7 @@ function loadComparison(cardId, searchTerm, brand, name, fallbackLink, sub, cat)
   // conforme cada comparação terminava, mas o texto "Mostrando X de Y" nunca acompanhava,
   // ficando mentiroso ("mostrando 54" com só 16 visíveis de verdade). Perfumaria tem catálogo
   // pequeno e curado (~60 produtos), o mesmo problema não se repete na mesma escala ali.
-  var sourcesTotal = (region==='BR' && cat==='perfumaria') ? 16 : 0; // awin, americanas, epoca, wepink, lojasrede, mahogany, pompeia, extrafarma, venancio, drogal, paguemenos, catarinense, saojoao, rosario, payot, precopopular
+  var sourcesTotal = (region==='BR' && cat==='perfumaria') ? 18 : 0; // awin, americanas, epoca, wepink, lojasrede, mahogany, pompeia, extrafarma, venancio, drogal, paguemenos, catarinense, saojoao, rosario, payot, precopopular, globo, indiana
   var sourcesDone = 0;
   var fallbackTried = false;
   function renderCombined(){
@@ -7851,7 +7877,7 @@ function loadComparison(cardId, searchTerm, brand, name, fallbackLink, sub, cat)
     // Lojas Rede, Mahogany, Lojas Pompéia) — só não se aplica ao Scrappa (já desligado) porque
     // ele nunca teve esse tratamento e não é prioridade de desenvolvimento no momento.
     combined = combined.filter(function(r){
-      if(r._source!=='awin' && r._source!=='americanas' && r._source!=='epoca' && r._source!=='wepink' && r._source!=='lojasrede' && r._source!=='mahogany' && r._source!=='pompeia' && r._source!=='extrafarma' && r._source!=='venancio' && r._source!=='drogal' && r._source!=='paguemenos' && r._source!=='catarinense' && r._source!=='saojoao' && r._source!=='rosario' && r._source!=='payot' && r._source!=='precopopular') return true;
+      if(r._source!=='awin' && r._source!=='americanas' && r._source!=='epoca' && r._source!=='wepink' && r._source!=='lojasrede' && r._source!=='mahogany' && r._source!=='pompeia' && r._source!=='extrafarma' && r._source!=='venancio' && r._source!=='drogal' && r._source!=='paguemenos' && r._source!=='catarinense' && r._source!=='saojoao' && r._source!=='rosario' && r._source!=='payot' && r._source!=='precopopular' && r._source!=='globo' && r._source!=='indiana') return true;
       var t=(r.title||'').toLowerCase();
       if(brandLower && t.indexOf(brandLower)<0 && normBrand(r.store).indexOf(brandNorm0)<0) return false;
       if(effCat0 && conflictsWithCategory(effCat0, r.title)) return false;
@@ -7868,7 +7894,7 @@ function loadComparison(cardId, searchTerm, brand, name, fallbackLink, sub, cat)
     // sem a parte específica do nome) — o filtro de marca+tipo (D3) acima continua exatamente
     // igual, só muda o texto de busca. Só tenta uma vez por card, e só depois que todas as 5
     // fontes já responderam com o nome completo (nunca no meio do caminho).
-    if(!combined.length && sub && brand && region==='BR' && sourcesDone>=16 && !fallbackTried){
+    if(!combined.length && sub && brand && region==='BR' && sourcesDone>=18 && !fallbackTried){
       var kwsFb=subKeywords(sub);
       var fallbackTerm=(brand+' '+(kwsFb[0]||'')).trim();
       if(fallbackTerm && fallbackTerm.toLowerCase()!==searchTerm.toLowerCase()){
@@ -7894,6 +7920,8 @@ function loadComparison(cardId, searchTerm, brand, name, fallbackLink, sub, cat)
         rosarioSearchPrices(fallbackTerm, function(r){ onFallback(r,'rosario'); });
         payotSearchPrices(fallbackTerm, function(r){ onFallback(r,'payot'); });
         precopopularSearchPrices(fallbackTerm, function(r){ onFallback(r,'precopopular'); });
+        globoSearchPrices(fallbackTerm, function(r){ onFallback(r,'globo'); });
+        indianaSearchPrices(fallbackTerm, function(r){ onFallback(r,'indiana'); });
         return; // espera as respostas do termo mais simples antes de decidir remover/renderizar
       }
     }
@@ -7936,7 +7964,7 @@ function loadComparison(cardId, searchTerm, brand, name, fallbackLink, sub, cat)
       // brand+type identity check already happened above when filtering `combined`, so any
       // awin/americanas/epoca entry that made it into `top` is already confirmed to be the
       // same product (decision D3).
-      var withPhoto=top.find(function(r){ return r.image && (r._source==='awin'||r._source==='americanas'||r._source==='epoca'||r._source==='wepink'||r._source==='lojasrede'||r._source==='mahogany'||r._source==='pompeia'||r._source==='extrafarma'||r._source==='venancio'||r._source==='drogal'||r._source==='paguemenos'||r._source==='catarinense'||r._source==='saojoao'||r._source==='rosario'||r._source==='payot'||r._source==='precopopular'); });
+      var withPhoto=top.find(function(r){ return r.image && (r._source==='awin'||r._source==='americanas'||r._source==='epoca'||r._source==='wepink'||r._source==='lojasrede'||r._source==='mahogany'||r._source==='pompeia'||r._source==='extrafarma'||r._source==='venancio'||r._source==='drogal'||r._source==='paguemenos'||r._source==='catarinense'||r._source==='saojoao'||r._source==='rosario'||r._source==='payot'||r._source==='precopopular'||r._source==='globo'||r._source==='indiana'); });
       if(withPhoto){
         var imgEl=document.getElementById(cardId+'_img');
         if(imgEl){ imgEl.src=withPhoto.image; imgEl.style.padding='0'; }
@@ -8116,6 +8144,20 @@ function loadComparison(cardId, searchTerm, brand, name, fallbackLink, sub, cat)
   // Farmácia Preço Popular: mesmo tratamento — complemento não-bloqueante.
   if(region==='BR') precopopularSearchPrices(searchTerm, function(results){
     (results||[]).forEach(function(r){ r._source = 'precopopular'; });
+    rawCombined = rawCombined.concat(results||[]);
+    sourcesDone++;
+    if(pending<=0) renderCombined();
+  });
+  // Drogaria Globo: mesmo tratamento — complemento não-bloqueante.
+  if(region==='BR') globoSearchPrices(searchTerm, function(results){
+    (results||[]).forEach(function(r){ r._source = 'globo'; });
+    rawCombined = rawCombined.concat(results||[]);
+    sourcesDone++;
+    if(pending<=0) renderCombined();
+  });
+  // Farmácia Indiana: mesmo tratamento — complemento não-bloqueante.
+  if(region==='BR') indianaSearchPrices(searchTerm, function(results){
+    (results||[]).forEach(function(r){ r._source = 'indiana'; });
     rawCombined = rawCombined.concat(results||[]);
     sourcesDone++;
     if(pending<=0) renderCombined();
