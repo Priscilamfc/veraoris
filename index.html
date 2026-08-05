@@ -1431,7 +1431,13 @@ var SKINCARE_ONLY_NOUNS=['hidratante facial','hidratante corporal','corporal hid
 // literalmente (achado ao vivo, 28/07/2026: "Máscara de Tratamento... Niely Gold Detox Raiz
 // Oleosa e Pontas Secas" passava batido pro filtro de Maquiagem).
 var HAIR_ONLY_NOUNS=['shampoo','condicionador','leave-in','leave in','óleo capilar','oleo capilar','máscara capilar','mascara capilar','tônico capilar','tonico capilar','ampola capilar','cabelo','raiz oleosa','pontas secas'];
-var PERFUME_ONLY_NOUNS=['perfume','colônia','colonia','eau de parfum','eau de toilette','eau de cologne','body splash','deo colônia','deo colonia'];
+// "parfum"/"eau fraiche" entraram na sessão de 05/08/2026: achado ao vivo que "hidratante
+// pele oleosa" ordenado por Maior preço mostrava perfume (Drogaria Venâncio) dentro do
+// filtro de Skincare — os títulos usam grafia francesa/inglesa sem a palavra "perfume" em
+// português ("Devotion... Parfum Masculino", "Versace Man Eau Fraiche", "Extrait De
+// Parfum"), nenhuma batia a lista antiga, então `conflictsWithCategory('skincare', t)`
+// não detectava o conflito.
+var PERFUME_ONLY_NOUNS=['perfume','colônia','colonia','eau de parfum','eau de toilette','eau de cologne','eau fraiche','parfum','body splash','deo colônia','deo colonia'];
 // "perfume" aparece em MUITO produto que não é perfume — desodorante antitranspirante "sem
 // perfume" (ou seja, sem fragrância nenhuma), loção corporal com aroma tipo "perfume de bebê",
 // sabonete perfumado. Essas frases têm prioridade sobre o match de PERFUME_ONLY_NOUNS: se
