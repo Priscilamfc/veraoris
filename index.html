@@ -1429,12 +1429,26 @@ var PERFUME_ONLY_NOUNS=['perfume','colônia','colonia','eau de parfum','eau de t
 // sabonete perfumado. Essas frases têm prioridade sobre o match de PERFUME_ONLY_NOUNS: se
 // aparecerem, é sempre exclusão, mesmo contendo a palavra "perfume" em algum lugar.
 var PERFUME_FALSE_POSITIVE_HINTS=['sem perfume','sem fragrância','sem fragrancia','antitranspirante','loção hidratante','locao hidratante','hidratante corporal','sabonete'];
+// Achado ao vivo (05/08/2026, auditoria): loção corporal é frequentemente nomeada "Hidratante
+// [Marca] [Descrição]" (ex: "Hidratante Monange Intensiva", "Hidratante Paixão Bridgerton") —
+// a palavra "hidratante" vem PRIMEIRO, ordem que nenhuma frase de SKINCARE_ONLY_NOUNS cobria
+// (todas exigem "[tipo] hidratante", nunca "hidratante" sozinho na frente). Isso deixava esses
+// hidratantes corporais vazarem pro filtro de Maquilhagem/Cabelo. Não dá pra rejeitar "hidratante"
+// solto de forma geral (quebraria "Batom Hidratante", "Hidratante Labial" — maquiagem de
+// verdade) — por isso só conta como conflito quando começa com "hidratante" E não tem nenhuma
+// palavra de maquiagem/cabelo junto (labial, capilar etc.).
+function isGenericHidratante(t){
+  if(!/^hidratante\b/.test(t)) return false;
+  if(MAKEUP_ONLY_NOUNS.some(function(w){return t.indexOf(w)>=0;})) return false;
+  if(HAIR_ONLY_NOUNS.some(function(w){return t.indexOf(w)>=0;}) || t.indexOf('capilar')>=0) return false;
+  return true;
+}
 function conflictsWithCategory(cat, title){
   var t=(title||'').toLowerCase();
   var has=function(list){ return list.some(function(w){ return t.indexOf(w)>=0; }); };
   if(cat==='skincare') return has(MAKEUP_ONLY_NOUNS) || has(HAIR_ONLY_NOUNS) || has(PERFUME_ONLY_NOUNS);
-  if(cat==='maquiagem') return has(SKINCARE_ONLY_NOUNS) || has(HAIR_ONLY_NOUNS) || has(PERFUME_ONLY_NOUNS);
-  if(cat==='cabelo') return has(MAKEUP_ONLY_NOUNS) || has(SKINCARE_ONLY_NOUNS) || has(PERFUME_ONLY_NOUNS);
+  if(cat==='maquiagem') return has(SKINCARE_ONLY_NOUNS) || has(HAIR_ONLY_NOUNS) || has(PERFUME_ONLY_NOUNS) || isGenericHidratante(t);
+  if(cat==='cabelo') return has(MAKEUP_ONLY_NOUNS) || has(SKINCARE_ONLY_NOUNS) || has(PERFUME_ONLY_NOUNS) || isGenericHidratante(t);
   // Perfumaria é diferente das outras 3: é uma categoria estreita (só perfume/colônia/body
   // splash), não um guarda-chuva amplo. Excluir só o que "parece outra categoria" não basta —
   // sobra qualquer creme/máscara/tratamento que não menciona nenhuma palavra das listas de
