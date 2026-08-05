@@ -2470,3 +2470,89 @@ direta: Americanas/Época[desligada]/WePink/Lojas Rede[desligada]/
 Mahogany/Pompéia/Extrafarma/Venâncio/Drogal/Pague Menos/Catarinense/
 São João/Rosário/Payot/Preço Popular/Globo/Indiana). Eudora continua
 desligada (`EUDORA_ENABLED=false`), aguardando teste de amanhã.
+
+## Sessão 05/08/2026 — auditoria minuciosa pedida pela Priscila ("testa e revisa tudo")
+Priscila pediu uma revisão completa do site inteiro (não só as mudanças
+do dia) pra confirmar que estava tudo funcionando. Rodada como fork em
+segundo plano, cobrindo: as 18 fontes ao vivo (com termo de risco de
+contaminação testado em cada farmácia multi-raiz), fiação completa de
+cada fonte em todos os pontos do `index.html` (grep sistemático —
+tudo certo, nenhuma fonte esquecida em nenhum lugar desta vez),
+sintaxe de todas as functions + `<script>` inteiro, e teste real no
+navegador (extensão "Claude in Chrome") em busca de produto, troca de
+categoria, ordenação, "Ver mais" e quiz completo. Eudora não foi
+tocada (decisão de deixar pra outra sessão, respeitada).
+
+**Dois bugs reais encontrados e corrigidos, ambos achados só ao vivo no
+navegador (não apareciam numa leitura estática do código)**:
+
+1. **Hidratante corporal/facial vazando pro filtro de Maquilhagem e
+   Cabelo.** Buscando "hidratante" e filtrando por Maquilhagem,
+   apareciam loções corporais reais (Monange, Paixão da Drogaria
+   Globo) e depois, numa segunda passada de teste, também sérum
+   facial, gel facial, bastão facial, creme de mãos, óleo de banho e
+   até um produto de higiene íntima — tudo skincare de verdade, não
+   maquiagem. Causa: as frases de exclusão (`SKINCARE_ONLY_NOUNS`)
+   assumiam sempre a ordem "[tipo] hidratante" (ex: "loção
+   hidratante"), mas nome real de produto varia muito ("Hidratante
+   Monange", "Gel Facial Hidratante", "Sérum Hidratante" sem dizer
+   "facial", "Creme Vodol Hidratante"). Corrigido com
+   `isGenericHidratante()` (nova função, `index.html`): título conta
+   como conflito de Maquilhagem/Cabelo quando tem "hidratante" +
+   ("começa a frase" OU "facial" OU "sérum/soro" OU "creme"), EXCETO
+   se também tiver palavra de maquiagem (labial, primer — "primer"
+   adicionado à lista) ou de cabelo (capilar) junto — essa exceção é
+   o que protege "Batom Hidratante", "Hidratante Labial", "Primer
+   Facial Hidratante" e "Sérum Hidratante Capilar" de serem excluídos
+   por engano. "mãos"/"óleo de banho"/"íntimo"/"vulvar" também
+   entraram direto em `SKINCARE_ONLY_NOUNS` (sem ambiguidade
+   possível com as outras categorias). 21 casos de teste rodados
+   direto contra a lógica extraída do arquivo real antes de publicar
+   (positivos e negativos), todos passando. Dois commits (`e5d5de8`,
+   `593e9ec`) — o segundo ampliando o primeiro depois de achar mais
+   variações no mesmo teste ao vivo.
+
+2. **Pílulas de categoria da página de resultados do quiz sem
+   nenhum efeito.** Clicar Skincare/Maquilhagem/Cabelo/Perfumaria na
+   tela final do quiz não mudava nada na tela — a grade de resultados
+   continuava mostrando tudo. Causa: essas pílulas (`id="resCatF"`)
+   usavam a mesma `filterCat()`/`renderCats()` da página Comparar, que
+   só mexe na variável global `cat` e só re-renderiza o grid escondido
+   `productGrid` — a grade visível do quiz (`resultsGrid`) é filtrada
+   por uma variável diferente (`qD.cat`) e nunca era tocada pelo
+   clique. Bug antigo, não é regressão de hoje — bem provável que
+   ninguém tivesse reparado porque parece que "só não filtra bem" em
+   vez de "não faz nada". Corrigido (`index.html`): `filterCat()`
+   agora detecta `cid==='resCatF'` e, nesse caso, atualiza `qD.cat`
+   (convertendo o sentinela `'todas'` da pílula pro `'todos'` que o
+   resto do código do quiz já esperava) e chama `renderAmazonResults()`
+   de verdade; `renderCats()` passou a destacar a pílula ativa lendo
+   `qD.cat` quando for esse grid, em vez de sempre ler `cat`. Testado
+   ao vivo depois do deploy: clicar "Maquilhagem" mudou a contagem de
+   443→548 cards (produtos diferentes de verdade) e não sobrou nenhum
+   hidratante/sérum solto; clicar "Todas" voltou a mostrar tudo (508
+   cards, sentinela convertido certo nos dois sentidos). Commit
+   `86cf3fb`.
+
+**Testado e confirmado OK, sem mudança de código necessária**: as 18
+fontes ao vivo (todas responderam produto real, farmácias multi-raiz
+sem contaminação de categoria nos termos reais do site); fiação de
+cada fonte em `liveMultiSourceSearch`/filtro D3/troca de
+foto/fallback/`loadComparison`/contadores da Perfumaria (grep em cada
+uma das 18, tudo presente em todos os pontos); sintaxe de todas as
+functions e do `<script>` inteiro; ordenação por preço (não some
+card, reordena de verdade); "Ver mais" (acrescenta sem duplicar);
+quiz completo até resultados com fallback genérico (433 de 444 cards
+com comparação real, não só Amazon). Época e Lojas Rede continuam
+corretamente desligadas (flag do lado cliente — a function em si
+ainda responde se chamada direto, comportamento esperado, não bug).
+
+**Achado mencionado mas não corrigido (baixo risco, não confirmado em
+produto real)**: em teste isolado, "Creme Hidratante para Cabelos
+Cacheados" (hipotético) seria rejeitado do filtro de Cabelo porque a
+frase antiga `'creme hidratante'` (já existia em `SKINCARE_ONLY_NOUNS`
+antes desta sessão) bate primeiro, antes da guarda de `isHairSignal`
+entrar em ação — mesma categoria de limitação que o site já aceita há
+várias sessões (frase composta cobre a maioria dos casos reais, não
+todos). Não fica pra trás sozinho: se aparecer com produto real, é
+achar a frase exata e ajustar a guarda.
