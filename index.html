@@ -1118,13 +1118,79 @@ function drogalSearchPrices(query, callback){
     callback([]);
   });
 }
+// ── PAGUE MENOS, DROGARIA CATARINENSE, FARMÁCIAS SÃO JOÃO, DROGARIA ROSÁRIO, PAYOT ──
+// Achadas e testadas ao vivo em 04-05/08/2026, mesmo pedido acima (aumentar quantidade de
+// lojas/produtos, mesmo sem comissão). As 4 farmácias filtram pelo campo `categories` do lado
+// da function (mesma proteção de Extrafarma/Venâncio/Drogal). Payot é marca própria (skincare
+// e maquiagem), sem filtro de categoria — mesmo tratamento de Mahogany/WePink.
+function paguemenosSearchPrices(query, callback){
+  var url = '/.netlify/functions/paguemenos-search?query='+encodeURIComponent(query);
+  fetch(url)
+  .then(function(r){ return r.json(); })
+  .then(function(data){
+    callback(data.results || []);
+  })
+  .catch(function(err){
+    console.log('Pague Menos search failed:', err);
+    callback([]);
+  });
+}
+function catarinenseSearchPrices(query, callback){
+  var url = '/.netlify/functions/catarinense-search?query='+encodeURIComponent(query);
+  fetch(url)
+  .then(function(r){ return r.json(); })
+  .then(function(data){
+    callback(data.results || []);
+  })
+  .catch(function(err){
+    console.log('Drogaria Catarinense search failed:', err);
+    callback([]);
+  });
+}
+function saojoaoSearchPrices(query, callback){
+  var url = '/.netlify/functions/saojoao-search?query='+encodeURIComponent(query);
+  fetch(url)
+  .then(function(r){ return r.json(); })
+  .then(function(data){
+    callback(data.results || []);
+  })
+  .catch(function(err){
+    console.log('Farmácias São João search failed:', err);
+    callback([]);
+  });
+}
+function rosarioSearchPrices(query, callback){
+  var url = '/.netlify/functions/rosario-search?query='+encodeURIComponent(query);
+  fetch(url)
+  .then(function(r){ return r.json(); })
+  .then(function(data){
+    callback(data.results || []);
+  })
+  .catch(function(err){
+    console.log('Drogaria Rosário search failed:', err);
+    callback([]);
+  });
+}
+function payotSearchPrices(query, callback){
+  var url = '/.netlify/functions/payot-search?query='+encodeURIComponent(query);
+  fetch(url)
+  .then(function(r){ return r.json(); })
+  .then(function(data){
+    callback(data.results || []);
+  })
+  .catch(function(err){
+    console.log('Payot search failed:', err);
+    callback([]);
+  });
+}
 // Combina Awin + Americanas + Época + WePink + Lojas Rede + Mahogany + Lojas Pompéia +
-// Extrafarma + Drogaria Venâncio + Drogal numa única busca — usado em qualquer lugar que
-// precise de preço/foto ao vivo de mais de uma fonte parceira (busca de produtos, quiz, foto
-// de promoções), pra não repetir a mesma lógica de "esperar todas as fontes responderem" em
-// cada lugar. Cada resultado já sai marcado com `_source` pra quem precisar diferenciar.
+// Extrafarma + Drogaria Venâncio + Drogal + Pague Menos + Drogaria Catarinense + Farmácias São
+// João + Drogaria Rosário + Payot numa única busca — usado em qualquer lugar que precise de
+// preço/foto ao vivo de mais de uma fonte parceira (busca de produtos, quiz, foto de
+// promoções), pra não repetir a mesma lógica de "esperar todas as fontes responderem" em cada
+// lugar. Cada resultado já sai marcado com `_source` pra quem precisar diferenciar.
 function liveMultiSourceSearch(query, callback){
-  var results=[], waiting=10;
+  var results=[], waiting=15;
   function done(list, source){
     (list||[]).forEach(function(r){ r._source=source; });
     results = results.concat(list||[]);
@@ -1141,6 +1207,11 @@ function liveMultiSourceSearch(query, callback){
   extrafarmaSearchPrices(query, function(r){ done(r,'extrafarma'); });
   venancioSearchPrices(query, function(r){ done(r,'venancio'); });
   drogalSearchPrices(query, function(r){ done(r,'drogal'); });
+  paguemenosSearchPrices(query, function(r){ done(r,'paguemenos'); });
+  catarinenseSearchPrices(query, function(r){ done(r,'catarinense'); });
+  saojoaoSearchPrices(query, function(r){ done(r,'saojoao'); });
+  rosarioSearchPrices(query, function(r){ done(r,'rosario'); });
+  payotSearchPrices(query, function(r){ done(r,'payot'); });
 }
 // Roda liveMultiSourceSearch pra VÁRIOS termos ao mesmo tempo e junta tudo num resultado só,
 // sem duplicar (usado quando um termo sozinho não cobre como cada loja nomeia o produto — ex:
@@ -7739,7 +7810,7 @@ function loadComparison(cardId, searchTerm, brand, name, fallbackLink, sub, cat)
   // conforme cada comparação terminava, mas o texto "Mostrando X de Y" nunca acompanhava,
   // ficando mentiroso ("mostrando 54" com só 16 visíveis de verdade). Perfumaria tem catálogo
   // pequeno e curado (~60 produtos), o mesmo problema não se repete na mesma escala ali.
-  var sourcesTotal = (region==='BR' && cat==='perfumaria') ? 10 : 0; // awin, americanas, epoca, wepink, lojasrede, mahogany, pompeia, extrafarma, venancio, drogal
+  var sourcesTotal = (region==='BR' && cat==='perfumaria') ? 15 : 0; // awin, americanas, epoca, wepink, lojasrede, mahogany, pompeia, extrafarma, venancio, drogal, paguemenos, catarinense, saojoao, rosario, payot
   var sourcesDone = 0;
   var fallbackTried = false;
   function renderCombined(){
@@ -7766,7 +7837,7 @@ function loadComparison(cardId, searchTerm, brand, name, fallbackLink, sub, cat)
     // Lojas Rede, Mahogany, Lojas Pompéia) — só não se aplica ao Scrappa (já desligado) porque
     // ele nunca teve esse tratamento e não é prioridade de desenvolvimento no momento.
     combined = combined.filter(function(r){
-      if(r._source!=='awin' && r._source!=='americanas' && r._source!=='epoca' && r._source!=='wepink' && r._source!=='lojasrede' && r._source!=='mahogany' && r._source!=='pompeia' && r._source!=='extrafarma' && r._source!=='venancio' && r._source!=='drogal') return true;
+      if(r._source!=='awin' && r._source!=='americanas' && r._source!=='epoca' && r._source!=='wepink' && r._source!=='lojasrede' && r._source!=='mahogany' && r._source!=='pompeia' && r._source!=='extrafarma' && r._source!=='venancio' && r._source!=='drogal' && r._source!=='paguemenos' && r._source!=='catarinense' && r._source!=='saojoao' && r._source!=='rosario' && r._source!=='payot') return true;
       var t=(r.title||'').toLowerCase();
       if(brandLower && t.indexOf(brandLower)<0 && normBrand(r.store).indexOf(brandNorm0)<0) return false;
       if(effCat0 && conflictsWithCategory(effCat0, r.title)) return false;
@@ -7783,7 +7854,7 @@ function loadComparison(cardId, searchTerm, brand, name, fallbackLink, sub, cat)
     // sem a parte específica do nome) — o filtro de marca+tipo (D3) acima continua exatamente
     // igual, só muda o texto de busca. Só tenta uma vez por card, e só depois que todas as 5
     // fontes já responderam com o nome completo (nunca no meio do caminho).
-    if(!combined.length && sub && brand && region==='BR' && sourcesDone>=10 && !fallbackTried){
+    if(!combined.length && sub && brand && region==='BR' && sourcesDone>=15 && !fallbackTried){
       var kwsFb=subKeywords(sub);
       var fallbackTerm=(brand+' '+(kwsFb[0]||'')).trim();
       if(fallbackTerm && fallbackTerm.toLowerCase()!==searchTerm.toLowerCase()){
@@ -7803,6 +7874,11 @@ function loadComparison(cardId, searchTerm, brand, name, fallbackLink, sub, cat)
         extrafarmaSearchPrices(fallbackTerm, function(r){ onFallback(r,'extrafarma'); });
         venancioSearchPrices(fallbackTerm, function(r){ onFallback(r,'venancio'); });
         drogalSearchPrices(fallbackTerm, function(r){ onFallback(r,'drogal'); });
+        paguemenosSearchPrices(fallbackTerm, function(r){ onFallback(r,'paguemenos'); });
+        catarinenseSearchPrices(fallbackTerm, function(r){ onFallback(r,'catarinense'); });
+        saojoaoSearchPrices(fallbackTerm, function(r){ onFallback(r,'saojoao'); });
+        rosarioSearchPrices(fallbackTerm, function(r){ onFallback(r,'rosario'); });
+        payotSearchPrices(fallbackTerm, function(r){ onFallback(r,'payot'); });
         return; // espera as respostas do termo mais simples antes de decidir remover/renderizar
       }
     }
@@ -7845,7 +7921,7 @@ function loadComparison(cardId, searchTerm, brand, name, fallbackLink, sub, cat)
       // brand+type identity check already happened above when filtering `combined`, so any
       // awin/americanas/epoca entry that made it into `top` is already confirmed to be the
       // same product (decision D3).
-      var withPhoto=top.find(function(r){ return r.image && (r._source==='awin'||r._source==='americanas'||r._source==='epoca'||r._source==='wepink'||r._source==='lojasrede'||r._source==='mahogany'||r._source==='pompeia'||r._source==='extrafarma'||r._source==='venancio'||r._source==='drogal'); });
+      var withPhoto=top.find(function(r){ return r.image && (r._source==='awin'||r._source==='americanas'||r._source==='epoca'||r._source==='wepink'||r._source==='lojasrede'||r._source==='mahogany'||r._source==='pompeia'||r._source==='extrafarma'||r._source==='venancio'||r._source==='drogal'||r._source==='paguemenos'||r._source==='catarinense'||r._source==='saojoao'||r._source==='rosario'||r._source==='payot'); });
       if(withPhoto){
         var imgEl=document.getElementById(cardId+'_img');
         if(imgEl){ imgEl.src=withPhoto.image; imgEl.style.padding='0'; }
@@ -7983,6 +8059,41 @@ function loadComparison(cardId, searchTerm, brand, name, fallbackLink, sub, cat)
   // Drogal: mesmo tratamento — complemento não-bloqueante.
   if(region==='BR') drogalSearchPrices(searchTerm, function(results){
     (results||[]).forEach(function(r){ r._source = 'drogal'; });
+    rawCombined = rawCombined.concat(results||[]);
+    sourcesDone++;
+    if(pending<=0) renderCombined();
+  });
+  // Pague Menos: mesmo tratamento — complemento não-bloqueante.
+  if(region==='BR') paguemenosSearchPrices(searchTerm, function(results){
+    (results||[]).forEach(function(r){ r._source = 'paguemenos'; });
+    rawCombined = rawCombined.concat(results||[]);
+    sourcesDone++;
+    if(pending<=0) renderCombined();
+  });
+  // Drogaria Catarinense: mesmo tratamento — complemento não-bloqueante.
+  if(region==='BR') catarinenseSearchPrices(searchTerm, function(results){
+    (results||[]).forEach(function(r){ r._source = 'catarinense'; });
+    rawCombined = rawCombined.concat(results||[]);
+    sourcesDone++;
+    if(pending<=0) renderCombined();
+  });
+  // Farmácias São João: mesmo tratamento — complemento não-bloqueante.
+  if(region==='BR') saojoaoSearchPrices(searchTerm, function(results){
+    (results||[]).forEach(function(r){ r._source = 'saojoao'; });
+    rawCombined = rawCombined.concat(results||[]);
+    sourcesDone++;
+    if(pending<=0) renderCombined();
+  });
+  // Drogaria Rosário: mesmo tratamento — complemento não-bloqueante.
+  if(region==='BR') rosarioSearchPrices(searchTerm, function(results){
+    (results||[]).forEach(function(r){ r._source = 'rosario'; });
+    rawCombined = rawCombined.concat(results||[]);
+    sourcesDone++;
+    if(pending<=0) renderCombined();
+  });
+  // Payot: mesmo tratamento — complemento não-bloqueante.
+  if(region==='BR') payotSearchPrices(searchTerm, function(results){
+    (results||[]).forEach(function(r){ r._source = 'payot'; });
     rawCombined = rawCombined.concat(results||[]);
     sourcesDone++;
     if(pending<=0) renderCombined();
