@@ -1402,7 +1402,11 @@ function looseTypeMatch(searchTerm, title){
 // Labial Carmed..." (um balm de lábio, maquiagem) aparecia dentro do filtro de Cabelo, porque
 // nenhuma palavra da lista batia — "labial" sozinho é sempre produto de lábio/maquiagem, nunca
 // skincare/cabelo/perfume.
-var MAKEUP_ONLY_NOUNS=['batom','gloss','sombra','delineador','rímel','rimel','base líquida','base liquida','corretivo','pó compacto','po compacto','pó solto','po solto','blush','bronzer','iluminador','contorno','bb cream','paleta','lápis de olho','lapis de olho','máscara de cílios','mascara de cilios','esmalte','labial','lip balm','lip gloss'];
+// "primer" entrou na auditoria de 05/08/2026: sem ele, "Primer Facial Hidratante"/"Primer
+// Hidratante" não batiam MAKEUP_ONLY_NOUNS e ficavam vulneráveis a serem rejeitados por engano
+// pela regra nova de "facial"+"hidratante" (ver isGenericHidratante) — primer é sempre
+// maquiagem, nunca skincare, mesmo quando hidratante.
+var MAKEUP_ONLY_NOUNS=['batom','gloss','sombra','delineador','rímel','rimel','base líquida','base liquida','corretivo','pó compacto','po compacto','pó solto','po solto','blush','bronzer','iluminador','contorno','bb cream','paleta','lápis de olho','lapis de olho','máscara de cílios','mascara de cilios','esmalte','labial','lip balm','lip gloss','primer'];
 // Achado real (27/07/2026): as frases compostas exatas ("hidratante facial") quase nunca
 // aparecem literalmente em título de produto de verdade — as lojas escrevem "Leite Hidratante
 // Rosto e Corpo", "Fluído Hidratante Relaxante", "Creme de Barbear Hidratante" etc., nenhuma
@@ -1418,7 +1422,11 @@ var MAKEUP_ONLY_NOUNS=['batom','gloss','sombra','delineador','rímel','rimel','b
 // "Corporal" também entra em ordem invertida ("Óleo Corporal Hidratante", não só "Hidratante
 // Corporal") — achado ao vivo (28/07/2026): esse produto passava batido pro filtro de
 // Maquiagem porque só a ordem "hidratante corporal" estava coberta.
-var SKINCARE_ONLY_NOUNS=['hidratante facial','hidratante corporal','corporal hidratante','óleo corporal','oleo corporal','loção corporal','locao corporal','creme corporal','sérum facial','soro facial','protetor solar','esfoliante facial','água micelar','agua micelar','sabonete facial','sabonete','leite hidratante','fluido hidratante','fluído hidratante','creme hidratante','loção hidratante','locao hidratante','gel hidratante','barbear','desodorante'];
+// "mãos"/"óleo de banho"/"íntimo"/"vulvar" entraram na auditoria de 05/08/2026: creme de mão,
+// óleo de banho e produto de higiene íntima nunca são maquiagem/cabelo/perfume, mesmo sem
+// nenhuma das outras frases bater (ex: "Creme para as Mãos Hidratante Amêndoa" da L'Occitane,
+// "Atoderm Óleo de Banho Hidratante Bioderma").
+var SKINCARE_ONLY_NOUNS=['hidratante facial','hidratante corporal','corporal hidratante','óleo corporal','oleo corporal','loção corporal','locao corporal','creme corporal','sérum facial','soro facial','protetor solar','esfoliante facial','água micelar','agua micelar','sabonete facial','sabonete','leite hidratante','fluido hidratante','fluído hidratante','creme hidratante','loção hidratante','locao hidratante','gel hidratante','barbear','desodorante','mãos','maos','óleo de banho','oleo de banho','íntimo','intimo','vulvar'];
 // "raiz oleosa"/"pontas secas" são vocabulário de cabelo mesmo sem dizer "capilar"/"cabelo"
 // literalmente (achado ao vivo, 28/07/2026: "Máscara de Tratamento... Niely Gold Detox Raiz
 // Oleosa e Pontas Secas" passava batido pro filtro de Maquiagem).
@@ -1432,16 +1440,27 @@ var PERFUME_FALSE_POSITIVE_HINTS=['sem perfume','sem fragrância','sem fragranci
 // Achado ao vivo (05/08/2026, auditoria): loção corporal é frequentemente nomeada "Hidratante
 // [Marca] [Descrição]" (ex: "Hidratante Monange Intensiva", "Hidratante Paixão Bridgerton") —
 // a palavra "hidratante" vem PRIMEIRO, ordem que nenhuma frase de SKINCARE_ONLY_NOUNS cobria
-// (todas exigem "[tipo] hidratante", nunca "hidratante" sozinho na frente). Isso deixava esses
-// hidratantes corporais vazarem pro filtro de Maquilhagem/Cabelo. Não dá pra rejeitar "hidratante"
-// solto de forma geral (quebraria "Batom Hidratante", "Hidratante Labial" — maquiagem de
-// verdade) — por isso só conta como conflito quando começa com "hidratante" E não tem nenhuma
-// palavra de maquiagem/cabelo junto (labial, capilar etc.).
+// (todas exigem "[tipo] hidratante", nunca "hidratante" sozinho na frente). Mesma auditoria
+// achou variações parecidas ainda escapando: "Gel Facial Hidratante"/"Bastão Facial
+// Hidratante" (facial em ordem invertida), "Sérum Hidratante"/"Sérum Hidratante Com
+// Ceramidas" (sérum sem a palavra "facial"), "Creme Vodol Hidratante" (creme genérico sem
+// "corporal"). Não dá pra rejeitar "hidratante" solto de forma geral (quebraria "Batom
+// Hidratante", "Hidratante Labial", "Primer Hidratante" — maquiagem de verdade) — por isso só
+// conta como conflito quando NENHUMA palavra de maquiagem/cabelo aparece junto (guarda comum a
+// todos os padrões abaixo), combinado com um dos sinais: começa com "hidratante"; tem "facial"
+// E "hidratante"; tem "sérum"/"soro" E "hidratante" (sérum capilar continua protegido pela
+// guarda de cabelo); ou tem "creme" E "hidratante".
 function isGenericHidratante(t){
-  if(!/^hidratante\b/.test(t)) return false;
-  if(MAKEUP_ONLY_NOUNS.some(function(w){return t.indexOf(w)>=0;})) return false;
-  if(HAIR_ONLY_NOUNS.some(function(w){return t.indexOf(w)>=0;}) || t.indexOf('capilar')>=0) return false;
-  return true;
+  var isMakeupSignal = MAKEUP_ONLY_NOUNS.some(function(w){return t.indexOf(w)>=0;});
+  var isHairSignal = HAIR_ONLY_NOUNS.some(function(w){return t.indexOf(w)>=0;}) || t.indexOf('capilar')>=0;
+  if(isMakeupSignal || isHairSignal) return false;
+  if(/^hidratante\b/.test(t)) return true;
+  if(t.indexOf('hidratante')>=0){
+    if(t.indexOf('facial')>=0) return true;
+    if(t.indexOf('sérum')>=0 || t.indexOf('serum')>=0 || t.indexOf('soro')>=0) return true;
+    if(t.indexOf('creme')>=0) return true;
+  }
+  return false;
 }
 function conflictsWithCategory(cat, title){
   var t=(title||'').toLowerCase();
