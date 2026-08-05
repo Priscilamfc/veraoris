@@ -26,6 +26,20 @@ function isRealBeautyProduct(p) {
   return cats.some((c) => BEAUTY_CATEGORY_PREFIXES.some((prefix) => c.startsWith(prefix)));
 }
 
+// Deriva subcategoria (skincare/maquiagem/cabelo/perfumaria) do campo `categories` que a
+// própria loja devolve — mais confiável que adivinhar pelo título do lado do site (achado ao
+// vivo, 05/08/2026: "Cool Water De Zino Davidoff Masculino" não tem nenhuma palavra de
+// perfume no título, só o nome da fragrância + gênero, mas a Venâncio já classifica como
+// "/Beleza/Fragrâncias/Perfume/"). `null` quando não dá pra afirmar, cai no palpite por
+// título sem regressão.
+function guessSubcat(categories) {
+  const joined = (categories || []).join(' ').toLowerCase();
+  if (joined.indexOf('fragrânc') >= 0 || joined.indexOf('perfum') >= 0 || joined.indexOf('colônia') >= 0 || joined.indexOf('colonia') >= 0) return 'perfumaria';
+  if (joined.indexOf('maquiagem') >= 0 || joined.indexOf('make') >= 0) return 'maquiagem';
+  if (joined.indexOf('cabelo') >= 0 || joined.indexOf('capilar') >= 0) return 'cabelo';
+  return null;
+}
+
 function bestAvailablePrice(product) {
   let best = null;
   (product.items || []).forEach((item) => {
@@ -55,7 +69,8 @@ function normalizeItems(raw) {
         store: 'Drogaria Venâncio',
         link: 'https://www.drogariavenancio.com.br/' + encodeURIComponent(p.linkText) + '/p',
         image: image || null,
-        brand
+        brand,
+        category: guessSubcat(p.categories)
       };
     })
     .filter(Boolean);

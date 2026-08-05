@@ -1468,7 +1468,15 @@ function isGenericHidratante(t){
   }
   return false;
 }
-function conflictsWithCategory(cat, title){
+// `structCat` (opcional): categoria real que a PRÓPRIA loja já devolveu no campo `categories`
+// da API (ex: Venâncio classifica "Cool Water De Zino Davidoff Masculino" como
+// "/Beleza/Fragrâncias/Perfume/") — achado ao vivo (05/08/2026): título de perfume às vezes
+// não tem NENHUMA palavra das listas (nome de fragrância + gênero, sem "perfume"/"parfum"/
+// "eau de..."), então o filtro por texto sozinho não pega. Quando a loja já manda essa
+// informação (ver campo `category` nas functions VTEX), confiar nela tem prioridade — só cai
+// pro palpite por título quando a fonte não manda esse dado (ex: Awin).
+function conflictsWithCategory(cat, title, structCat){
+  if(structCat && cat && cat!=='todas' && cat!==structCat) return true;
   var t=(title||'').toLowerCase();
   var has=function(list){ return list.some(function(w){ return t.indexOf(w)>=0; }); };
   if(cat==='skincare') return has(MAKEUP_ONLY_NOUNS) || has(HAIR_ONLY_NOUNS) || has(PERFUME_ONLY_NOUNS);
@@ -1479,7 +1487,10 @@ function conflictsWithCategory(cat, title){
   // sobra qualquer creme/máscara/tratamento que não menciona nenhuma palavra das listas de
   // exclusão. Aqui a regra é ao contrário: só aceita se REALMENTE parecer perfume — e mesmo
   // assim, se bater uma frase de falso-positivo (ex: "sem perfume"), exclui de qualquer jeito.
-  if(cat==='perfumaria') return has(PERFUME_FALSE_POSITIVE_HINTS) || !has(PERFUME_ONLY_NOUNS);
+  // Quando `structCat` já confirma 'perfumaria' (a própria loja classificou assim), essa prova
+  // já está satisfeita mesmo sem a palavra no título (ex: "Cool Water De Zino Davidoff
+  // Masculino" — nome de fragrância puro, sem "perfume"/"parfum" nenhum).
+  if(cat==='perfumaria') return has(PERFUME_FALSE_POSITIVE_HINTS) || (structCat==='perfumaria' ? false : !has(PERFUME_ONLY_NOUNS));
   return false;
 }
 // Best-effort category guess from free text, used when we don't have a structured cat (ex: promos)
@@ -1505,7 +1516,7 @@ function preloadEudoraImage(imgId, searchTerm, sub, cat, brand){
       if(!r.image) return false;
       var t=(r.title||'').toLowerCase();
       if(brandLower && t.indexOf(brandLower)<0 && normBrand(r.store).indexOf(brandNorm)<0) return false;
-      if(effCat && conflictsWithCategory(effCat, r.title)) return false;
+      if(effCat && conflictsWithCategory(effCat, r.title, r.category)) return false;
       if(sub) return kws.some(function(k){return t.indexOf(k.toLowerCase())>=0;});
       return !brandLower && looseTypeMatch(searchTerm, r.title);
     });
@@ -2091,7 +2102,7 @@ function finishRenderProds(pool, g){
       // ativo (Skincare/Maquilhagem/Cabelo), rejeita resultado ao vivo que não bate com ela,
       // senão aparece batom/loção corporal misturado numa busca de hidratante facial.
       if(results && cat && cat!=='todas'){
-        results = results.filter(function(r){ return !conflictsWithCategory(cat, r.title); });
+        results = results.filter(function(r){ return !conflictsWithCategory(cat, r.title, r.category); });
       }
       if(results && results.length){
         // Prioridade: lojas com API/feed de afiliado real (Eudora, L'Occitane, Ama Beleza) são
@@ -7678,7 +7689,7 @@ function renderLiveQuizResults(){
       pending--;
       if(results && results.length){
         if(qD.cat && qD.cat!=='todos'){
-          results=results.filter(function(r){ return !conflictsWithCategory(qD.cat, r.title); });
+          results=results.filter(function(r){ return !conflictsWithCategory(qD.cat, r.title, r.category); });
         }
         allResults=allResults.concat(results);
       }
@@ -7934,7 +7945,7 @@ function loadComparison(cardId, searchTerm, brand, name, fallbackLink, sub, cat)
       if(r._source!=='awin' && r._source!=='americanas' && r._source!=='epoca' && r._source!=='wepink' && r._source!=='lojasrede' && r._source!=='mahogany' && r._source!=='pompeia' && r._source!=='extrafarma' && r._source!=='venancio' && r._source!=='drogal' && r._source!=='paguemenos' && r._source!=='catarinense' && r._source!=='saojoao' && r._source!=='rosario' && r._source!=='payot' && r._source!=='precopopular' && r._source!=='globo' && r._source!=='indiana') return true;
       var t=(r.title||'').toLowerCase();
       if(brandLower && t.indexOf(brandLower)<0 && normBrand(r.store).indexOf(brandNorm0)<0) return false;
-      if(effCat0 && conflictsWithCategory(effCat0, r.title)) return false;
+      if(effCat0 && conflictsWithCategory(effCat0, r.title, r.category)) return false;
       if(sub) return kws0.some(function(k){return t.indexOf(k.toLowerCase())>=0;});
       return true;
     });
