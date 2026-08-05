@@ -2382,3 +2382,91 @@ publicado. **Confirmado ao vivo em produção** (`WebFetch` direto nas
 duas functions, com parâmetro extra pra furar o cache de 15min do
 WebFetch): Drogal devolveu 20 resultados reais pra "hidratante" (ex.
 Sérum Hidratante Corporal Dove), Venâncio devolveu 15, nenhuma com erro.
+
+## Sessão 04-05/08/2026 — testar Eudora (adiado) + oito lojas novas via VTEX
+Pedido de testar se a Awin corrigiu o link da Eudora (ver pendência
+acima): direto (WebFetch) continua batendo 403 — mesmo bloqueio
+anti-bot de sempre contra acesso tipo servidor. Usei a extensão "Claude
+in Chrome" (navegador real conectado) pra confirmar: o SITE da Eudora
+funciona perfeitamente pra busca e produto normal (testado ao vivo,
+sem "produto não encontrado"). Mas o bug real documentado é
+especificamente o link de AFILIADO da Awin (`aw_deep_link`), que só
+existe dentro do feed — e a variável `AWIN_EUDORA_FEED_URL` foi apagada
+do Netlify em sessão anterior (crise do limite de 4KB, já resolvida).
+Sem o feed não dá pra testar o link de afiliado de verdade. **Priscila
+decidiu adiar pra outra sessão** — precisa gerar feed novo da Eudora na
+Awin (ou passar URL de feed salvo) antes de eu conseguir testar de
+verdade.
+
+**Resto da sessão: "continua procurando mais lojas"** (pedido dela).
+Mesmo processo de sempre — testar API pública VTEX (`/api/catalog_
+system/pub/products/search`) via `WebFetch`, confirmar com termo neutro
+("hidratante") E termo de risco de contaminação ("batom", pra achar
+categoria errada tipo brinquedo/infantil), só then implementar. Oito
+lojas novas confirmadas e publicadas nesta sessão (todas farmácia,
+exceto Payot):
+
+1. **Pague Menos** — guarda-chuva único `/Dermo e Beleza/`, marca
+   própria Dauf. Commit `7580970`.
+2. **Drogaria Catarinense** — guarda-chuva único `/Beleza e Proteção/`,
+   multimarca de verdade (Neutrogena, Payot, Eudora, Vult testados ao
+   vivo). Commit `7580970`.
+3. **Farmácias São João** — 3 raízes separadas (`/Beleza E Cuidados
+   Pessoais/`, `/Maquiagem/`, `/Cabelos/`); achada contaminação real
+   (batom de brinquedo em `/Casa E Utilidades/Brinquedos/`) excluída
+   por não entrar na lista. Commit `7580970`.
+4. **Drogaria Rosário** — 3 raízes separadas (`/Dermocosméticos/`,
+   `/Maquiagem/`, `/Cuidados Com Os Cabelos/`); traz Cetaphil real.
+   Bastante produto infantil Pampers excluído (raiz `/Infantil/` fora
+   da lista). Commit `7580970`.
+5. **Payot** — marca própria (loja oficial `lojapayot.com.br`), sem
+   filtro de categoria (mesmo tratamento de Mahogany/WePink). Commit
+   `7580970`.
+6. **Farmácia Preço Popular** (Grupo Clamed) — 2 raízes (`/Beleza e
+   Proteção/`, `/Dermocosméticos/`); hidratante infantil Johnson Baby
+   excluído (raiz `/Mamãe e Bebê/` fora da lista). Commit `cfcbc01`.
+7. **Drogaria Globo** (Grupo Jorge Batista) — 2 raízes
+   (`/Dermocosméticos/`, `/Higiene & Beleza/` — essa segunda já cobre
+   maquiagem também, confirmado testando "batom"); traz Bepantol,
+   Fisiogel, CeraVe reais. Gel de saúde sexual excluído (raiz `/Saúde/`
+   fora da lista). Commit `7d590a2`.
+8. **Farmácia Indiana** — 2 raízes (`/Beleza/`, `/Higiene Pessoal/`);
+   traz Vult/Ruby Rose (marca já vendida por outras parceiras) e
+   sabonete/hidratante labial. Testado com "fralda" pra confirmar que
+   produto infantil fica em raiz separada (`/Mamãe e Bebê/`), não vaza
+   pra `/Higiene Pessoal/`. Commit `7d590a2`.
+
+**Testada e descartada**: Ikesaki (loja multimarca de maquiagem,
+`ikesaki.com.br`) — API responde 429 (limite de requisição) de forma
+persistente mesmo em chamada isolada, mesmo padrão que já tirou a
+Lojas Rede do site (`LOJASREDE_ENABLED=false`) antes. Não implementada
+por risco de instabilidade.
+
+**Testadas e bloqueadas (403, proteção anti-bot)**: Panvel, Drogaria
+São Paulo, Onofre, Drogaria Araújo, Droga Raia, Drogasil (grupo RD),
+Extra.com.br. **Sem VTEX confirmado nesse caminho**: Nissei (erro de
+certificado SSL), Ultrafarma, Sallve (é Shopify, não VTEX), Dailus,
+Contém1g, Ruby Rose (própria, 404 no caminho testado).
+
+Todas as 8 lojas novas seguem o mesmo padrão de código (function
+`.mjs` com `CACHE_TTL_MS`/`FETCH_TIMEOUT_MS`/`API_URL` declarados no
+topo — atenção redobrada aqui depois do bug do início da sessão) e
+foram conectadas em TODOS os pontos do `index.html` que precisam
+(`liveMultiSourceSearch`, filtro D3 marca+tipo, troca de foto,
+fallback de busca simplificada, complemento não-bloqueante em
+`loadComparison`, `sourcesTotal`/`sourcesDone` da Perfumaria) — cada
+edição conferida com grep antes de dar como concluída, pra não repetir
+o esquecimento de "fonte nova só ligada em um lugar" que já aconteceu
+antes nesta sessão longa do projeto. Sintaxe validada (`node --check`
+em cada function + `<script>` inteiro do `index.html` via `new
+Function()`) antes de cada push. Todas as 8 confirmadas ao vivo em
+produção depois do deploy (`WebFetch` com parâmetro `cb=` pra furar o
+cache de 15min do próprio WebFetch, que causou confusão nesta sessão
+até eu perceber e contornar).
+
+**Contagem de lojas parceiras BR depois desta sessão**: 18 fontes ao
+vivo no total (Awin: L'Occitane/Natura/Forever Liss/Boticário + API
+direta: Americanas/Época[desligada]/WePink/Lojas Rede[desligada]/
+Mahogany/Pompéia/Extrafarma/Venâncio/Drogal/Pague Menos/Catarinense/
+São João/Rosário/Payot/Preço Popular/Globo/Indiana). Eudora continua
+desligada (`EUDORA_ENABLED=false`), aguardando teste de amanhã.
