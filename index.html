@@ -1900,13 +1900,28 @@ function showPage(p){
 // inteira, não uma busca velha por cima.
 function goCat(c){cat=c;srch='';showPage('compare');renderCats('catFilters');renderProds();}
 function startQuiz(){qD={};qStep=1;document.querySelectorAll('.qstep').forEach(function(s){s.classList.remove('active');});document.getElementById('qs1').classList.add('active');document.getElementById('qprog').style.width='12%';document.querySelectorAll('.qopt').forEach(function(o){o.classList.remove('sel');});showPage('quiz');}
+// Achado ao vivo (05/08/2026, auditoria): as pílulas de categoria da página de resultados do
+// quiz (id "resCatF") usavam a MESMA filterCat()/renderCats() da página Comparar — que só
+// mexe na variável global `cat` e só re-renderiza `productGrid`. Como a grade visível do quiz
+// é outra (`resultsGrid`, filtrada por `qD.cat`), clicar numa pílula lá não fazia nada visível
+// (o clique atualizava uma página escondida em segundo plano). `qD.cat` também usa o sentinela
+// "todos" (não "todas") pra "sem filtro" — convertido na borda pra não zerar os resultados.
 function renderCats(cid){
   var el=document.getElementById(cid);if(!el)return;
+  var isResults = cid==='resCatF';
+  var activeCat = isResults ? ((!qD.cat||qD.cat==='todos')?'todas':qD.cat) : cat;
   var cats=['todas','skincare','maquiagem','cabelo','perfumaria'];
   var lbls=lang==='pt'?{todas:'Todas',skincare:'Skincare',maquiagem:'Maquilhagem',cabelo:'Cabelo',perfumaria:'Perfumaria'}:{todas:'All',skincare:'Skincare',maquiagem:'Makeup',cabelo:'Hair',perfumaria:'Fragrance'};
-  el.innerHTML=cats.map(function(c){return '<button class="cat-pill'+(cat===c?' active':'')+'" onclick="filterCat(\''+c+'\',\''+cid+'\')">'+lbls[c]+'</button>';}).join('');
+  el.innerHTML=cats.map(function(c){return '<button class="cat-pill'+(activeCat===c?' active':'')+'" onclick="filterCat(\''+c+'\',\''+cid+'\')">'+lbls[c]+'</button>';}).join('');
 }
-function filterCat(c,cid){cat=c;renderCats(cid||'catFilters');renderProds();}
+function filterCat(c,cid){
+  if(cid==='resCatF'){
+    qD.cat=(c==='todas')?'todos':c;
+    renderAmazonResults();
+  } else {
+    cat=c;renderCats(cid||'catFilters');renderProds();
+  }
+}
 function renderFeatured(){
   var g=document.getElementById('featuredGrid');if(!g)return;
   var title=lang==='pt'?'✦ Produtos reais, comparados para si':'✦ Real products, compared for you';
