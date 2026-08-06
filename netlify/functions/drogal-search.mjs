@@ -31,6 +31,12 @@ function guessSubcat(categories) {
   if (joined.indexOf('fragrânc') >= 0 || joined.indexOf('perfum') >= 0 || joined.indexOf('colônia') >= 0 || joined.indexOf('colonia') >= 0) return 'perfumaria';
   if (joined.indexOf('maquiagem') >= 0 || joined.indexOf('make') >= 0) return 'maquiagem';
   if (joined.indexOf('cabelo') >= 0 || joined.indexOf('capilar') >= 0) return 'cabelo';
+  // Achado ao vivo (06/08/2026): "Leite Corporal Leite de Colônia" (loção/limpeza, marca
+  // usa "Colônia" no nome) tem a palavra "colônia" no TÍTULO mas a própria loja classifica
+  // como "/Higiene & Beleza/Cuidados com a pele/" -- skincare, não perfume. Sem detectar
+  // esse sinal aqui, o filtro de Perfumaria (que confia em PERFUME_ONLY_NOUNS por texto
+  // quando `structCat` não desmente) aceitava esse produto por engano.
+  if (joined.indexOf('cuidados com a pele') >= 0 || joined.indexOf('dermocosmétic') >= 0 || joined.indexOf('dermocosmetic') >= 0 || joined.indexOf('rosto') >= 0) return 'skincare';
   return null;
 }
 

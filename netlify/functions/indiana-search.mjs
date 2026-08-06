@@ -29,6 +29,9 @@ function guessSubcat(categories) {
   if (joined.indexOf('fragrânc') >= 0 || joined.indexOf('perfum') >= 0 || joined.indexOf('colônia') >= 0 || joined.indexOf('colonia') >= 0) return 'perfumaria';
   if (joined.indexOf('maquiagem') >= 0 || joined.indexOf('make') >= 0) return 'maquiagem';
   if (joined.indexOf('cabelo') >= 0 || joined.indexOf('capilar') >= 0) return 'cabelo';
+  // "Leite de Colônia" (loção corporal) tem "colônia" no título mas é skincare de
+  // verdade -- achado ao vivo 06/08/2026, mesmo padrão em todas as functions de farmácia.
+  if (joined.indexOf('cuidados com a pele') >= 0 || joined.indexOf('dermocosmétic') >= 0 || joined.indexOf('dermocosmetic') >= 0 || joined.indexOf('rosto') >= 0) return 'skincare';
   return null;
 }
 

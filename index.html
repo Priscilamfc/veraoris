@@ -1915,7 +1915,12 @@ function showPage(p){
 // anterior — o filtro de categoria (`cat`) e a busca antiga (`srch`) ficavam somados, às
 // vezes reduzindo o resultado quase a zero. Navegar por categoria deve mostrar a categoria
 // inteira, não uma busca velha por cima.
-function goCat(c){cat=c;srch='';showPage('compare');renderCats('catFilters');renderProds();}
+// Bug real (06/08/2026): `showPage('compare')` já chama `renderCats`+`renderProds` sozinha
+// (linha logo acima) quando a página de destino é 'compare' — chamar de novo aqui disparava
+// a busca ao vivo (Awin/Americanas/etc.) duas vezes em paralelo, duplicando card por card na
+// grade e o texto "N em lojas parceiras" (visível navegando direto pra Perfumaria: "500 em
+// lojas parceiras + 500 em lojas parceiras..." com cada produto repetido).
+function goCat(c){cat=c;srch='';showPage('compare');}
 function startQuiz(){qD={};qStep=1;document.querySelectorAll('.qstep').forEach(function(s){s.classList.remove('active');});document.getElementById('qs1').classList.add('active');document.getElementById('qprog').style.width='12%';document.querySelectorAll('.qopt').forEach(function(o){o.classList.remove('sel');});showPage('quiz');}
 // Achado ao vivo (05/08/2026, auditoria): as pílulas de categoria da página de resultados do
 // quiz (id "resCatF") usavam a MESMA filterCat()/renderCats() da página Comparar — que só
