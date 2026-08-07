@@ -2825,3 +2825,51 @@ de afiliado. Nenhuma mudança de código nesta sessão. Se a Beleza na
 Web um dia liberar feed (Awin ou Rakuten) ou Product Search API, é só
 avisar — o padrão de integração já está pronto e testado em várias
 outras lojas, só falta o dado da loja em si.
+
+## Sessão 07/08/2026 (continuação) — quiz sem comparação ao trocar categoria + manicure vazando
+Priscila testou o quiz de verdade: fez Skincare + pele oleosa + sabonete,
+resultado veio certinho (comparação real em vários itens). Na PRÓPRIA
+página de resultados, trocou a pílula pra Maquilhagem — o primeiro item
+foi um shampoo (categoria errada), depois algumas maquiagens, e depois
+só sobrou botão Amazon, sem comparação real nenhuma (diferente da busca
+original).
+
+**Causa raiz 1**: `quizSearchTerms()` escolhia o termo de busca ao vivo
+por prioridade fixa (`maq_prod > hair_prod > skin_prod`), sempre
+reusando o tipo de produto do quiz ORIGINAL — trocar a pílula pra
+Maquilhagem não muda `qD.maq_prod` (nunca foi escolhido, já que o quiz
+percorrido foi o de Skincare), então continuava buscando "sabonete" e
+filtrando perguntando "isso é maquiagem?" — sempre zero. Corrigido pra
+escolher o campo certo pela categoria ATUAL da tela, caindo no termo
+genérico da categoria (`batom`/`base`, depois trocado — ver causa 2)
+quando não há produto específico escolhido pra ela. Bug relacionado
+corrigido junto: `renderLiveQuizResults()` não tinha proteção contra
+resposta atrasada (categoria trocando enquanho a busca da categoria
+anterior ainda estava a caminho) — adicionada trava de categoria
+(mesmo padrão de `finishRenderProds`). Commit `7e92039`.
+
+**Causa raiz 2, achada testando a correção acima**: o termo genérico de
+fallback pra Maquilhagem era `['batom','base']` — "base" sozinho é
+ambíguo, trazia "Base Fortalecedora Risqué"/"Base Unhas Impala"
+(produto de UNHA, não maquiagem de rosto). Trocado pra `'base líquida'`
+(específico, mesmo termo já usado em `MAKEUP_ONLY_NOUNS`).
+
+**Descoberta maior, confirmada pela Priscila**: manicure/unha não é e
+nunca foi categoria do site ("nenhum produto de manicure entra") — mas
+"esmalte" estava dentro de `MAKEUP_ONLY_NOUNS`, tratado como maquiagem
+legítima. Corrigido de raiz: `esmalte` saiu de `MAKEUP_ONLY_NOUNS`,
+nova lista `NAIL_ONLY_NOUNS` (esmalte, base fortalecedora, top coat,
+removedor de esmalte, cutícula etc.) checada ANTES de qualquer regra
+de categoria em `conflictsWithCategory()` — exclui de TODAS as 4
+categorias, inclusive "Todas" (achado que o filtro inteiro era pulado
+nesse caso em dois lugares — `finishRenderProds` e
+`renderLiveQuizResults` — corrigidos pra sempre rodar a checagem de
+manicure, mesmo sem categoria específica ativa). Testado com 7 casos
+via script Node antes de publicar. Commit `b3374fd`.
+
+**Confirmado ao vivo em produção** (via `javascript_tool` no navegador
+real, chamando as mesmas funções que os botões chamam — mais confiável
+que clique simulado nesta sessão): reproduzido o cenário exato da
+Priscila — Skincare/sabonete (207 produtos, comparação real) → trocar
+pra Maquilhagem (491 produtos, 485 com comparação real, zero produto
+de manicure, primeiros itens todos batom de verdade).
