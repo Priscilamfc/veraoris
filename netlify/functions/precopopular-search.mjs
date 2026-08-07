@@ -26,12 +26,15 @@ function isRealBeautyProduct(p) {
 // da fragrância). `null` quando não dá pra afirmar, cai no palpite por título sem regressão.
 function guessSubcat(categories) {
   const joined = (categories || []).join(' ').toLowerCase();
-  if (joined.indexOf('fragrânc') >= 0 || joined.indexOf('perfum') >= 0 || joined.indexOf('colônia') >= 0 || joined.indexOf('colonia') >= 0) return 'perfumaria';
+  // Ordem importa: raizes de categoria tipo "Beleza e Perfumaria" (Americanas) contem a
+  // palavra "perfum" mesmo pra produto que nao e perfume nenhum -- checar maquiagem/cabelo/
+  // skincare (mais especificos) primeiro evita falso positivo (achado ao vivo 06/08/2026).
   if (joined.indexOf('maquiagem') >= 0 || joined.indexOf('make') >= 0) return 'maquiagem';
   if (joined.indexOf('cabelo') >= 0 || joined.indexOf('capilar') >= 0) return 'cabelo';
   // "Leite de Colônia" (loção corporal) tem "colônia" no título mas é skincare de
   // verdade -- achado ao vivo 06/08/2026, mesmo padrão em todas as functions de farmácia.
-  if (joined.indexOf('cuidados com a pele') >= 0 || joined.indexOf('dermocosmétic') >= 0 || joined.indexOf('dermocosmetic') >= 0 || joined.indexOf('rosto') >= 0) return 'skincare';
+  if (joined.indexOf('cuidados com a pele') >= 0 || joined.indexOf('dermocosmétic') >= 0 || joined.indexOf('dermocosmetic') >= 0 || joined.indexOf('rosto') >= 0 || joined.indexOf('skincare') >= 0 || joined.indexOf('desodorante') >= 0 || joined.indexOf('higiene pessoal') >= 0) return 'skincare';
+  if (joined.indexOf('fragrânc') >= 0 || joined.indexOf('perfum') >= 0 || joined.indexOf('colônia') >= 0 || joined.indexOf('colonia') >= 0) return 'perfumaria';
   return null;
 }
 
