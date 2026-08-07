@@ -2688,3 +2688,38 @@ commits anteriores) antes de cada publicação.
 Ambos os bugs testados e confirmados corrigidos ao vivo em produção
 depois do deploy (contador não duplica mais, "Leite de Colônia" sumiu
 da Perfumaria, só ficaram Deo Colônia/Body Splash/perfume de verdade).
+
+## Sessão 06-07/08/2026 — mais uma rodada de revisão minuciosa
+Priscila pediu pra continuar testando (3ª rodada de fork nesta mesma
+onda de revisão). Escopo desta vez: consistência do código entre as 12
+functions de farmácia, "Ver mais" combinado com filtro de categoria,
+Perfumaria + Mais vendidos, páginas institucionais, busca sem
+resultado.
+
+**Testado e confirmado OK (sem mudança)**: as 12 functions de farmácia/
+loja geral (Drogal, Venâncio, São João, Rosário, Pague Menos,
+Catarinense, Preço Popular, Globo, Indiana, Extrafarma, Americanas,
+Lojas Pompéia) têm `guessSubcat()` idêntica entre si — nenhuma ficou
+desatualizada. Perfumaria + "Mais vendidos" (sem quebrar, só perfume
+de verdade). Páginas "Como Funciona" e "Sobre" carregam normalmente.
+Busca sem resultado nenhum (termo inventado) mostra a mensagem
+"Nenhum produto encontrado" limpa, sem travar.
+
+**Achado e corrigido (1 bug real)**: testando "Ver mais" com filtro de
+categoria ativo, confirmado com `javascript_tool` contando elementos
+`.cpc` de verdade no DOM (139 cards: 103 ao vivo + 36 catálogo, todos
+ainda lá) que os CARDS nunca sumiam — só o TEXTO do contador é que
+perdia o prefixo "X em lojas parceiras +" depois de clicar "Ver mais",
+porque `renderProdsPage()` reescrevia `resultCount` do zero sem saber
+desse número (que só existia como uma concatenação de uma vez só, feita
+pela busca ao vivo original). Corrigido com uma variável nova
+(`prodLiveCount`) que guarda o número e é reaplicada toda vez que o
+contador é recalculado. Testado ao vivo depois do deploy: contador
+manteve "142 em lojas parceiras + X de 217 produtos" corretamente
+depois de 2 cliques em "Ver mais" seguidos (18→36→54). Commit
+`4ed0ec6`.
+
+**Não coberto nesta rodada** (falta de tempo, não é bug conhecido, só
+não testado): quiz pelos caminhos Maquilhagem e Skincare (só o
+caminho Cabelo foi testado, numa rodada anterior); cards de foto real
+na secção de promoções da home.
