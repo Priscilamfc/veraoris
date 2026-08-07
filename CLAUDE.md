@@ -2723,3 +2723,76 @@ depois de 2 cliques em "Ver mais" seguidos (18→36→54). Commit
 não testado): quiz pelos caminhos Maquilhagem e Skincare (só o
 caminho Cabelo foi testado, numa rodada anterior); cards de foto real
 na secção de promoções da home.
+
+## Sessão 06/08/2026 (continuação) — 4ª rodada: quiz Maquilhagem/Skincare + bug real no "Mais vendidos" do quiz
+Fechando as duas pontas que ficaram pendentes da rodada anterior.
+
+**Ferramenta de clique/screenshot instável nesta sessão** (extensão
+"Claude in Chrome"): cliques simulados via `computer` não registravam
+no site (confirmado comparando o estado real via JavaScript antes/
+depois — nada mudava) e `screenshot` retornava erro técnico
+("Failed to deserialize params.clip.scale"). Contornado testando via
+`javascript_tool` chamando as mesmas funções que os botões chamam
+(`startQuiz()`, `qSel()`, `qSelMulti()`, `qNext()`, `onSortChangeQuiz()`
+etc. — confirmado lendo o atributo `onclick` de cada botão antes, pra
+ter certeza de estar chamando exatamente o que o clique chamaria) —
+continua sendo teste real do site, só não passou pela simulação de
+mouse. Se esse problema de clique/screenshot aparecer nas próximas
+sessões, vale investigar se é passageiro (extensão) ou reprodutível.
+
+**Quiz — caminho Maquilhagem** (Pele Oleosa → Lábios → Batom → Todos):
+resultado final com 271 cards reais, comparação de preço genuína entre
+várias lojas (ex: Batom Vult com preço da Drogal, Drogaria Globo e
+Amazon lado a lado). Ordenar por Maior preço: topo trazia só batom de
+verdade (Lancôme L'Absolu Rouge), sem vazamento.
+
+**Quiz — caminho Skincare** (Pele Seca → Hidratação → Hidratante →
+Todos): 190 cards reais, hidratante corporal/facial de verdade (Le
+Occitane, L'Occitane, Davines, O Boticário), sem vazamento nem no topo
+ordenado por Maior preço.
+
+**Bug real encontrado testando "Mais vendidos" no caminho Maquilhagem**:
+clicar "Mais vendidos" na página de RESULTADOS DO QUIZ (diferente da
+página Comparar) derrubava a contagem de 271 pra 6 cards, na hora,
+sem nunca voltar. Causa: `onSortChangeQuiz()` (`index.html`) chama
+`renderAmzPage()` de novo pra reordenar o catálogo por popularidade —
+só que essa função, quando `amzPage` ainda está em 1 (ninguém clicou
+"Ver mais"), recria a grade INTEIRA (`grid.innerHTML=...`), apagando
+também os ~265 cards AO VIVO que `renderLiveQuizResults()` tinha
+inserido antes por fora (`insertAdjacentHTML`, nunca rastreado por
+`amzRenderedIdx`). Diferente da página Comparar, onde "Mais vendidos"
+já refaz a busca ao vivo do zero (`renderProds()`→`finishRenderProds()`),
+aqui ninguém rebuscava depois — os cards ficavam perdidos até a pessoa
+recarregar a página inteira.
+
+**Corrigido**: `onSortChangeQuiz()` agora chama `renderLiveQuizResults()`
+de novo logo depois de `renderAmzPage()`, mesmo tratamento que a
+página Comparar já tinha. Testado ao vivo depois do deploy (numa aba
+nova, sem cache do navegador — a primeira tentativa de reteste bateu
+numa versão em cache da página e pareceu que não tinha resolvido,
+confirmado comparando `onSortChangeQuiz.toString()` antes/depois):
+271 cards antes → 271 cards depois de "Mais vendidos", sem perder
+nenhum. Commit `ff06b02`.
+
+**Promoções da home — não é bug**: só 1 promoção ativa no momento
+("Sérum... Neo Dermo Etage Pró"), mostrando o ícone genérico "Foto
+ilustrativa". Investigado ao vivo: buscando o nome do produto nas 18
+fontes parceiras, vieram 22 resultados reais de "sérum", mas nenhum é
+da marca Neo Dermo — ela simplesmente não é vendida por nenhuma loja
+parceira hoje, então a regra D3 (só mostra foto com marca confirmada)
+está funcionando certo, não achar foto aqui é o comportamento
+esperado, não uma falha.
+
+Documentação desta rodada: `CLAUDE.md` (este commit).
+
+**Marco**: com essa rodada, a revisão minuciosa cobriu essencialmente
+o site inteiro — as 18 fontes de dados, filtro de categoria nas 4
+categorias (com e sem ordenação), "Ver mais", quiz completo nos 3
+caminhos que existem (Maquilhagem/Skincare/Cabelo — Perfumaria não é
+opção do quiz por decisão antiga), painel admin (tela de login),
+páginas institucionais, casos extremos de busca, mobile, e promoções
+da home. 8 bugs reais encontrados e corrigidos ao longo das 4 rodadas
+(perfume vazando por grafia, perfume vazando por título sem palavra
+nenhuma, cards duplicados ao navegar por categoria, falso positivo de
+"colônia" em Perfumaria, ordem de checagem do guessSubcat, contador
+perdendo prefixo no "Ver mais", e agora o "Mais vendidos" do quiz).
