@@ -7676,14 +7676,20 @@ function renderAmazonResults(){
 // de preço parceira, só o botão Amazon, mesmo a pessoa tendo escolhido tipos de produto bem
 // específicos. Complementa com uma busca ao vivo pelos tipos de produto escolhidos no quiz
 // (mesmas lojas parceiras reais), igual ao que já existe na busca de produtos.
+// Bug real (07/08/2026): trocar a pílula de categoria na página de RESULTADOS do quiz
+// (`filterCat` com `qD.cat` novo) não muda o termo de busca ao vivo — a prioridade fixa
+// (maq_prod > hair_prod > skin_prod) sempre reusava o tipo de produto escolhido no quiz
+// ORIGINAL (ex: "sabonete" de um quiz de Skincare), mesmo depois de trocar pra Maquilhagem.
+// Buscar "sabonete" e filtrar o resultado por "é maquiagem?" sempre dava zero — só sobrava
+// o botão Amazon, sem nenhuma comparação real. Agora escolhe o campo certo pelo `qD.cat`
+// ATUAL (a categoria que está na tela agora), não por ordem de prioridade fixa.
 function quizSearchTerms(){
-  // "Avançar" não exige seleção nenhuma — se a pessoa pular a etapa de produto específico,
-  // maq_prod/hair_prod/skin_prod ficam vazios. Usa o que existir (funciona também pra
-  // cat==='todos', que preenche skin_prod pelo mesmo passo do skincare).
-  var subs = (qD.maq_prod&&qD.maq_prod.length) ? qD.maq_prod
-    : (qD.hair_prod&&qD.hair_prod.length) ? qD.hair_prod
-    : (qD.skin_prod&&qD.skin_prod.length) ? qD.skin_prod
-    : [];
+  // "Avançar" não exige seleção nenhuma — se a pessoa pular a etapa de produto específico
+  // (ou trocou de categoria pela pílula depois), o campo correspondente fica vazio — cai no
+  // termo genérico da categoria logo abaixo.
+  var subs = qD.cat==='maquiagem' ? (qD.maq_prod||[])
+    : qD.cat==='cabelo' ? (qD.hair_prod||[])
+    : (qD.skin_prod||[]); // skincare, perfumaria (não existe no quiz) ou 'todos'
   var terms=[];
   subs.forEach(function(sub){
     var kws=subKeywords(sub);
@@ -7704,10 +7710,16 @@ function renderLiveQuizResults(){
   if(!terms.length) return;
   var grid=document.getElementById('resultsGrid');
   if(!grid) return;
+  // Achado junto com o bug acima (07/08/2026): sem essa trava, uma busca antiga (categoria
+  // já trocada enquanto a resposta ainda estava a caminho) conseguia inserir card de uma
+  // categoria errada na grade nova — `renderAmazonResults` já dispara uma busca nova quando
+  // a categoria muda, então a antiga só precisa ser descartada, nunca renderizada.
+  var snapCat=qD.cat;
   var allResults=[], pending=terms.length;
   terms.forEach(function(term){
     liveMultiSourceSearch(term, function(results){
       pending--;
+      if(qD.cat!==snapCat) return;
       if(results && results.length){
         if(qD.cat && qD.cat!=='todos'){
           results=results.filter(function(r){ return !conflictsWithCategory(qD.cat, r.title, r.category); });
