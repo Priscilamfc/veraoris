@@ -1955,7 +1955,7 @@ function renderFeatured(){
     +'<button class="btn-caq" style="margin:0 auto" onclick="startQuiz()"><span class="ico">✦</span><span>'+btn+'</span></button>'
     +'</div>';
 }
-var prodResultsAll=[],prodPage=1,prodPS=18,prodRenderedIdx=0;
+var prodResultsAll=[],prodPage=1,prodPS=18,prodRenderedIdx=0,prodLiveCount=0;
 function renderProds(){
   var g=document.getElementById('productGrid');if(!g)return;
 
@@ -2068,6 +2068,7 @@ function finishRenderProds(pool, g){
   prodResultsAll=pool;
   prodPage=1;
   prodRenderedIdx=0;
+  prodLiveCount=0;
 
   var wrap=document.getElementById('prodVmWrap');
   var cnt0=document.getElementById('resultCount');
@@ -2121,6 +2122,12 @@ function finishRenderProds(pool, g){
         var liveHtml=grouped.map(liveResultCard).join('');
         if(hadCatalogResults){
           g.insertAdjacentHTML('afterbegin', liveHtml);
+          // Bug real (achado na auditoria de 06-07/08/2026): "Ver mais" chamava
+          // renderProdsPage() de novo, que reescrevia `resultCount` do zero — apagava esse
+          // prefixo mesmo com os cards ao vivo continuando certinhos na tela (só o texto
+          // ficava enganoso, mostrando menos do que realmente tinha). `prodLiveCount` guarda
+          // o número pra renderProdsPage() reaplicar o prefixo toda vez que recalcular.
+          prodLiveCount=grouped.length;
           if(cnt0)cnt0.textContent=(lang==='pt'?grouped.length+' em lojas parceiras + ':grouped.length+' from partner stores + ')+cnt0.textContent;
         } else {
           g.innerHTML=liveHtml;
@@ -2218,7 +2225,10 @@ function renderProdsPage(){
   prodRenderedIdx=shown.length;
 
   var cnt=document.getElementById('resultCount');
-  if(cnt)cnt.textContent=(lang==='pt'?shown.length+' de '+prodResultsAll.length+' produtos':shown.length+' of '+prodResultsAll.length+' products');
+  if(cnt){
+    cnt.textContent=(lang==='pt'?shown.length+' de '+prodResultsAll.length+' produtos':shown.length+' of '+prodResultsAll.length+' products');
+    if(prodLiveCount>0) cnt.textContent=(lang==='pt'?prodLiveCount+' em lojas parceiras + ':prodLiveCount+' from partner stores + ')+cnt.textContent;
+  }
 
   if(wrap){
     if(hasMore){
