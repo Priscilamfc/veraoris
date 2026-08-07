@@ -1406,7 +1406,17 @@ function looseTypeMatch(searchTerm, title){
 // Hidratante" não batiam MAKEUP_ONLY_NOUNS e ficavam vulneráveis a serem rejeitados por engano
 // pela regra nova de "facial"+"hidratante" (ver isGenericHidratante) — primer é sempre
 // maquiagem, nunca skincare, mesmo quando hidratante.
-var MAKEUP_ONLY_NOUNS=['batom','gloss','sombra','delineador','rímel','rimel','base líquida','base liquida','corretivo','pó compacto','po compacto','pó solto','po solto','blush','bronzer','iluminador','contorno','bb cream','paleta','lápis de olho','lapis de olho','máscara de cílios','mascara de cilios','esmalte','labial','lip balm','lip gloss','primer'];
+// "esmalte" SAIU desta lista (achado ao vivo, 07/08/2026): manicure não é categoria do site
+// (Priscila confirmou: "nenhum produto de manicure entra") — tratar esmalte como maquiagem
+// legítima deixava passar produto de unha no filtro de Maquilhagem. Movido pra
+// NAIL_ONLY_NOUNS (exclusão total, ver abaixo), nunca mais contado como maquiagem.
+var MAKEUP_ONLY_NOUNS=['batom','gloss','sombra','delineador','rímel','rimel','base líquida','base liquida','corretivo','pó compacto','po compacto','pó solto','po solto','blush','bronzer','iluminador','contorno','bb cream','paleta','lápis de olho','lapis de olho','máscara de cílios','mascara de cilios','labial','lip balm','lip gloss','primer'];
+// Manicure/unha nunca é vendido/comparado no site — não existe categoria própria pra isso
+// (só Skincare/Maquilhagem/Cabelo/Perfumaria). Checado ANTES de qualquer regra de categoria
+// em `conflictsWithCategory`, exclui de TODAS as 4 categorias (inclusive "Todas"), não só
+// reclassifica. Achado ao vivo (07/08/2026): "Base Fortalecedora Risqué", "Base Unhas
+// Impala" passavam pelo termo genérico "base" do quiz e apareciam como maquiagem.
+var NAIL_ONLY_NOUNS=['esmalte','base fortalecedora','base para unhas','base unhas','top coat','fortalecedor de unhas','removedor de esmalte','unha postiça','unha postica','cutícula','cuticula'];
 // Achado real (27/07/2026): as frases compostas exatas ("hidratante facial") quase nunca
 // aparecem literalmente em título de produto de verdade — as lojas escrevem "Leite Hidratante
 // Rosto e Corpo", "Fluído Hidratante Relaxante", "Creme de Barbear Hidratante" etc., nenhuma
@@ -1476,9 +1486,10 @@ function isGenericHidratante(t){
 // informação (ver campo `category` nas functions VTEX), confiar nela tem prioridade — só cai
 // pro palpite por título quando a fonte não manda esse dado (ex: Awin).
 function conflictsWithCategory(cat, title, structCat){
-  if(structCat && cat && cat!=='todas' && cat!==structCat) return true;
   var t=(title||'').toLowerCase();
   var has=function(list){ return list.some(function(w){ return t.indexOf(w)>=0; }); };
+  if(has(NAIL_ONLY_NOUNS)) return true; // manicure nunca entra, mesmo em "Todas"
+  if(structCat && cat && cat!=='todas' && cat!==structCat) return true;
   if(cat==='skincare') return has(MAKEUP_ONLY_NOUNS) || has(HAIR_ONLY_NOUNS) || has(PERFUME_ONLY_NOUNS);
   if(cat==='maquiagem') return has(SKINCARE_ONLY_NOUNS) || has(HAIR_ONLY_NOUNS) || has(PERFUME_ONLY_NOUNS) || isGenericHidratante(t);
   if(cat==='cabelo') return has(MAKEUP_ONLY_NOUNS) || has(SKINCARE_ONLY_NOUNS) || has(PERFUME_ONLY_NOUNS) || isGenericHidratante(t);
@@ -2107,8 +2118,11 @@ function finishRenderProds(pool, g){
       // (batom hidratante, loção corporal hidratante...) — quando há um filtro de categoria
       // ativo (Skincare/Maquilhagem/Cabelo), rejeita resultado ao vivo que não bate com ela,
       // senão aparece batom/loção corporal misturado numa busca de hidratante facial.
-      if(results && cat && cat!=='todas'){
-        results = results.filter(function(r){ return !conflictsWithCategory(cat, r.title, r.category); });
+      // Manicure (`conflictsWithCategory` com NAIL_ONLY_NOUNS) precisa rodar sempre, mesmo em
+      // "Todas" — achado ao vivo (07/08/2026), o filtro de categoria inteiro era pulado nesse
+      // caso e deixava passar produto de unha despercebido.
+      if(results){
+        results = results.filter(function(r){ return !conflictsWithCategory(cat||'todas', r.title, r.category); });
       }
       if(results && results.length){
         // Prioridade: lojas com API/feed de afiliado real (Eudora, L'Occitane, Ama Beleza) são
@@ -7699,7 +7713,10 @@ function quizSearchTerms(){
     // Nenhum tipo específico escolhido — termo genérico da categoria, pra nunca ficar sem
     // nenhuma busca ao vivo (mesmo padrão já usado na navegação por Perfumaria).
     if(qD.cat==='cabelo') terms=['shampoo','condicionador'];
-    else if(qD.cat==='maquiagem') terms=['batom','base'];
+    // "base" sozinho é ambíguo (achado ao vivo, 07/08/2026): "Base Fortalecedora Risqué",
+    // "Base Unhas Impala" são esmalte/tratamento de unha, não maquiagem — "base líquida" é
+    // específico o bastante pra não confundir, mesmo termo já usado em MAKEUP_ONLY_NOUNS.
+    else if(qD.cat==='maquiagem') terms=['batom','base líquida'];
     else terms=['hidratante','protetor solar'];
   }
   return terms.slice(0,3);
@@ -7721,9 +7738,9 @@ function renderLiveQuizResults(){
       pending--;
       if(qD.cat!==snapCat) return;
       if(results && results.length){
-        if(qD.cat && qD.cat!=='todos'){
-          results=results.filter(function(r){ return !conflictsWithCategory(qD.cat, r.title, r.category); });
-        }
+        // Manicure precisa ser filtrado sempre, mesmo com qD.cat==='todos' — achado ao vivo
+        // (07/08/2026) junto com o bug do termo "base" genérico, mesmo padrão do comparador.
+        results=results.filter(function(r){ return !conflictsWithCategory(qD.cat||'todos', r.title, r.category); });
         allResults=allResults.concat(results);
       }
       if(pending<=0 && allResults.length){
