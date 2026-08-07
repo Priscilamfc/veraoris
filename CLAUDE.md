@@ -2796,3 +2796,32 @@ da home. 8 bugs reais encontrados e corrigidos ao longo das 4 rodadas
 nenhuma, cards duplicados ao navegar por categoria, falso positivo de
 "colônia" em Perfumaria, ordem de checagem do guessSubcat, contador
 perdendo prefixo no "Ver mais", e agora o "Mais vendidos" do quiz).
+
+## Sessão 07/08/2026 — Beleza na Web: confirmado sem feed nenhum, nem via Rakuten
+Priscila avisou que a Beleza na Web aceitou parceria pela **Rakuten**
+(rede de afiliados diferente da Awin, onde ela já estava aprovada há
+semanas mas sem feed). Investigado com ela, direto no painel da
+Rakuten (prints da própria Priscila):
+
+1. **Catálogo de Produtos (Product Catalog, feed completo por
+   SFTP)**: suporte da Rakuten confirmou por escrito — a Beleza na Web
+   **não oferece** esse recurso. Teria que pegar link de produto um
+   por um manualmente pelo painel (inviável pro site, que busca
+   automaticamente entre milhares de termos).
+2. **Product Search API** (busca por palavra-chave, alternativa que eu
+   sugeri por pesquisa — funcionaria parecido com as lojas VTEX):
+   descartada também — ela depende do mesmo catálogo de produto que a
+   loja nunca enviou pra Rakuten, então não tem dado nenhum pra
+   buscar. Confirmado que a aba "Recursos & Serviços" do perfil dela
+   na Rakuten está vazia.
+3. Lembrete do que já tinha sido tentado antes (sessão 24/07/2026):
+   acesso direto à API pública VTEX do site da Beleza na Web também
+   foi tentado e bloqueado (403).
+
+**Conclusão**: as três portas possíveis de automatizar a Beleza na Web
+estão fechadas por enquanto — não é falta de tentativa, é a loja que
+não disponibilizou dado nenhum do lado dela em nenhuma das duas redes
+de afiliado. Nenhuma mudança de código nesta sessão. Se a Beleza na
+Web um dia liberar feed (Awin ou Rakuten) ou Product Search API, é só
+avisar — o padrão de integração já está pronto e testado em várias
+outras lojas, só falta o dado da loja em si.
