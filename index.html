@@ -2169,7 +2169,13 @@ function onSortChangeQuiz(v){
       });
       ranked.sort(function(a,b){ return b.c-a.c; });
       amzResultsAll=ranked.map(function(x){return x.p;});
+      // Bug real (06/08/2026): renderAmzPage() recria a grade inteira (amzPage ainda em 1),
+      // apagando os cards AO VIVO que renderLiveQuizResults() tinha inserido separadamente
+      // (insertAdjacentHTML, fora do controle de amzRenderedIdx) — ex: 271 cards viravam 6.
+      // Rebusca esses cards de novo depois, mesmo tratamento que "Mais vendidos" já tem na
+      // página Comparar (renderProds() sempre refaz a busca ao vivo do zero).
       renderAmzPage();
+      renderLiveQuizResults();
     });
   }
 }
