@@ -2624,3 +2624,67 @@ adicionada, dar preferência a repassar o campo `categories` real da
 API (via `guessSubcat`) em vez de só confiar em `conflictsWithCategory`
 adivinhando pelo título — é estrutural, não depende de lista de
 palavra nunca ficar completa.
+
+## Sessão 06-07/08/2026 — continuação da revisão minuciosa: 2 bugs reais achados e corrigidos
+Priscila pediu pra continuar testando o resto do site. Rodei em segundo
+plano (fork), cobrindo o que a auditoria anterior e a correção do
+perfume ainda não tinham testado: Maquilhagem+Maior preço, Cabelo+Maior
+preço, Perfumaria (navegação direta)+Maior preço, "Mais vendidos" nas 4
+categorias, quiz completo caminho Cabelo, painel admin, mobile.
+
+**Testado e confirmado OK**: Maquilhagem+Maior preço e Cabelo+Maior
+preço (nenhum produto fora do tema, rolando a lista inteira). "Mais
+vendidos" funciona sem duplicar. Quiz completo caminho Cabelo (Oleoso →
+Hidratação → Shampoo → sem alergia → Todos os orçamentos) chega na
+página de resultados com comparação real (Seda/Skala/Pantene), resumo
+das respostas bate certinho. Confirmado que Perfumaria não é opção do
+quiz (decisão antiga, nada quebrado). Painel admin usa `prompt()`
+nativo do navegador (atalho de teclado D-A-S-H) — não dá pra/não deve
+testar via automação (dispara diálogo que trava o browser, contra a
+política de segurança da ferramenta) e não tem "tela" custom pra
+quebrar visualmente, então não é um risco de bug de UI. Mobile não
+re-testado nesta sessão (`resize_window` não surtiu efeito na captura
+de tela desta vez, provável limitação da ferramenta com múltiplas abas
+abertas — já tinha sido corrigido e confirmado em sessão anterior).
+
+**Bug real #1 — cards duplicados ao navegar direto por categoria**:
+clicar em "Perfumaria" no menu (sem digitar nada) mostrava CADA produto
+duas vezes e o contador "500 em lojas parceiras + 500 em lojas
+parceiras + 18 de 54 produtos" (duplicado). Causa: `goCat(c){cat=c;
+srch='';showPage('compare');renderCats('catFilters');renderProds();}`
+chamava `renderCats`+`renderProds` no final, mas `showPage('compare')`
+JÁ faz isso sozinha quando a página de destino é 'compare' — resultado:
+toda a busca ao vivo (Awin/Americanas/etc.) disparava duas vezes em
+paralelo. Bug reproduzido também num carregamento limpo, sem busca
+prévia — não era específico de nenhuma sessão anterior de busca.
+Corrigido removendo a chamada redundante (`goCat` agora só chama
+`showPage('compare')`). Commit `643ad2f`.
+
+**Bug real #2 — "Leite de Colônia" (loção/limpeza facial) aparecendo
+como perfume em Perfumaria**: mesmo teste que achou o bug #1 revelou
+produtos tipo "Leite Corporal Leite de Colônia" e "Tônico Facial...
+Leite de Colônia" (marca usa "Colônia" no nome, mas não é perfume)
+passando pelo filtro de Perfumaria — a palavra "colônia" no TÍTULO
+bastava pra aceitar, mesmo a loja (Globo/São João/Preço Popular/
+Americanas) já classificando esses produtos como skincare de verdade
+("Cuidados com a pele"/"Rosto"/"Skincare"/"Desodorante"/"Higiene
+Pessoal" na categoria real). `guessSubcat()` (as 12 functions VTEX)
+ganhou detecção desses sinais de skincare, que agora desmentem o
+falso-positivo de texto via `structCat` (mesmo mecanismo da correção
+anterior, agora protegendo o sentido contrário: produto correto NÃO
+vazar pra Perfumaria). Corrigido em duas rodadas — 1ª rodada
+(`643ad2f`) ainda deixava passar 2 casos da Americanas porque a raiz de
+categoria dela se chama literalmente **"Beleza e perfumaria"** pra
+TUDO (não só perfume de verdade) — minha checagem de "perfum" rodando
+primeiro batia nessa raiz genérica antes de checar os sinais mais
+específicos. 2ª rodada (`625371c`) reordenou: maquiagem/cabelo/
+skincare são checados ANTES do sinal de perfume. Confirmado que não
+quebra "Deo Colônia" de verdade (perfume tradicional brasileiro,
+categoria real é "/Perfumes e Colônias/", nunca tem palavra de
+skincare/desodorante junto). Testado com 8 casos via script Node
+(incluindo todos os achados ao vivo desta sessão + regressões dos
+commits anteriores) antes de cada publicação.
+
+Ambos os bugs testados e confirmados corrigidos ao vivo em produção
+depois do deploy (contador não duplica mais, "Leite de Colônia" sumiu
+da Perfumaria, só ficaram Deo Colônia/Body Splash/perfume de verdade).
