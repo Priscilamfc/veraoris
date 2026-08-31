@@ -1967,6 +1967,14 @@ function renderFeatured(){
     +'</div>';
 }
 var prodResultsAll=[],prodPage=1,prodPS=18,prodRenderedIdx=0,prodLiveCount=0;
+// Bug real (31/08/2026): a busca do catálogo casava termo como substring solta (hay.indexOf),
+// não como palavra de verdade — "we" (de "we pink") batia dentro de "Wella"/"Sweet"/"Power"/
+// "Weleda", trazendo marca nada a ver com a busca. Limite de palavra (\b) resolve sem quebrar
+// buscas legítimas de várias palavras (ex: "hidratante pele oleosa" continua funcionando).
+function termMatchesWord(hay, term){
+  var esc = term.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
+  return new RegExp('(^|[^a-z0-9à-ú])'+esc+'([^a-z0-9à-ú]|$)','i').test(hay);
+}
 function renderProds(){
   var g=document.getElementById('productGrid');if(!g)return;
 
@@ -1978,7 +1986,7 @@ function renderProds(){
     var terms=srch.toLowerCase().split(/\s+/).filter(Boolean);
     pool=pool.map(function(p){
       var hay=(p.brand+' '+p.name+' '+(p.sub||'')+' '+p.cat).toLowerCase();
-      var score=terms.reduce(function(acc,t){return acc+(hay.indexOf(t)>=0?1:0);},0);
+      var score=terms.reduce(function(acc,t){return acc+(termMatchesWord(hay,t)?1:0);},0);
       return {p:p,score:score};
     }).filter(function(x){return x.score>0;})
       .sort(function(a,b){return b.score-a.score;})
