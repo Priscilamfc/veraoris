@@ -2873,3 +2873,32 @@ que clique simulado nesta sessão): reproduzido o cenário exato da
 Priscila — Skincare/sabonete (207 produtos, comparação real) → trocar
 pra Maquilhagem (491 produtos, 485 com comparação real, zero produto
 de manicure, primeiros itens todos batom de verdade).
+
+## Sessão 31/08/2026 — busca de marca trazia produto sem relação nenhuma
+Priscila reportou: buscar "we pink" no comparador trazia um monte de
+marca nada a ver (não só WePink).
+
+**Causa raiz confirmada testando contra o catálogo real (2483
+produtos)**: a busca (`renderProds`, `index.html`) quebra o termo
+digitado em palavras separadas e casa cada uma com `hay.indexOf(t)`
+— isso é substring SOLTA, não palavra de verdade (apesar do comentário
+antigo do código dizer "casar por palavra"). O termo "we" (de "we
+pink") batia como pedaço de "We"lla, "S"we"et, "Po"we"r, "We"leda —
+trazia NYX, Wella, Weleda, COSRX, Estée Lauder, Huda Beauty, Lowell,
+L'Oréal, Rare Beauty (66 produtos errados no teste).
+
+**Corrigido**: nova função `termMatchesWord()` (`index.html`, antes de
+`renderProds`) — casa o termo com limite de palavra de verdade em vez
+de substring solta. Testado contra o catálogo real antes de publicar:
+"we pink"/"wepink" caíram de 66 pra **0** resultados errados no
+catálogo (correto — a WePink não está no catálogo fixo, só na busca
+ao vivo, que já confirmei trazendo os produtos reais dela via
+`wepink-search.mjs`); buscas legítimas de várias palavras continuam
+funcionando igual ("hidratante pele oleosa" 279, "cerave hidratante"
+283) e agora buscas de marca+produto colocam a marca pesquisada no
+TOPO do resultado (ex: "batom vult" → Vult aparece primeiro, "protetor
+solar la roche posay" → La Roche-Posay primeiro), porque o placar de
+relevância (soma de termos batidos) prioriza quem bate mais palavras
+de verdade. Commit `599fe81`.
+
+**Ainda não confirmado pela Priscila em produção.**
