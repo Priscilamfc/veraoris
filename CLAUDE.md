@@ -2943,3 +2943,60 @@ testes; se aparecer de novo, seria preciso alguma regra específica
 pra esse tipo de sufixo de fabricante, não dá pra generalizar.
 
 **Ainda não confirmado pela Priscila em produção.**
+
+## Sessão 01-09/09/2026 — novo quiz de tipo de pele na home + EN escondido
+Priscila trouxe um arquivo HTML pronto (`quiztipopele.html`, baixado do
+Downloads) — um quiz autônomo de 11 perguntas que identifica o tipo de
+pele (Normal/Oleosa/Seca/Mista/Sensível/Acneica) por pontuação, com
+resultado mostrando rotina sugerida (manhã/noite), o que buscar/evitar
+e detalhamento da pontuação. Pediu pra integrar na home, ver prévia
+antes de publicar.
+
+**Processo (várias rodadas de prévia, nenhuma publicada até a
+aprovação final)**:
+1. Recolorido por completo pra bater com a identidade do site — o
+   arquivo original vinha com paleta própria (bege/terracota, fontes
+   Fraunces/Work Sans); trocado pra paleta rosa-framboesa do VERAORIS
+   (var(--gold)/var(--gold5) etc.) e Cormorant Garamond/Inter (fontes
+   já carregadas no site) — senão ia parecer um widget estranho colado
+   na página.
+2. Todo HTML/CSS/JS prefixado com `qtp-`/`qtp` (classes e ids) pra
+   nunca colidir com o resto do CSS/JS gigante do site (`.card`,
+   `.option`, `.label`, `.eyebrow` etc. já existem soltos no site).
+   Script mantido como bloco próprio, contido, fácil de remover se um
+   dia for descartado.
+3. **Prévias mostradas em 3 formatos diferentes**, conforme pedido foi
+   evoluindo: (a) só a seção isolada; (b) cópia completa da página
+   inicial de verdade com a seção encaixada (pra ver o contexto real
+   — nav, hero, etc.) — usando o próprio `index.html` copiado pra fora
+   do repositório, nunca publicado até aprovação; (c) reposicionada
+   dentro dessa cópia completa três vezes até o lugar certo.
+4. **Botão extra removido a pedido dela**: tinha adicionado um botão
+   "Ver produtos pro meu tipo →" no resultado, ligando pro mesmo
+   mecanismo de busca do `doHeroSearch()` (prefixo "hidratante pele
+   X"). Ela pediu pra tirar por enquanto — removido, pode voltar depois
+   se ela quiser (ideia documentada aqui: mapear resultado→termo de
+   busca e chamar `srch=...;showPage('compare')`, igual o resto do
+   site já faz).
+5. **Posição final decidida com ela, testada em 3 lugares até acertar**:
+   não entre "Em Alta" e "Compare Aqui" (ideia original minha) nem
+   acima do hero inteiro — ficou **logo abaixo dos dois cartões do
+   topo** ("Não sabe por onde começar?"/"Já escolheu o produto?"),
+   antes de "Dica da Semana"/"Promoções do Dia".
+6. **Texto de abertura reescrito**: era "Antes de comparar / Descubra o
+   seu tipo de pele"; virou **"Tipo de pele" (eyebrow) / "Não sabe qual
+   é o seu tipo de pele? A gente ajuda a descobrir." (título)** — pedido
+   dela, escrito pra ecoar o mesmo tom de voz que já existe no cartão
+   do hero ("Não sabe por onde começar? A gente te ajuda a escolher
+   certo").
+7. **Botão EN escondido** (mesmo pedido, mesma sessão): `<span
+   class="tdiv">|</span>` e `<button id="len" onclick="setLang('en')">`
+   na barra do topo ganharam `style="display:none"` — mesmo padrão já
+   usado pra esconder a região Portugal (reversível, só tirar o
+   `display:none`).
+
+Sintaxe validada (`node --check` equivalente nos 2 blocos `<script>`
+do arquivo) antes de cada prévia e antes do push final. Commit
+`e48e15e`, publicado. **Ainda não confirmado pela Priscila em
+produção** (aprovação foi só da prévia, publicação aconteceu logo
+depois).
