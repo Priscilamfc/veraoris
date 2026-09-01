@@ -2997,6 +2997,62 @@ aprovação final)**:
 
 Sintaxe validada (`node --check` equivalente nos 2 blocos `<script>`
 do arquivo) antes de cada prévia e antes do push final. Commit
-`e48e15e`, publicado. **Ainda não confirmado pela Priscila em
-produção** (aprovação foi só da prévia, publicação aconteceu logo
-depois).
+`e48e15e`, publicado. **Confirmado pela Priscila em produção** (ver
+sessão seguinte).
+
+## Sessão 02/09/2026 — ajuste de texto + bug real: promoção rejeitava link de loja nova
+Priscila pediu duas mudanças rápidas de texto, testadas e publicadas
+direto (sem risco, sem prévia):
+1. Título do quiz de pele: "A gente ajuda a descobrir" → **"Nós
+   ajudamos a descobrir"** (ela achou "a gente" pouco elegante).
+2. Cartões do topo (hero), mesmo motivo: "A gente te ajuda a escolher
+   certo" → **"Te ajudamos a escolher o certo"**; "A gente acha o
+   melhor preço" → **"Nós encontramos o melhor preço"**. Trocado tanto
+   no HTML quanto na lista de tradução `TX.pt` (o site guarda o texto
+   duas vezes, um pro carregamento inicial, outro pra função de
+   idioma — achado nesta sessão, útil lembrar da próxima vez que for
+   editar texto do hero).
+
+**Confusão real que vale documentar**: depois da 1ª troca, Priscila
+testou e disse que continuava errado — mas na verdade ela tinha
+olhado o cartão ERRADO (o do hero, que tem frase parecida mas é
+outra, nunca pedida pra mudar). Print dela confirmou os dois textos
+lado a lado. Resolvido explicando a diferença, e ela decidiu então
+mudar os dois cartões do hero também pro mesmo tom.
+
+**Bug real encontrado e corrigido**: Priscila reportou dois problemas
+que pareciam graves — (1) comparação de preço voltando só com Amazon
+em "todos" os produtos, e (2) botão "Guardar Promoção" no painel admin
+não fazendo nada ao clicar. Investigação:
+- **Item 1 (comparação só Amazon)**: testado a fundo direto no
+  servidor (sem navegador) — busquei o mecanismo de comparação real
+  (`loadComparison`, com a mesma lógica de filtro D3 extraída do
+  arquivo) contra dados reais de várias lojas parceiras pra 4 marcas
+  diferentes (Revlon, Isdin, Neutrogena, CeraVe) — todas retornaram
+  preço real, confirmando que o mecanismo em si funciona. **Acabou
+  sendo cache do navegador** (mesmo problema já visto nesta sessão
+  com o texto) — resolvido com Ctrl+F5, sem mudança de código
+  necessária.
+- **Item 2 (botão "Guardar Promoção" sem efeito) — bug real,
+  confirmado e corrigido**: `savePromo()` (`index.html`) só aceitava
+  link de `amazon.com.br`/`eudora.com.br`/`awin1.com`/`zenaps.com` —
+  essa lista foi escrita há muito tempo e **nunca foi atualizada**
+  conforme ~17 lojas novas foram integradas ao longo de várias sessões
+  (Americanas, WePink, Extrafarma, Drogal, Venâncio, Pague Menos,
+  Drogaria Catarinense, Farmácias São João, Drogaria Rosário, Payot,
+  Preço Popular, Drogaria Globo, Farmácia Indiana, Lojas Rede,
+  Mahogany, Lojas Pompéia, Época). Link de qualquer uma dessas lojas
+  era rejeitado — a validação inclusive mostrava um toast de erro,
+  mas com a lista antiga de domínios ficando enorme e genérica o
+  suficiente pra passar despercebido como "não funciona". Corrigido:
+  domínio real de cada uma das 17 lojas (extraído direto do
+  `API_URL` de cada function `.mjs`) adicionado à lista
+  `allowedDomains`; mensagem de erro também reescrita (a antiga listava
+  todos os domínios permitidos, ficaria enorme e ilegível com a lista
+  maior — trocada por uma frase curta). Commit `2b39393`. **Confirmado
+  pela Priscila em produção.**
+
+**Lição pra próxima vez que uma loja nova for integrada**: checar
+também se `savePromo()`/`allowedDomains` (`index.html`) precisa do
+domínio novo — essa lista não é atualizada automaticamente junto com
+`liveMultiSourceSearch`/D3/etc., é mantida à parte.
