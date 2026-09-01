@@ -135,6 +135,76 @@ nav{background:rgba(255,255,255,0.97);border-bottom:1px solid var(--marble3);pos
 .btn-big:hover{transform:translateY(-3px);box-shadow:0 14px 48px rgba(230,64,125,.7)}
 .btn-big .ico{width:44px;height:44px;background:rgba(30,45,61,.2);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:22px}
 .caq-note{font-size:12px;color:rgba(250,250,248,.3);margin-top:16px}
+/* QUIZ TIPO DE PELE */
+.qtp-sec{background:var(--marble);padding:64px 40px}
+.qtp-in{max-width:760px;margin:0 auto;text-align:center}
+.qtp-eyebrow{font-size:11px;letter-spacing:3px;text-transform:uppercase;color:var(--gold);font-weight:700;margin-bottom:10px;display:inline-flex;align-items:center;gap:10px;justify-content:center;width:100%}
+.qtp-title{font-family:Cormorant Garamond,serif;font-size:clamp(2rem,3.6vw,2.6rem);font-weight:600;color:var(--gold5);line-height:1.15;letter-spacing:-.3px;margin-bottom:14px}
+.qtp-title em{background:var(--gg);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;font-style:italic}
+.qtp-lede{font-size:15px;color:var(--muted);line-height:1.7;max-width:52ch;margin:0 auto 36px}
+.qtp-stage{max-width:620px;margin:0 auto;text-align:left}
+.qtp-card{background:var(--white);border:1px solid var(--marble3);border-radius:var(--r);box-shadow:0 8px 32px rgba(230,64,125,.10);padding:32px clamp(20px,5vw,40px)}
+.qtp-screen{display:none}
+.qtp-screen.active{display:block}
+.qtp-type-grid{display:flex;flex-direction:column;gap:10px;margin-bottom:26px}
+.qtp-type-row{display:flex;gap:14px;align-items:baseline;padding:12px 14px;border:1px solid var(--marble3);border-radius:var(--r2)}
+.qtp-type-row .qtp-type-name{flex:none;width:88px;font-weight:700;font-size:13.5px;color:var(--gold5)}
+.qtp-type-row .qtp-type-line{font-size:13.5px;color:var(--muted);line-height:1.5}
+.qtp-start-btn,.qtp-restart{display:block;width:100%;background:var(--gg);color:var(--night);border:none;border-radius:var(--r2);padding:15px;font-family:'Inter',sans-serif;font-size:15px;font-weight:800;cursor:pointer;transition:all .25s;box-shadow:0 6px 22px rgba(230,64,125,.4)}
+.qtp-start-btn:hover,.qtp-restart:hover{transform:translateY(-1px);box-shadow:0 8px 28px rgba(230,64,125,.5)}
+.qtp-start-btn:focus-visible,.qtp-restart:focus-visible{outline:2px solid var(--gold5);outline-offset:2px}
+.qtp-intro-foot{text-align:center;font-size:12.5px;color:var(--muted);margin-top:14px}
+.qtp-disclaimer{max-width:48ch;margin:10px auto 0;text-align:center;font-size:11.5px;color:var(--muted);line-height:1.5}
+.qtp-progress-row{display:flex;align-items:center;gap:12px;margin-bottom:22px}
+.qtp-progress-track{flex:1;height:6px;border-radius:999px;background:var(--gold4);overflow:hidden}
+.qtp-progress-fill{height:100%;background:var(--gg);border-radius:999px;transition:width .35s ease;width:0%}
+.qtp-progress-label{font-size:12.5px;color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap;font-weight:600}
+.qtp-question h3{font-family:Cormorant Garamond,serif;font-weight:600;font-size:clamp(19px,3vw,23px);color:var(--text);line-height:1.35;margin:0 0 8px;text-wrap:balance}
+.qtp-q-hint{font-size:13px;color:var(--muted);margin:0 0 18px;line-height:1.5}
+.qtp-options{display:flex;flex-direction:column;gap:10px}
+.qtp-option{display:flex;align-items:flex-start;gap:12px;text-align:left;width:100%;border:1px solid var(--marble3);background:var(--white);color:var(--text);border-radius:var(--r2);padding:14px 16px;font-family:'Inter',sans-serif;font-size:14.5px;line-height:1.45;cursor:pointer;transition:border-color .15s ease,background .15s ease,transform .1s ease}
+.qtp-option:hover{background:var(--gold4);border-color:var(--gold2)}
+.qtp-option:focus-visible{outline:2px solid var(--gold5);outline-offset:2px}
+.qtp-option:active{transform:scale(.995)}
+.qtp-option .qtp-dot{flex:none;width:17px;height:17px;border-radius:50%;border:1.5px solid var(--border);margin-top:2px}
+.qtp-option.qtp-unsure{border-style:dashed;color:var(--muted)}
+.qtp-option.qtp-unsure:hover{border-color:var(--muted);background:var(--gold4)}
+.qtp-nav-row{display:flex;justify-content:space-between;align-items:center;margin-top:22px}
+.qtp-back-btn{background:none;border:none;color:var(--muted);font-family:'Inter',sans-serif;font-size:13.5px;cursor:pointer;padding:8px 4px}
+.qtp-back-btn:disabled{visibility:hidden}
+.qtp-back-btn:hover{color:var(--gold5)}
+.qtp-hint{font-size:12.5px;color:var(--muted);text-align:center;margin-top:18px}
+.qtp-result-badge{display:flex;flex-direction:column;align-items:center;text-align:center;gap:10px;padding-bottom:22px;border-bottom:1px solid var(--marble3);margin-bottom:22px}
+.qtp-result-badge h2{font-family:Cormorant Garamond,serif;font-weight:600;font-size:clamp(28px,6vw,38px);margin:0;color:var(--gold5)}
+.qtp-result-badge p{max-width:46ch;margin:0;color:var(--muted);line-height:1.55;font-size:14.5px}
+.qtp-confidence-note{display:flex;gap:10px;align-items:flex-start;background:var(--okbg);border-radius:var(--r2);padding:12px 14px;font-size:13px;line-height:1.5;color:var(--text);margin-bottom:24px}
+.qtp-confidence-note .qtp-cdot{flex:none;width:7px;height:7px;border-radius:50%;background:var(--ok);margin-top:6px}
+.qtp-section-block{margin-bottom:26px}
+.qtp-section-block h4{font-family:Cormorant Garamond,serif;font-weight:600;font-size:15.5px;color:var(--text);margin:0 0 10px}
+.qtp-signals ul,.qtp-care-list{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:8px}
+.qtp-signals li,.qtp-care-list li{display:flex;gap:10px;font-size:14px;line-height:1.5;color:var(--text)}
+.qtp-signals li::before,.qtp-care-list.avoid li::before{content:'';flex:none;width:6px;height:6px;border-radius:50%;background:var(--gold);margin-top:8px}
+.qtp-care-list.good li::before{content:'';flex:none;width:6px;height:6px;border-radius:50%;background:var(--ok);margin-top:8px}
+.qtp-routine-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.qtp-routine-card{border:1px solid var(--marble3);border-radius:var(--r2);padding:14px 16px;background:var(--gold4)}
+.qtp-routine-card .qtp-label{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--gold5);font-weight:700;margin-bottom:6px}
+.qtp-routine-card p{margin:0;font-size:13.5px;line-height:1.55;color:var(--text)}
+.qtp-care-columns{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.qtp-caution{font-size:12.5px;color:var(--muted);border-top:1px solid var(--marble3);padding-top:14px;line-height:1.55}
+.qtp-breakdown{margin-top:6px}
+.qtp-bar-row{display:grid;grid-template-columns:78px 1fr 26px;align-items:center;gap:10px;margin-bottom:8px;font-size:12.5px}
+.qtp-bar-row .qtp-blabel{color:var(--muted)}
+.qtp-bar-row .qtp-btrack{height:8px;background:var(--gold4);border-radius:999px;overflow:hidden}
+.qtp-bar-row .qtp-bfill{height:100%;background:var(--gold3);border-radius:999px}
+.qtp-bar-row.qtp-winner .qtp-bfill{background:var(--gold)}
+.qtp-bar-row.qtp-winner .qtp-blabel{color:var(--gold5);font-weight:700}
+.qtp-bar-row .qtp-bval{text-align:right;font-variant-numeric:tabular-nums;color:var(--muted)}
+.qtp-details{margin-top:6px;margin-bottom:22px;border-top:1px solid var(--marble3);padding-top:16px}
+.qtp-details summary{cursor:pointer;font-size:13px;color:var(--muted);list-style:none}
+.qtp-details summary::-webkit-details-marker{display:none}
+.qtp-details summary::before{content:"Ver detalhamento da pontuação ▸"}
+.qtp-details[open] summary::before{content:"Ocultar detalhamento da pontuação ▾"}
+@media (max-width:560px){.qtp-routine-grid,.qtp-care-columns{grid-template-columns:1fr}}
 /* CATS */
 .cats-sec{background:var(--marble);padding:56px 40px}
 .cats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:20px;margin-top:32px}
@@ -674,8 +744,8 @@ textarea.form-inp{resize:vertical;min-height:140px}
 <!-- TOP BAR -->
 <div class="top-bar"><div class="top-in">
   <button class="tbtn active" id="lpt" onclick="setLang('pt')">PT</button>
-  <span class="tdiv">|</span>
-  <button class="tbtn" id="len" onclick="setLang('en')">EN</button>
+  <span class="tdiv" style="display:none">|</span>
+  <button class="tbtn" id="len" onclick="setLang('en')" style="display:none">EN</button>
   <span class="tdiv" style="margin:0 6px">·</span>
   <button class="rbtn active" id="rbr" onclick="setRegion('BR')">🇧🇷 Brasil</button>
   <button class="rbtn" id="rpt" onclick="setRegion('PT')" style="display:none">🇵🇹 Portugal</button>
@@ -741,6 +811,301 @@ textarea.form-inp{resize:vertical;min-height:140px}
   </div>
   <div class="hero-wave"><svg viewBox="0 0 1440 90" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg"><path d="M0,45 C240,85 480,5 720,45 C960,85 1200,5 1440,45 L1440,90 L0,90 Z" fill="#FAFAF8" opacity=".55"/><path d="M0,58 C360,22 720,72 1080,32 C1260,16 1380,54 1440,58 L1440,90 L0,90 Z" fill="#FAFAF8" opacity=".78"/><path d="M0,70 C300,48 600,80 900,60 C1100,46 1280,68 1440,70 L1440,90 L0,90 Z" fill="#FAFAF8"/></svg></div>
 </div>
+<!-- QUIZ TIPO DE PELE -->
+<div class="qtp-sec"><div class="qtp-in">
+  <p class="qtp-eyebrow">Tipo de pele</p>
+  <h2 class="qtp-title">Não sabe qual é o seu <em>tipo de pele</em>? A gente ajuda a descobrir.</h2>
+  <p class="qtp-lede">Não é preciso já saber o termo técnico. Responda sobre como sua pele se comporta no dia a dia e a gente identifica pra você — em menos de 2 minutos.</p>
+
+  <div class="qtp-stage">
+    <div class="qtp-screen active" id="qtpScreenIntro">
+      <div class="qtp-card">
+        <div class="qtp-type-grid" id="qtpTypeGrid"></div>
+        <button class="qtp-start-btn" id="qtpStartBtn" type="button">Começar o quiz</button>
+      </div>
+      <p class="qtp-intro-foot">Leva cerca de 2 minutos · 11 perguntas rápidas</p>
+      <p class="qtp-disclaimer">Este quiz é uma ferramenta demonstrativa, pensada para dar um primeiro direcionamento. Ele não substitui a avaliação de um dermatologista.</p>
+    </div>
+
+    <div class="qtp-screen" id="qtpScreenQuiz">
+      <div class="qtp-progress-row">
+        <div class="qtp-progress-track"><div class="qtp-progress-fill" id="qtpProgressFill"></div></div>
+        <div class="qtp-progress-label" id="qtpProgressLabel">1 / 11</div>
+      </div>
+      <div class="qtp-card">
+        <div class="qtp-question">
+          <h3 id="qtpQuestionText"></h3>
+          <p class="qtp-q-hint" id="qtpQuestionHint"></p>
+          <div class="qtp-options" id="qtpOptionsList"></div>
+        </div>
+        <div class="qtp-nav-row">
+          <button class="qtp-back-btn" id="qtpBackBtn">← Voltar</button>
+        </div>
+      </div>
+      <p class="qtp-hint">Responda pensando na sua pele sem maquiagem e sem produtos aplicados. Se não tiver certeza, tudo bem marcar "não tenho certeza".</p>
+    </div>
+
+    <div class="qtp-screen" id="qtpScreenResult">
+      <div class="qtp-card">
+        <div class="qtp-result-badge">
+          <p class="qtp-eyebrow" style="margin-bottom:0">Seu tipo de pele é</p>
+          <h2 id="qtpResultType"></h2>
+          <p id="qtpResultDesc"></p>
+          <p class="qtp-disclaimer">Este resultado é um direcionamento inicial e não substitui a avaliação de um dermatologista.</p>
+        </div>
+
+        <div class="qtp-confidence-note" id="qtpConfidenceNote" style="display:none">
+          <span class="qtp-cdot"></span>
+          <span id="qtpConfidenceText"></span>
+        </div>
+
+        <div class="qtp-section-block qtp-signals">
+          <h4>Por que chegamos nesse resultado</h4>
+          <ul id="qtpResultSignals"></ul>
+        </div>
+
+        <div class="qtp-section-block">
+          <h4>Rotina sugerida</h4>
+          <div class="qtp-routine-grid">
+            <div class="qtp-routine-card"><div class="qtp-label">Manhã</div><p id="qtpRoutineAM"></p></div>
+            <div class="qtp-routine-card"><div class="qtp-label">Noite</div><p id="qtpRoutineNight"></p></div>
+          </div>
+        </div>
+
+        <div class="qtp-section-block">
+          <div class="qtp-care-columns">
+            <div><h4>Buscar</h4><ul class="qtp-care-list good" id="qtpCareFor"></ul></div>
+            <div><h4>Evitar</h4><ul class="qtp-care-list avoid" id="qtpCareAvoid"></ul></div>
+          </div>
+        </div>
+
+        <p class="qtp-caution" id="qtpResultCaution"></p>
+
+        <details class="qtp-details">
+          <summary></summary>
+          <div class="qtp-breakdown" id="qtpResultBreakdown"></div>
+        </details>
+
+        <button class="qtp-restart" id="qtpRestartBtn">Refazer o quiz</button>
+      </div>
+    </div>
+  </div>
+</div></div>
+<script>
+(function(){
+  var TYPES={
+    N:{name:"Normal",desc:"Sua pele está equilibrada: pouca oleosidade, pouco ressecamento e baixa reatividade. O foco do seu cuidado é manter esse equilíbrio.",routineAM:"Limpeza suave, hidratante leve e protetor solar todos os dias.",routineNight:"Limpeza e um hidratante leve para repor o que o dia tirou.",careFor:["Antioxidantes (vitamina C, por exemplo)","Hidratantes leves de manutenção","Protetor solar diário"],careAvoid:["Trocar de rotina com muita frequência","Fórmulas muito pesadas sem necessidade"],caution:""},
+    O:{name:"Oleosa",desc:"Sua pele produz mais sebo do que o normal, o que costuma trazer brilho no rosto todo e poros mais visíveis.",routineAM:"Limpeza que remova o excesso de oleosidade, hidratante em gel (oil-free) e protetor solar com toque seco.",routineNight:"Limpeza + ativos que ajudam a controlar oleosidade, como niacinamida.",careFor:["Fórmulas oil-free e não comedogênicas","Niacinamida","Ácido salicílico em baixa concentração"],careAvoid:["Produtos muito oleosos ou oclusivos","Esfoliação em excesso — pode estimular ainda mais oleosidade"],caution:""},
+    S:{name:"Seca",desc:"Sua pele produz pouco sebo e tende a repuxar, descamar ou ficar opaca ao longo do dia.",routineAM:"Limpeza suave, sem espuma agressiva, hidratante rico e protetor solar.",routineNight:"Limpeza suave + hidratante com ceramidas ou ácido hialurônico.",careFor:["Ceramidas","Ácido hialurônico","Óleos e manteigas emolientes"],careAvoid:["Fórmulas com álcool em alta concentração","Esfoliação física forte","Água muito quente no rosto"],caution:""},
+    M:{name:"Mista",desc:"Sua zona T (testa, nariz e queixo) se comporta diferente do restante do rosto — geralmente mais oleosa, enquanto as bochechas ficam normais ou secas.",routineAM:"Hidratante leve na zona T e um pouco mais rico nas bochechas, seguido de protetor solar.",routineNight:"Pode valer usar produtos diferentes por região — algo com controle de oleosidade na testa/nariz e mais hidratação nas bochechas.",careFor:["Ácido salicílico pontual na zona T","Hidratantes em texturas diferentes por região"],careAvoid:["Um único produto muito rico ou muito matificante para o rosto inteiro"],caution:""},
+    Se:{name:"Sensível",desc:"Sua pele reage com facilidade a produtos novos, clima ou atrito — com vermelhidão, ardência ou coceira. Isso pode acontecer em qualquer um dos outros tipos.",routineAM:"Limpeza bem suave, sem fragrância, hidratante calmante e protetor solar mineral.",routineNight:"Rotina minimalista — introduza ativos novos um de cada vez, com alguns dias de intervalo.",careFor:["Fórmulas hipoalergênicas e sem fragrância","Centella asiática, aveia coloidal, pantenol"],careAvoid:["Fragrância e álcool","Esfoliantes físicos ásperos","Testar vários produtos novos ao mesmo tempo"],caution:""},
+    A:{name:"Acneica",desc:"Sua pele tem tendência a cravos, espinhas e poros obstruídos com mais frequência.",routineAM:"Limpeza suave (sem agredir a pele), hidratante leve oil-free e protetor solar não comedogênico.",routineNight:"Limpeza + ativos como ácido salicílico, seguidos de hidratação leve.",careFor:["Fórmulas não comedogênicas","Ácido salicílico","Niacinamida"],careAvoid:["Espremer a pele","Excesso de esfoliação","Produtos muito oclusivos"],caution:"Se as espinhas forem frequentes, doloridas ou deixarem marcas, vale complementar com uma avaliação dermatológica."}
+  };
+  var TYPE_ORDER=["N","O","S","M","Se","A"];
+  var TIE_PRIORITY=["M","A","Se","O","S","N"];
+  var UNSURE="__unsure__";
+  var QUESTIONS=[
+    {text:"Como sua pele fica de 30 minutos a 2 horas depois de lavar o rosto, sem passar nenhum produto?",hint:"Pense na última vez que ficou sem aplicar nada depois de lavar.",options:[
+      {label:"Fica repuxando, com sensação de aperto, às vezes até descamando",points:{S:2}},
+      {label:"Fica brilhante e oleosa no rosto todo",points:{O:2}},
+      {label:"Fica brilhante só na testa, nariz e queixo — as bochechas continuam normais ou secas",points:{M:2}},
+      {label:"Fica confortável, sem brilho excessivo e sem repuxar",points:{N:2}},
+      {label:"Fica ardendo, coçando ou avermelhada",points:{Se:2}}
+    ]},
+    {text:"Até o fim da tarde, o que costuma acontecer com sua pele?",hint:"Observe do início da manhã até o fim do dia.",options:[
+      {label:"Fica cada vez mais oleosa, o rosto todo brilha",points:{O:2}},
+      {label:"Só a testa, o nariz e o queixo ficam brilhando",points:{M:2}},
+      {label:"Fica opaca, sem brilho — às vezes até mais seca",points:{S:1}},
+      {label:"Quase não muda",points:{N:1}},
+      {label:"Fica irritada ou com manchas vermelhas",points:{Se:1}}
+    ]},
+    {text:"Como estão seus poros, principalmente na região da testa, nariz e queixo?",hint:"Olhe de perto, num espelho com boa luz.",options:[
+      {label:"Bem dilatados e visíveis",points:{O:1,A:1}},
+      {label:"Quase imperceptíveis",points:{S:1,N:1}},
+      {label:"Visíveis na testa e no nariz, mas discretos nas bochechas",points:{M:2}},
+      {label:"Normais, nem muito abertos nem fechados",points:{N:1}}
+    ]},
+    {text:"Com que frequência aparecem cravos, espinhas ou pequenas inflamações?",hint:"Considere as últimas semanas, não só hoje.",options:[
+      {label:"Com frequência, em várias áreas do rosto",points:{A:2}},
+      {label:"De vez em quando, mais na testa, nariz e queixo",points:{A:1,M:1}},
+      {label:"Raramente ou nunca",points:{N:1}},
+      {label:"Quase nunca — mas minha pele irrita com facilidade",points:{Se:1}}
+    ]},
+    {text:"Quando você testa um produto novo (hidratante, protetor solar etc.), o que costuma acontecer?",hint:"Pense na primeira vez que usou algo novo, não em produtos que já conhece.",options:[
+      {label:"Nada, minha pele tolera bem a maioria dos produtos",points:{N:1}},
+      {label:"Frequentemente arde, coça, fica vermelha ou descama",points:{Se:2}},
+      {label:"Às vezes dá uma reação leve, mas passa rápido",points:{Se:1}},
+      {label:"Pode piorar cravos ou espinhas",points:{A:1}}
+    ]},
+    {text:"Se você passar um lenço de papel no rosto, sem produtos, o que costuma acontecer?",hint:"Vale um lenço comum ou até um guardanapo de papel.",options:[
+      {label:"Fica bem encharcado de oleosidade no rosto todo",points:{O:2}},
+      {label:"Quase não pega oleosidade nenhuma",points:{S:2}},
+      {label:"Pega oleosidade só na testa, nariz e queixo",points:{M:2}},
+      {label:"Pega uma oleosidade leve e equilibrada",points:{N:1}}
+    ]},
+    {text:"Como você descreveria a textura geral da sua pele?",hint:"Passe a mão no rosto, sem produtos, e preste atenção na sensação.",options:[
+      {label:"Áspera, com descamação ou linhas de ressecamento",points:{S:2}},
+      {label:"Lisa e macia, sem parecer oleosa nem ressecada",points:{N:2}},
+      {label:"Lisa, mas com aspecto oleoso",points:{O:1}},
+      {label:"Costuma ficar avermelhada, com sensação de calor ou ardência",points:{Se:1}},
+      {label:"Irregular, com cravos ou poros obstruídos",points:{A:1}}
+    ]},
+    {text:"Como sua pele reage ao sol ou a ambientes quentes (praia, calor forte, sauna)?",hint:"Pense num dia bem quente ou de bastante sol.",options:[
+      {label:"Fica ainda mais oleosa e brilhante rapidamente",points:{O:1}},
+      {label:"Fica vermelha, resseca ou irrita com facilidade",points:{Se:1,S:1}},
+      {label:"Não muda muito, se comporta praticamente igual",points:{N:1}},
+      {label:"Aparecem mais cravos ou espinhas, provavelmente por causa do suor",points:{A:1}}
+    ]},
+    {text:"Sua pele muda bastante com o clima, o estresse ou o ciclo hormonal (TPM, por exemplo)?",hint:"Pense em épocas de mais estresse, TPM ou mudança de estação.",options:[
+      {label:"Sim, fica bem mais oleosa ou com mais espinhas nesses períodos",points:{A:1,M:1}},
+      {label:"Sim, fica bem mais seca, sensível ou reativa",points:{Se:1,S:1}},
+      {label:"Não muda muito, minha pele se mantém parecida",points:{N:1}}
+    ]},
+    {text:"Como fica a sensação de hidratação da sua pele ao longo do dia, sem reaplicar nada?",hint:"Pense num dia comum, do café da manhã até a noite.",options:[
+      {label:"Preciso hidratar de novo antes do fim do dia, senão fica repuxando",points:{S:2}},
+      {label:"Fica confortável o dia todo, sem precisar reaplicar",points:{N:1}},
+      {label:"Fica bem no geral, mas a zona T pede um controle de oleosidade",points:{M:1}},
+      {label:"Nunca preciso hidratar, minha pele já é oleosa o bastante",points:{O:1}}
+    ]},
+    {text:"Perfumes, tecidos novos, vento ou mudanças bruscas de temperatura costumam irritar sua pele?",hint:"Pense em coceira, vermelhidão ou ardência depois desse tipo de contato.",options:[
+      {label:"Sim, com frequência",points:{Se:2}},
+      {label:"Às vezes, mas passa rápido",points:{Se:1}},
+      {label:"Quase nunca",points:{N:1}}
+    ]}
+  ];
+
+  var current=0, answers=new Array(QUESTIONS.length).fill(null);
+
+  var screenIntro=document.getElementById("qtpScreenIntro");
+  var screenQuiz=document.getElementById("qtpScreenQuiz");
+  var screenResult=document.getElementById("qtpScreenResult");
+  var questionText=document.getElementById("qtpQuestionText");
+  var questionHint=document.getElementById("qtpQuestionHint");
+  var optionsList=document.getElementById("qtpOptionsList");
+  var progressFill=document.getElementById("qtpProgressFill");
+  var progressLabel=document.getElementById("qtpProgressLabel");
+  var backBtn=document.getElementById("qtpBackBtn");
+
+  function showScreen(name){
+    [screenIntro,screenQuiz,screenResult].forEach(function(s){s.classList.remove("active");});
+    if(name==="intro")screenIntro.classList.add("active");
+    if(name==="quiz")screenQuiz.classList.add("active");
+    if(name==="result")screenResult.classList.add("active");
+  }
+
+  function buildIntro(){
+    var grid=document.getElementById("qtpTypeGrid");
+    var lines={N:"pele equilibrada, sem oleosidade nem ressecamento excessivos",O:"brilho no rosto todo, poros mais visíveis",S:"repuxa, descama ou fica opaca",M:"zona T oleosa, bochechas normais ou secas",Se:"reage com facilidade a produtos, clima ou atrito",A:"tendência a cravos, espinhas e poros obstruídos"};
+    TYPE_ORDER.forEach(function(k){
+      var row=document.createElement("div");row.className="qtp-type-row";
+      var name=document.createElement("div");name.className="qtp-type-name";name.textContent=TYPES[k].name;
+      var line=document.createElement("div");line.className="qtp-type-line";line.textContent=lines[k];
+      row.appendChild(name);row.appendChild(line);grid.appendChild(row);
+    });
+  }
+
+  function renderQuestion(){
+    var q=QUESTIONS[current];
+    questionText.textContent=q.text;
+    questionHint.textContent=q.hint||"";
+    optionsList.innerHTML="";
+    q.options.forEach(function(opt,idx){ optionsList.appendChild(makeOptionButton(opt.label,function(){selectOption(idx);})); });
+    optionsList.appendChild(makeOptionButton("Não tenho certeza",function(){selectOption(UNSURE);},true));
+    progressFill.style.width=Math.round((current/QUESTIONS.length)*100)+"%";
+    progressLabel.textContent=(current+1)+" / "+QUESTIONS.length;
+    backBtn.disabled=current===0;
+  }
+
+  function makeOptionButton(label,onClick,isUnsure){
+    var btn=document.createElement("button");
+    btn.className="qtp-option"+(isUnsure?" qtp-unsure":"");
+    btn.type="button";
+    var dot=document.createElement("span");dot.className="qtp-dot";
+    var span=document.createElement("span");span.textContent=label;
+    btn.appendChild(dot);btn.appendChild(span);
+    btn.addEventListener("click",onClick);
+    return btn;
+  }
+
+  function selectOption(idx){
+    answers[current]=idx;
+    if(current<QUESTIONS.length-1){ current++; renderQuestion(); }
+    else{ progressFill.style.width="100%"; showResult(); }
+  }
+
+  backBtn.addEventListener("click",function(){ if(current>0){current--;renderQuestion();} });
+  document.getElementById("qtpStartBtn").addEventListener("click",function(){ showScreen("quiz"); renderQuestion(); });
+
+  function computeScores(){
+    var totals={N:0,O:0,S:0,M:0,Se:0,A:0}, unsureCount=0;
+    answers.forEach(function(ansIdx,qIdx){
+      if(ansIdx===null)return;
+      if(ansIdx===UNSURE){unsureCount++;return;}
+      var opt=QUESTIONS[qIdx].options[ansIdx];
+      Object.keys(opt.points).forEach(function(k){totals[k]+=opt.points[k];});
+    });
+    return {totals:totals,unsureCount:unsureCount};
+  }
+
+  function showResult(){
+    var scored=computeScores();
+    var totals=scored.totals;
+    var maxScore=Math.max.apply(null,Object.values(totals));
+    var tied=Object.keys(totals).filter(function(k){return totals[k]===maxScore;});
+    var winner=(maxScore===0)?"N":(tied.length===1?tied[0]:TIE_PRIORITY.find(function(k){return tied.indexOf(k)!==-1;}));
+
+    var t=TYPES[winner];
+    document.getElementById("qtpResultType").textContent=t.name;
+    document.getElementById("qtpResultDesc").textContent=t.desc;
+    document.getElementById("qtpRoutineAM").textContent=t.routineAM;
+    document.getElementById("qtpRoutineNight").textContent=t.routineNight;
+
+    var careFor=document.getElementById("qtpCareFor");careFor.innerHTML="";
+    t.careFor.forEach(function(item){var li=document.createElement("li");li.textContent=item;careFor.appendChild(li);});
+    var careAvoid=document.getElementById("qtpCareAvoid");careAvoid.innerHTML="";
+    t.careAvoid.forEach(function(item){var li=document.createElement("li");li.textContent=item;careAvoid.appendChild(li);});
+
+    document.getElementById("qtpResultCaution").textContent=t.caution||"";
+    document.getElementById("qtpResultCaution").style.display=t.caution?"block":"none";
+
+    var confidenceNote=document.getElementById("qtpConfidenceNote");
+    if(scored.unsureCount>=4){
+      confidenceNote.style.display="flex";
+      document.getElementById("qtpConfidenceText").textContent="Você marcou \"não tenho certeza\" em várias perguntas — o resultado é um bom ponto de partida, mas pode valer observar sua pele por um dia e refazer o quiz para confirmar.";
+    } else { confidenceNote.style.display="none"; }
+
+    var signalsList=document.getElementById("qtpResultSignals");signalsList.innerHTML="";
+    answers.forEach(function(ansIdx,qIdx){
+      if(ansIdx===null||ansIdx===UNSURE)return;
+      var opt=QUESTIONS[qIdx].options[ansIdx];
+      if(opt.points[winner]){var li=document.createElement("li");li.textContent=opt.label;signalsList.appendChild(li);}
+    });
+    if(signalsList.children.length===0){var li=document.createElement("li");li.textContent="Resultado calculado a partir do conjunto de respostas.";signalsList.appendChild(li);}
+
+    var breakdown=document.getElementById("qtpResultBreakdown");breakdown.innerHTML="";
+    var order=Object.keys(totals).sort(function(a,b){return totals[b]-totals[a];});
+    var maxForBars=Math.max(1,maxScore);
+    order.forEach(function(k){
+      var row=document.createElement("div");row.className="qtp-bar-row"+(k===winner?" qtp-winner":"");
+      var label=document.createElement("div");label.className="qtp-blabel";label.textContent=TYPES[k].name;
+      var track=document.createElement("div");track.className="qtp-btrack";
+      var fill=document.createElement("div");fill.className="qtp-bfill";fill.style.width=Math.round((totals[k]/maxForBars)*100)+"%";
+      track.appendChild(fill);
+      var val=document.createElement("div");val.className="qtp-bval";val.textContent=totals[k];
+      row.appendChild(label);row.appendChild(track);row.appendChild(val);
+      breakdown.appendChild(row);
+    });
+
+    showScreen("result");
+  }
+
+  document.getElementById("qtpRestartBtn").addEventListener("click",function(){
+    current=0; answers=new Array(QUESTIONS.length).fill(null); showScreen("intro");
+  });
+
+  buildIntro();
+})();
+</script>
 <!-- DICA DA SEMANA - logo após o hero, bem visível -->
 <div id="dicaHomeWrap" style="display:none"></div>
 <!-- PROMOÇÕES DO DIA -->
