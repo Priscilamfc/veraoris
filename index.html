@@ -1971,9 +1971,16 @@ var prodResultsAll=[],prodPage=1,prodPS=18,prodRenderedIdx=0,prodLiveCount=0;
 // não como palavra de verdade — "we" (de "we pink") batia dentro de "Wella"/"Sweet"/"Power"/
 // "Weleda", trazendo marca nada a ver com a busca. Limite de palavra (\b) resolve sem quebrar
 // buscas legítimas de várias palavras (ex: "hidratante pele oleosa" continua funcionando).
+// Acento ignorado (foldAccents) porque o dado de loja de terceiro vem inconsistente (às vezes
+// "O Boticário", às vezes "BOTICARIO" sem acento) — comparar só a forma exata perdia produto
+// real por causa disso.
+function foldAccents(s){
+  return (s||'').normalize('NFD').replace(/[̀-ͯ]/g,'');
+}
 function termMatchesWord(hay, term){
-  var esc = term.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
-  return new RegExp('(^|[^a-z0-9à-ú])'+esc+'([^a-z0-9à-ú]|$)','i').test(hay);
+  var h=foldAccents(hay), t=foldAccents(term);
+  var esc = t.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
+  return new RegExp('(^|[^a-z0-9])'+esc+'([^a-z0-9]|$)','i').test(h);
 }
 function renderProds(){
   var g=document.getElementById('productGrid');if(!g)return;
@@ -2131,6 +2138,21 @@ function finishRenderProds(pool, g){
       // caso e deixava passar produto de unha despercebido.
       if(results){
         results = results.filter(function(r){ return !conflictsWithCategory(cat||'todas', r.title, r.category); });
+      }
+      // Bug real (01/09/2026): buscar uma marca específica (ex: "boticário") trazia produto de
+      // marca completamente diferente ("Hidratante Labial Carmed", "Balm Labial Vult") — a busca
+      // de CADA loja parceira (VTEX) devolve resultado "parecido" por conta própria mesmo sem
+      // bater de verdade com o termo (confirmado testando as functions ao vivo: "Shampoo
+      // Hidratei" aparecendo pra busca "boticário", sem relação nenhuma), e o site nunca
+      // conferia isso — só filtrava por categoria. Só entra em vigor quando a pessoa digitou
+      // algo (não afeta a navegação por Perfumaria sem busca, que usa termos genéricos de
+      // propósito pra cobrir "Desodorante Colônia"/"Body Splash" sem a palavra "perfume").
+      if(results && srch){
+        var relevanceTerms=srch.toLowerCase().split(/\s+/).filter(Boolean);
+        results = results.filter(function(r){
+          var hay=(r.title||'')+' '+(r.store||'')+' '+(r.brand||'');
+          return relevanceTerms.some(function(t){ return termMatchesWord(hay, t); });
+        });
       }
       if(results && results.length){
         // Prioridade: lojas com API/feed de afiliado real (Eudora, L'Occitane, Ama Beleza) são
