@@ -2901,4 +2901,45 @@ solar la roche posay" → La Roche-Posay primeiro), porque o placar de
 relevância (soma de termos batidos) prioriza quem bate mais palavras
 de verdade. Commit `599fe81`.
 
+**Priscila testou de novo e o mesmo tipo de problema continuava**:
+buscou "boticário", apareceu "Hidratante Labial Carmed" e "Balm Labial
+Vult" — marcas sem relação nenhuma. A correção acima só tinha mexido
+no CATÁLOGO fixo; esses cards eram de resultado AO VIVO (loja
+parceira), um caminho de código diferente que nunca teve esse tipo de
+checagem.
+
+**Causa raiz, confirmada testando as functions das lojas direto**: a
+API de busca de CADA loja parceira (VTEX — Drogaria Rosário,
+Extrafarma etc.) devolve resultado "parecido" por conta própria,
+mesmo sem nenhuma relação real com o termo buscado — testei
+`rosario-search?query=boticário` e voltou "Shampoo Hidratei - 250ml"
+(marca genérica de xampu, zero relação com "boticário"). O site nunca
+conferia isso no caminho de busca ao vivo (`finishRenderProds`) — só
+filtrava por categoria (`conflictsWithCategory`), nunca por relevância
+ao termo digitado.
+
+**Corrigido**: nova função `foldAccents()` (ignora acento, porque dado
+de loja terceira vem inconsistente — às vezes "O Boticário", às vezes
+"BOTICARIO" sem acento) integrada ao `termMatchesWord()` da correção
+anterior. Resultado ao vivo agora só aparece se o termo digitado bater
+de verdade (por palavra) no título, na loja ou na marca do produto —
+só quando a pessoa realmente digitou uma busca (não afeta a navegação
+por Perfumaria sem busca, que usa termos genéricos de propósito).
+Testado com dado real da própria Drogaria Rosário antes de publicar:
+"Hidratante Labial Carmed"/"Balm Labial Vult" (os exemplos exatos do
+print dela) e "Shampoo Hidratei" corretamente removidos; os produtos
+reais do Boticário (Eudora Siàge) continuam aparecendo; busca de
+várias palavras ("hidratante pele oleosa") continua trazendo os
+mesmos resultados reais de antes (4 de 5 mantidos, só 1 sem relação
+nenhuma removido). Commit `74b9618`.
+
+**Limitação residual aceita, achada no mesmo teste**: um produto Vult
+da Drogaria Rosário tem "BOTICARIO PRODUTOS DE BELEZA L" grudado no
+final do próprio nome do produto (dado da loja, não um campo separado
+— parece nome de distribuidor/fabricante que a loja concatenou por
+engano) — como a palavra "boticario" está literalmente ali, ele
+continua passando no filtro. Caso raro, não achei outro igual nos
+testes; se aparecer de novo, seria preciso alguma regra específica
+pra esse tipo de sufixo de fabricante, não dá pra generalizar.
+
 **Ainda não confirmado pela Priscila em produção.**
