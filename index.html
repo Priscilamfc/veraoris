@@ -2873,11 +2873,20 @@ function savePromo(){
     srch:urlInput
   };
   if(!p.brand||!p.name||!urlInput||isNaN(priceOld)||isNaN(priceNew)){ showToast('Preenche todos os campos correctamente'); return; }
-  // BR aceita Amazon ou Eudora (afiliados activos); PT por agora só Amazon
-  var allowedDomains = promoRegion==='PT' ? ['amazon.es'] : ['amazon.com.br','eudora.com.br','awin1.com','zenaps.com'];
+  // BR aceita Amazon, Eudora/Awin e as lojas parceiras via API direta (Americanas, farmácias
+  // etc.) — lista original só tinha Amazon/Eudora/Awin, nunca foi atualizada conforme essas
+  // ~17 lojas novas foram integradas ao longo de várias sessões, rejeitando link válido delas
+  // sem aviso claro (achado real, 02/09/2026: Priscila tentando adicionar promoção via link de
+  // loja nova, botão "Guardar Promoção" não fazia nada visível). PT por agora só Amazon.
+  var allowedDomains = promoRegion==='PT' ? ['amazon.es'] : ['amazon.com.br','eudora.com.br','awin1.com','zenaps.com',
+    'americanas.com.br','drogariacatarinense.com.br','drogal.com.br','epocacosmeticos.com.br',
+    'extrafarma.com.br','drogariaglobo.com.br','farmaciaindiana.com.br','lojasrede.com.br',
+    'mahogany.com.br','paguemenos.com.br','lojapayot.com.br','lojaspompeia.com',
+    'precopopular.com.br','drogariarosario.com.br','saojoaofarmacias.com.br',
+    'drogariavenancio.com.br','wepink.com.br'];
   var urlLower = urlInput.toLowerCase();
   var domainOk = allowedDomains.some(function(d){ return urlLower.indexOf(d)!==-1; });
-  if(!domainOk){ showToast('Para a região '+promoRegion+', o link deve ser da '+allowedDomains.join(' / ')); return; }
+  if(!domainOk){ showToast(promoRegion==='PT' ? 'Para Portugal, o link deve ser da amazon.es' : 'Link não reconhecido — use um link direto da loja parceira (Amazon, Eudora, Awin, Americanas, farmácias parceiras etc.)'); return; }
   if(priceNew>=priceOld){ showToast('O preço promocional deve ser menor que o original'); return; }
   var action = editId>=0 ? 'update' : 'insert';
   var extra = editId>=0 ? {id:editId, data:p} : {data:p};
