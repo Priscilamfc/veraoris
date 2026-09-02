@@ -3056,3 +3056,62 @@ não fazendo nada ao clicar. Investigação:
 também se `savePromo()`/`allowedDomains` (`index.html`) precisa do
 domínio novo — essa lista não é atualizada automaticamente junto com
 `liveMultiSourceSearch`/D3/etc., é mantida à parte.
+
+## Sessão 02/09/2026 (continuação) — auditoria de SEO + correções de baixo risco
+Priscila pediu uma auditoria de SEO completa, sem mexer em nada até ela
+ver o resultado. Levantamento (só leitura, sem navegador) achou:
+
+**Achado grande, não corrigido ainda (decisão pendente)**: o site é um
+SPA de URL única — `showPage()` (`index.html`) só troca `display:none`/
+`active` entre as "páginas" (Comparar, Quiz, FAQ, Sobre, Privacidade,
+Termos, Contacto), nunca chama `history.pushState`. Resultado: o Google
+só enxerga UMA URL (`veraoris.com/`) pro site inteiro — nenhuma página
+interna pode rankear pela própria palavra-chave (ex.: FAQ não pode
+aparecer como resultado próprio, categorias não têm URL própria).
+Corrigir isso exige mexer na navegação inteira do site — arriscado
+demais pra fazer junto com o resto; **fica pra uma sessão futura,
+combinada com calma antes**.
+
+**Corrigido nesta sessão** (mudanças de baixo risco, testadas com
+`node --check` equivalente nos blocos `<script>` + validação do JSON
+antes de publicar):
+1. **Meta description + Open Graph + Twitter Card** adicionados no
+   `<head>` (`index.html`) — antes não existia nenhum, então
+   compartilhar o link no WhatsApp/Instagram ou ele aparecer no Google
+   não mostrava descrição nem imagem. Imagem usada: `icon-512.png` (já
+   existia no repositório). Canonical (`https://veraoris.com/`)
+   também adicionado.
+2. **`robots.txt` e `sitemap.xml`** criados na raiz (arquivos novos,
+   sem risco pro que já existia) — avisam o Google que o site existe e
+   pode ser indexado. Sitemap por enquanto só lista a home (é a única
+   URL real, ver achado grande acima) — quando/se a navegação ganhar
+   URLs próprias, o sitemap precisa ser expandido junto.
+3. **Dados estruturados `FAQPage`** (JSON-LD) no `<head>`, com as 8
+   perguntas/respostas que já existiam em `FAQS` (`index.html`,
+   `var FAQS=[...]`) — chance de aparecer como "perguntas frequentes"
+   expansível direto no resultado do Google.
+4. **`<html lang>` dinâmico**: `setLang()` agora atualiza
+   `document.documentElement.lang` (pt-BR/en) ao trocar de idioma —
+   antes ficava sempre fixo em `pt-BR` mesmo com o texto em inglês
+   (baixo impacto agora porque o botão EN está escondido, mas corrige
+   de qualquer forma).
+5. **`loading="lazy"` nas fotos abaixo da dobra**: cards de categoria
+   na home, logo do rodapé, e as fotos que os cards de produto/
+   promoção/"Em Alta" geram por JS — a foto principal do topo (hero) e
+   a logo do menu foram propositalmente deixadas de fora (carregam
+   assim que a página abre, não devem esperar).
+
+Commit `5377afc`, publicado. **Ainda não confirmado pela Priscila em
+produção** — mudanças são invisíveis no visual do site (só afetam como
+o Google/redes sociais enxergam o link), então não deve haver nada
+diferente pra ela ver na tela, só confirmar que o site continua normal.
+
+**Pendências reais da auditoria, não mexidas por serem mais arriscadas
+ou exigirem decisão/discussão antes**: rotas próprias por página (ver
+achado grande acima); reduzir o tamanho do `index.html` (1,28MB, tudo
+inline — prejudica velocidade de carregamento); `width`/`height` nas
+tags `<img>` (evita a página “pular” enquanto a foto carrega, mas exige
+saber o tamanho de cada imagem, mais trabalhoso e com mais chance de
+erro); instalar Google Analytics de verdade (hoje a Política de
+Privacidade menciona "cookies de analytics" mas não existe nenhuma tag
+de analytics no código).
