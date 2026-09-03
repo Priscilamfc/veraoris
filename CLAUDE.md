@@ -3115,3 +3115,64 @@ saber o tamanho de cada imagem, mais trabalhoso e com mais chance de
 erro); instalar Google Analytics de verdade (hoje a Política de
 Privacidade menciona "cookies de analytics" mas não existe nenhuma tag
 de analytics no código).
+
+## Sessão 02-03/09/2026 — Tutorial de Maquiagem (nova página) + faixa "Novidade" na home
+Priscila trouxe um arquivo pronto (`veraoristutorialmaquiagemintegracao.md`,
+baixado do Downloads) com o código de uma página nova de tutorial de
+maquiagem (10 passos, da preparação da pele ao fixador, com ajuste de cada
+passo pra 6 tipos de pele — Normal/Oleosa/Seca/Mista/Sensível/Acneica).
+Revisado antes de integrar: nenhum nome usado no arquivo (`TUT_STEPS`,
+`renderTutorial`, `page-tutorial`, chaves de `TX` etc.) colidia com o que já
+existia no site.
+
+**Processo de decisão, com prévias (artifacts) antes de mexer no site de
+verdade** — a Priscila pediu explicitamente pra não mudar nada até ver:
+1. 1ª ideia (minha, banner dentro da categoria Maquilhagem no comparador) —
+   ela rejeitou: quem entra direto no Comparador cai no filtro "Todas" e
+   nunca veria o banner.
+2. Ela pediu, com print de referência: uma **faixa "Novidade"** logo abaixo
+   do botão "Faça o Quiz e Compare Aqui" do menu, antes da foto do topo —
+   sempre visível na home, sem depender de clicar em categoria nenhuma.
+3. Testadas 3 frases numa prévia interativa; ela escolheu o texto da opção 1
+   com o emoji da opção 2: **"✨ Novidade — Tutorial de Maquiagem: da base ao
+   fixador, passo a passo"**.
+4. Pedido dela ("me mostra numa página teste") — prévia final combinando a
+   faixa clicável de verdade levando pra página do tutorial completa (abas
+   + 10 passos), pra ver a experiência inteira antes de aprovar. Aprovada.
+
+**Implementado no site de verdade** (`index.html`), reaproveitando 100% do
+código do arquivo da Priscila pro conteúdo da página, mais a faixa nova
+(que não estava no arquivo original, foi decidida nesta conversa):
+1. CSS da página do tutorial (`.tut-step`, `.tut-adjust` etc.) + CSS novo da
+   faixa (`.tut-ribbon`, `.tut-badge`, `.tut-arrow`) dentro do `<style>`.
+2. Nova `<div class="page" id="page-tutorial">` inserida logo depois da
+   página "Como Funciona" — mesma casca `inst-page`/`inst-hero` das outras
+   páginas institucionais, `showPage('tutorial')` funciona sem precisar
+   mexer em `showPage()` (função já é genérica).
+3. Faixa `<button class="tut-ribbon" onclick="showPage('tutorial')">`
+   inserida como primeiro elemento dentro de `#page-home`, antes da `.hero`
+   — aparece só na home, logo abaixo do menu.
+4. Link novo no rodapé (`id="fnavTut"`, coluna "Navegação").
+5. Chaves novas em `TX.pt`/`TX.en` (`tutBack`, `tutTitle`, `tutDesc`,
+   `tutRibbonBadge`, `tutRibbonTxt`, `fnavTut`) — conteúdo dos 10 passos em
+   si continua só em português (mesma decisão de arquitetura do arquivo
+   original: os passos usam as mesmas chaves de tipo de pele do quiz, texto
+   fixo da casca é que é bilíngue).
+6. `TUT_LABELS`/`TUT_DESC`/`TUT_STEPS`/`setTutType`/`renderTutorial`
+   adicionados perto de `showPage()`; `renderTutorial()` chamado junto com
+   os outros `render*()` de inicialização (`window.onload`), pra aba
+   "Normal" já vir preenchida.
+
+**Testado antes de publicar** (pedido de sempre): sintaxe de todo o
+`<script>` validada, depois testado ao vivo num servidor local (Node
+simples, já que Python não está instalado nesta máquina) com navegador de
+verdade — faixa aparece na home, clique leva pro tutorial, abas trocam a
+dica certa, "← Voltar" e o link do rodapé funcionam, sem erro no console.
+Não foi possível testar o layout mobile de verdade nesta sessão (a
+ferramenta de redimensionar a janela do navegador não surtiu efeito —
+mesma limitação já registrada em sessões anteriores) — o CSS mobile da
+faixa segue o mesmo padrão (só reduz fonte/espaçamento) já usado no resto
+do site, risco baixo.
+
+Commit `32f1b79`, publicado. **Ainda não confirmado pela Priscila em
+produção.**
