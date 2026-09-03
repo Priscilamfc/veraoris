@@ -414,6 +414,25 @@ footer{background:linear-gradient(135deg,#FFF0F6,#FFDCEC);padding:40px 40px 24px
 .inst-section ul li{font-size:14px;color:var(--muted);line-height:1.7;padding-left:20px;position:relative}
 .inst-section ul li::before{content:'✦';position:absolute;left:0;color:var(--gold);font-size:10px;top:4px}
 .inst-section strong{color:var(--text);font-weight:600}
+/* ===== TUTORIAL DE MAQUIAGEM ===== */
+.tut-tab-desc{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:15px;color:var(--muted);margin:14px 0 32px}
+.tut-tab-desc b{font-style:normal;color:var(--text)}
+.tut-steps{display:flex;flex-direction:column}
+.tut-step{display:grid;grid-template-columns:44px 1fr;gap:16px;padding:22px 0;border-top:1px solid var(--marble3)}
+.tut-step:first-child{border-top:none;padding-top:0}
+.tut-step-n{font-family:'Cormorant Garamond',serif;font-size:1.8rem;font-weight:600;color:var(--gold5);line-height:1.4}
+.tut-step h4{font-size:15px;font-weight:700;color:var(--text);margin-bottom:4px}
+.tut-step .tut-general{font-size:13px;color:var(--muted);line-height:1.7;max-width:60ch}
+.tut-adjust{margin-top:12px;padding:12px 16px;background:var(--gold4);border-left:3px solid var(--gold);border-radius:4px;font-size:13px;color:var(--text);line-height:1.6}
+.tut-adjust b{display:block;font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--gold5);margin-bottom:4px}
+@media (max-width:480px){.tut-step{grid-template-columns:30px 1fr;gap:10px}.tut-step-n{font-size:1.3rem}}
+/* Faixa "Novidade" na home, chamando pro tutorial */
+.tut-ribbon{display:flex;align-items:center;justify-content:center;gap:14px;padding:14px 20px;font-size:14px;font-weight:700;color:#fff;text-align:center;flex-wrap:wrap;background:var(--gg);cursor:pointer;transition:filter .15s;border:none;width:100%;font-family:'Inter',sans-serif;position:relative;z-index:4}
+.tut-ribbon:hover{filter:brightness(1.06)}
+.tut-badge{background:var(--night);color:var(--gold3);font-size:10px;font-weight:800;letter-spacing:1.3px;text-transform:uppercase;padding:4px 12px;border-radius:14px;flex-shrink:0}
+.tut-arrow{display:inline-block;transition:transform .15s}
+.tut-ribbon:hover .tut-arrow{transform:translateX(4px)}
+@media(max-width:900px){.tut-ribbon{font-size:12.5px;padding:12px 16px;gap:8px}}
 .how-steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin:24px 0}
 .how-step{background:var(--white);border:1px solid var(--marble3);border-radius:var(--r2);padding:24px 20px;text-align:center;transition:all .25s}
 .how-step:hover{border-color:var(--gold2);transform:translateY(-3px)}
@@ -791,6 +810,11 @@ textarea.form-inp{resize:vertical;min-height:140px}
 </div></nav>
 <!-- HOME -->
 <div class="page active" id="page-home">
+<button class="tut-ribbon" onclick="showPage('tutorial')">
+  <span class="tut-badge" id="tutRibbonBadge">Novidade</span>
+  <span id="tutRibbonTxt">✨ Novidade — Tutorial de Maquiagem: da base ao fixador, passo a passo</span>
+  <span class="tut-arrow">→</span>
+</button>
 <div class="hero">
   <div class="hero-bg"><img id="heroImg" alt="VERAORIS"><div class="hero-ov"></div></div>
   <div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div>
@@ -1208,7 +1232,7 @@ textarea.form-inp{resize:vertical;min-height:140px}
       <a href="https://www.tiktok.com/@veraoris.oficial" target="_blank" rel="noopener" aria-label="TikTok"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M16.5 2c.3 2.4 1.8 4 4.5 4.2v3.1c-1.6 0-3-.5-4.2-1.4v6.6c0 3.4-2.7 6.1-6.1 6.1S4.6 17.9 4.6 14.5c0-3.3 2.6-6 5.9-6.1v3.2a2.9 2.9 0 1 0 2.9 2.9V2h3.1z"/></svg></a>
     </div></div>
     <div><span class="foot-lbl" id="footCatLbl">Categorias</span><a class="foot-link" onclick="goCat('skincare')">Skincare</a><a class="foot-link" onclick="goCat('maquiagem')" id="fcat2">Maquilhagem</a><a class="foot-link" onclick="goCat('cabelo')">Cabelo</a><a class="foot-link" onclick="goCat('perfumaria')" id="fcat4">Perfumaria</a></div>
-    <div><span class="foot-lbl" id="footNavLbl">Navegação</span><a class="foot-link" onclick="showPage('howit')" id="fnav1">Como Funciona</a><a class="foot-link" onclick="showPage('faq')">FAQ</a><a class="foot-link" onclick="showPage('about')" id="fnav3">Sobre</a><a class="foot-link" onclick="showPage('contact')" id="fnav4">Contacto</a></div>
+    <div><span class="foot-lbl" id="footNavLbl">Navegação</span><a class="foot-link" onclick="showPage('howit')" id="fnav1">Como Funciona</a><a class="foot-link" onclick="showPage('faq')">FAQ</a><a class="foot-link" onclick="showPage('tutorial')" id="fnavTut">Tutorial de Maquiagem</a><a class="foot-link" onclick="showPage('about')" id="fnav3">Sobre</a><a class="foot-link" onclick="showPage('contact')" id="fnav4">Contacto</a></div>
     <div><span class="foot-lbl" id="footLegLbl">Legal</span><a class="foot-link" onclick="showPage('privacy')" id="fleg1">Privacidade</a><a class="foot-link" onclick="showPage('terms')" id="fleg2">Termos de Uso</a></div>
   </div>
   <div class="foot-bar"><p id="footCopy">© 2025 VERAORIS. Todos os direitos reservados.</p><p id="footAff">Alguns links são de afiliado. Sem custo adicional para si.</p></div>
@@ -1290,6 +1314,24 @@ textarea.form-inp{resize:vertical;min-height:140px}
   <div class="inst-section"><h2><span>✦</span> <span id="howSec2Title">O Quiz</span></h2><p id="howSec2P">O nosso quiz adaptativo faz perguntas sobre o seu tipo de pele, cabelo, preocupações, alergias e orçamento. Com base nas suas respostas, filtramos e recomendamos os produtos mais adequados.</p></div>
   <div class="inst-section"><h2><span>🌍</span> <span id="howSec3Title">Regionalização</span></h2><p id="howSec3P">O site detecta automaticamente a sua localização e mostra produtos disponíveis na sua região, com preços na moeda local (R$ ou €).</p></div>
   <div class="inst-section"><h2><span>💰</span> <span id="howSec4Title">Links de Afiliados</span></h2><p id="howSec4P">Quando clica em "Comprar", a VERAORIS pode receber uma comissão da loja parceira. Este processo não tem qualquer custo adicional para si.</p></div>
+</div></div></div>
+<!-- TUTORIAL DE MAQUIAGEM -->
+<div class="page" id="page-tutorial"><div class="inst-page"><div class="inst-in">
+  <button class="back-btn" onclick="showPage('home')" id="tutBack">← Voltar</button>
+  <div class="inst-hero">
+    <h1 id="tutTitle">Tutorial de maquiagem: da base ao fixador</h1>
+    <p id="tutDesc">O passo a passo completo, produto por produto — com os ajustes que mudam de acordo com o seu tipo de pele.</p>
+  </div>
+  <div class="cat-pills" id="tutTabs">
+    <button class="cat-pill" data-type="N" onclick="setTutType('N')">Normal</button>
+    <button class="cat-pill" data-type="O" onclick="setTutType('O')">Oleosa</button>
+    <button class="cat-pill" data-type="S" onclick="setTutType('S')">Seca</button>
+    <button class="cat-pill" data-type="M" onclick="setTutType('M')">Mista</button>
+    <button class="cat-pill" data-type="Se" onclick="setTutType('Se')">Sensível</button>
+    <button class="cat-pill" data-type="A" onclick="setTutType('A')">Acneica</button>
+  </div>
+  <p class="tut-tab-desc" id="tutTabDesc"></p>
+  <div class="tut-steps" id="tutStepsList"></div>
 </div></div></div>
 <!-- FAQ -->
 <div class="page" id="page-faq"><div class="inst-page"><div class="inst-in">
@@ -2079,7 +2121,7 @@ window.onload=function(){
   document.getElementById('catImgMaq').src=IMAQ;
   document.getElementById('catImgCab').src=ICAB;
   document.getElementById('catImgPerf').src=IPERF;
-  renderFeatured();renderCats('catFilters');renderProds();renderQ2();renderBudget();renderFAQ();applyLang('pt');
+  renderFeatured();renderCats('catFilters');renderProds();renderQ2();renderBudget();renderFAQ();renderTutorial();applyLang('pt');
   loadClicksFromStorage();
   updateDash();
   renderPromosHome();
@@ -2151,6 +2193,8 @@ var TX={
     footAff:'Alguns links são de afiliado. Sem custo adicional para si.',
     fcat2:'Maquilhagem',fnav1:'Como Funciona',fnav3:'Sobre',fnav4:'Contacto',fleg1:'Privacidade',fleg2:'Termos de Uso',
     howBack:'← Voltar',howTitle:'Como Funciona a VERAORIS',howDesc:'Somos um comparador inteligente de cosméticos — como um "Trivago da beleza". Encontramos, comparamos e recomendamos os melhores produtos para si.',
+    tutBack:'← Voltar',tutTitle:'Tutorial de maquiagem: da base ao fixador',tutDesc:'O passo a passo completo, produto por produto — com os ajustes que mudam de acordo com o seu tipo de pele.',tutRibbonBadge:'Novidade',tutRibbonTxt:'✨ Novidade — Tutorial de Maquiagem: da base ao fixador, passo a passo',
+    fnavTut:'Tutorial de Maquiagem',
     hs1h:'Compare Aqui',hs1p:'Responda algumas perguntas sobre o seu perfil.',
     hs2h:'Analisamos',hs2p:'Identificamos os produtos mais compatíveis com o seu perfil.',
     hs3h:'Comparamos',hs3p:'Reunimos preços de várias lojas lado a lado.',
@@ -2226,6 +2270,8 @@ var TX={
     footAff:'Some links are affiliate links. No extra cost to you.',
     fcat2:'Makeup',fnav1:'How it Works',fnav3:'About',fnav4:'Contact',fleg1:'Privacy',fleg2:'Terms of Use',
     howBack:'← Back',howTitle:'How VERAORIS Works',howDesc:'We are a smart beauty comparator — like a "Trivago for beauty". We find, compare and recommend the best products for you.',
+    tutBack:'← Back',tutTitle:'Makeup tutorial: from base to setting spray',tutDesc:'The full step-by-step, product by product — with the adjustments that change depending on your skin type.',tutRibbonBadge:'New',tutRibbonTxt:'✨ New — Makeup Tutorial: from base to setting spray, step by step',
+    fnavTut:'Makeup Tutorial',
     hs1h:'Compare Here',hs1p:'Answer a few questions about your profile.',
     hs2h:'We Analyse',hs2p:'We identify the products most compatible with your profile.',
     hs3h:'We Compare',hs3p:'We bring prices from multiple stores side by side.',
@@ -2306,6 +2352,100 @@ function setRegion(r){
   renderDicaHome();
   renderTrendingHome();
   if(document.getElementById('page-results').classList.contains('active'))renderAmazonResults();
+}
+// ===== TUTORIAL DE MAQUIAGEM =====
+// Conteúdo só em português (mesmo padrão do quiz) — se um dia traduzir pro
+// inglês, adicionar en:{...} em cada item de TUT_STEPS.
+var TUT_LABELS={N:'Normal',O:'Oleosa',S:'Seca',M:'Mista',Se:'Sensível',A:'Acneica'};
+var TUT_DESC={N:"pele equilibrada, sem oleosidade nem ressecamento excessivos",O:"brilho no rosto todo, poros mais visíveis",S:"repuxa, descama ou fica opaca",M:"zona T oleosa, bochechas normais ou secas",Se:"reage com facilidade a produtos, clima ou atrito",A:"tendência a cravos, espinhas e poros obstruídos"};
+var TUT_STEPS=[
+  {title:"Preparação da pele",general:"Pele limpa, hidratada e protegida é a base de qualquer maquiagem duradoura. Espere a hidratante ser absorvida antes de seguir.",
+   adjust:{N:"Hidratante leve de manutenção e protetor solar diário — sem necessidade de fórmulas especiais; o objetivo é manter o equilíbrio que a pele já tem.",
+           O:"Hidratante leve, em gel, oil-free — e protetor solar com toque seco. Não pule a hidratação achando que \"vai deixar mais oleosa\": pele desidratada produz ainda mais oleosidade ao longo do dia.",
+           S:"Hidratante rico, com ácido hialurônico ou ceramidas. Pode aplicar uma camada extra nas áreas mais ressecadas, como maçãs do rosto e ao redor da boca.",
+           M:"Hidrate o rosto todo, mas use uma camada mais fina na zona T (testa, nariz e queixo) e um pouco mais nas laterais.",
+           Se:"Produtos sem fragrância e hipoalergênicos. Faça sempre um teste em uma pequena área (atrás da orelha ou no antebraço) antes de usar algo novo no rosto.",
+           A:"Hidratante oil-free e não comedogênico. Se a rotina tiver ácidos (salicílico, retinoides), aplique a maquiagem só depois que a pele \"assentar\"."}},
+  {title:"Primer",general:"Uniformiza a textura e ajuda a maquiagem a durar mais.",
+   adjust:{N:"Qualquer tipo de primer funciona bem — a escolha pode ser guiada pelo efeito desejado (matte, natural ou \"glow\") em vez de uma necessidade específica da pele.",
+           O:"Primer matificante com efeito poro-minimizador, com atenção redobrada na zona T.",
+           S:"Primer hidratante ou com efeito \"iluminador\". Evite primers matificantes — eles tendem a ressecar ainda mais e acentuar áreas ásperas.",
+           M:"Combine dois produtos: matificante na zona T, hidratante nas laterais do rosto e bochechas.",
+           Se:"Primer calmante, sem álcool nem fragrância — ideal com ativos como centella asiática ou aloe vera na fórmula.",
+           A:"Primer oil-free e não comedogênico. Evite fórmulas muito \"alisadoras\" com silicone pesado — podem entupir os poros."}},
+  {title:"Base",general:"Aplique do centro do rosto para as bordas, com esponja, pincel ou dedos.",
+   adjust:{N:"Praticamente todos os acabamentos funcionam bem — aproveite para escolher pelo efeito que quer (natural, acetinado ou glow).",
+           O:"Base matte ou de longa duração, em fórmula fluida; esponja levemente úmida evita excesso de produto.",
+           S:"Base de acabamento luminoso (dewy), em fórmula líquida rica em hidratação. Pincel ou os dedos ajudam a \"fundir\" o produto com a pele.",
+           M:"Base de acabamento natural (semi-matte); camada mais fina na zona T e um pouco mais de produto nas laterais, se precisar.",
+           Se:"Base mineral ou hipoalergênica, com lista de ingredientes curta. Sempre teste antes — atrás da orelha, por 24h.",
+           A:"Base oil-free e não comedogênica, de preferência com ativos calmantes. Use pincel higienizado — pincel sujo é uma das causas mais comuns de crise de acne."}},
+  {title:"Corretivo",general:"Formato de \"V\" invertido sob os olhos e nos pontos de imperfeição; espere alguns segundos antes de esfumar.",
+   adjust:{N:"Sem restrições especiais aqui — escolha pela cobertura que precisa.",
+           O:"Tom levemente mais claro só sob os olhos, com fórmula de longa duração para não \"escorregar\" ao longo do dia.",
+           S:"Corretivo cremoso e hidratante, aplicado com leves batidinhas — nunca arrastando, para não marcar linhas de expressão.",
+           M:"Mesma lógica da base: mais leve na zona T, um pouco mais de cobertura nas laterais quando necessário.",
+           Se:"Fórmulas minimalistas, sem fragrância. Aplique com os dedos limpos em vez de esponjas, que podem irritar por atrito.",
+           A:"Cubra manchas e vermelhidão com boa cobertura, mas evite camadas grossas sobre espinhas ativas — isso chama mais atenção e pode irritar ainda mais."}},
+  {title:"Pó",general:"Fixa a base e o corretivo, controlando o brilho.",
+   adjust:{N:"Uma leve camada nos pontos estratégicos (sob os olhos, testa) já é suficiente para fixar sem pesar.",
+           O:"Pó translúcido ou compacto em toda a zona T — leve um pouco na bolsa para retocar ao longo do dia.",
+           S:"Use só nos pontos estratégicos — sob os olhos e asas do nariz. Pó em excesso acumula em linhas finas e deixa a pele opaca.",
+           M:"Pó solto concentrado na zona T; quase nada nas laterais e bochechas, para não deixar a pele opaca ali.",
+           Se:"Pó mineral, aplicado com pincel macio e em camada leve — pós muito perfumados são um gatilho comum de irritação.",
+           A:"Pó solto oil-free. Use pincéis limpos e, se possível, higienize-os semanalmente — bactérias acumuladas pioram as crises."}},
+  {title:"Contorno, blush e iluminador",general:"Contorno abaixo do osso da maçã do rosto, blush no \"sorriso\" das maçãs, iluminador nos pontos altos.",
+   adjust:{N:"Cremoso, líquido ou em pó — todos se comportam bem; escolha pela durabilidade que precisa ao longo do dia.",
+           O:"Prefira blush e iluminador em pó — versões cremosas tendem a intensificar o brilho natural da pele.",
+           S:"Blush e iluminador em versões cremosas ou líquidas — se fundem melhor na pele seca e dão um viço mais natural.",
+           M:"Blush em creme por baixo e um toque de blush em pó por cima — a combinação segura o produto por mais tempo.",
+           Se:"Escolha fórmulas minerais, sem corantes agressivos nem glitter grosso, que pode cair e irritar os olhos.",
+           A:"Blush em pó (fórmulas cremosas pesadas tendem a obstruir poros); toque leve de iluminador, evitando áreas com acne ativa."}},
+  {title:"Sobrancelhas",general:"Preencha com traços leves que imitam fios, seguindo o crescimento natural, e penteie para uniformizar.",
+   adjust:{N:"Passo praticamente igual para todos os tipos de pele — sem ajustes específicos aqui.",
+           O:"Prefira gel com fixação para os fios não perderem o desenho ao longo do dia.",
+           S:"Um sérum ou óleo de sobrancelha antes ajuda a manter os fios alinhados e evita que fiquem quebradiços.",
+           M:"Passo praticamente igual para todos os tipos de pele — sem ajustes específicos aqui.",
+           Se:"Prefira lápis e gel sem fragrância — a área é próxima aos olhos e mais sensível a produtos perfumados.",
+           A:"Passo praticamente igual para todos os tipos de pele — sem ajustes específicos aqui."}},
+  {title:"Olhos",general:"Sombra, delineador e rímel — do tom mais claro para o mais escuro, esfumando entre as cores.",
+   adjust:{N:"Sem necessidade de primer de pálpebra, mas ele ajuda a aumentar a duração se o dia for longo.",
+           O:"Primer de pálpebra é essencial: sem ele, a sombra tende a \"desmanchar\" ou vincar mais rápido.",
+           S:"Hidrate bem as pálpebras antes. Evite sombras muito secas em pó puro — texturas cremosas costumam ir melhor.",
+           M:"Primer de pálpebra ajuda a fixar a sombra por mais tempo, especialmente se a pálpebra tende a ficar oleosa.",
+           Se:"Rímel e delineador hipoalergênicos, fáceis de remover sem esfregar — reduz o risco de irritação e queda de cílios.",
+           A:"Sem restrição especial aqui — o foco de cuidado é na pele, não na área dos olhos."}},
+  {title:"Lábios",general:"Contorne com lápis (opcional) e preencha com batom ou gloss.",
+   adjust:{N:"Sem cuidados extras aqui — qualquer acabamento funciona bem.",
+           O:"Sem cuidados extras aqui — qualquer acabamento funciona bem.",
+           S:"Esfolie levemente e hidrate os lábios antes de tudo — evita que o batom craquele ou marque as rachaduras.",
+           M:"Sem cuidados extras aqui — qualquer acabamento funciona bem.",
+           Se:"Batom sem fragrância e sem corantes muito fortes — os lábios absorvem produto com facilidade.",
+           A:"Sem cuidados extras aqui — qualquer acabamento funciona bem."}},
+  {title:"Fixação final",general:"O último passo, que trava toda a maquiagem no lugar.",
+   adjust:{N:"Qualquer spray fixador funciona bem — escolha pelo acabamento (matte, natural ou glow) que combina com o look.",
+           O:"Spray fixador de efeito matte. Ao longo do dia, use papel absorvente na zona T em vez de reaplicar pó.",
+           S:"Spray fixador com efeito hidratante (\"dewy\"), sem álcool na fórmula — álcool tende a ressecar ainda mais.",
+           M:"Spray fixador de acabamento natural, equilibrando controle de brilho na zona T sem ressecar as laterais.",
+           Se:"Spray sem álcool nem fragrância — ou pule esse passo, se a pele reagir facilmente a produtos novos.",
+           A:"Spray fixador oil-free. E à noite, dupla limpeza antes de dormir — nunca deixe a maquiagem obstruindo os poros durante a noite."}}
+];
+var tutType='N';
+function setTutType(t){tutType=t;renderTutorial();}
+function renderTutorial(){
+  var tabs=document.querySelectorAll('#tutTabs .cat-pill');
+  tabs.forEach(function(b){b.classList.toggle('active',b.dataset.type===tutType);});
+  var descEl=document.getElementById('tutTabDesc');
+  if(descEl)descEl.innerHTML='<b>'+TUT_LABELS[tutType]+'</b> — '+TUT_DESC[tutType];
+  var list=document.getElementById('tutStepsList');
+  if(!list)return;
+  list.innerHTML=TUT_STEPS.map(function(s,i){
+    var n=(i+1<10?'0':'')+(i+1);
+    return '<div class="tut-step"><span class="tut-step-n">'+n+'</span><div>'
+      +'<h4>'+s.title+'</h4><p class="tut-general">'+s.general+'</p>'
+      +'<div class="tut-adjust"><b>Ajuste · '+TUT_LABELS[tutType]+'</b>'+s.adjust[tutType]+'</div>'
+      +'</div></div>';
+  }).join('');
 }
 function showPage(p){
   document.querySelectorAll('.page').forEach(function(s){s.classList.remove('active');});
