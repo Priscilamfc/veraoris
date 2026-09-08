@@ -3176,3 +3176,73 @@ do site, risco baixo.
 
 Commit `32f1b79`, publicado. **Ainda não confirmado pela Priscila em
 produção.**
+
+## Sessão 07-08/09/2026 — prazo de entrega investigado (não implementado) + 20ª loja: Dermage
+Priscila teve uma ideia nova: mostrar prazo de entrega junto do preço nos
+cards do comparador. Prévia mostrada primeiro (2 formatos: texto embaixo do
+nome da loja vs. selo ao lado do preço) com números **inventados só de
+exemplo** — ela gostou do formato "selo ao lado do preço, com Chegam em...",
+mas perguntou se os prazos eram reais. **Não eram** — eu tinha deixado isso
+mal explicado na primeira vez. Ela apontou, com razão, que não tem como
+saber o prazo certo por loja E por produto (varia por peso/estoque/CEP).
+
+Pesquisa feita (fork em segundo plano, 20 lojas parceiras ativas hoje):
+só **2 lojas em 20** publicam um prazo fixo em dias, com fonte oficial —
+Drogaria Rosário ("até 3 dias úteis") e Farmácias São João ("até 1 dia"/
+"Sedex até 7 dias"). As outras 18 (incluindo Boticário, Natura, Americanas,
+WePink etc.) só calculam por CEP no carrinho, sem prazo médio divulgado.
+**Decisão: não implementar** — mostrar prazo em só 2 de 20 lojas ficaria
+inconsistente/incompleto nos cards. Ideia arquivada; se retomada no futuro,
+o caminho realista é pedir o CEP da pessoa e calcular na hora (mais
+trabalhoso, ainda não avaliado a fundo).
+
+**Na sequência, pedido pra achar mais lojas fonte de preço** (mesmo método
+de sempre — API pública VTEX, gratuita, sem Apify). De 16 candidatas
+testadas (fork em segundo plano), só **1 funcionou**: **Dermage**
+(dermage.com.br, marca própria de skincare + maquiagem própria, sem
+contaminação de categoria nos testes). As outras 15 falharam por endereço
+de site errado/inexistente (Nissei, Ultrafarma, Widi Care, Lola Cosmetics,
+BT Skin, Skala, Novex, Inoar, Amend, Drogão Barato, Girassol Perfumaria,
+Renner) ou bloqueio anti-robô (Drogaria Pacheco, Salon Line, Ikesaki —
+mesmo problema de sempre com a Ikesaki, 429 persistente).
+
+**Dermage implementada** (`netlify/functions/dermage-search.mjs`, mesmo
+padrão exato do `wepink-search.mjs`) e conectada em TODOS os pontos que já
+sabemos que precisam — lição de sessões anteriores, conferida com grep
+antes de dar como concluído:
+1. `dermageSearchPrices()` nova, perto da `wepinkSearchPrices()`.
+2. `liveMultiSourceSearch()` — `waiting` subiu de 18 pra 19, Dermage
+   adicionada à lista (cobre busca de produto, quiz e foto de promoção
+   automaticamente, já que os três usam essa função combinada).
+3. Filtro D3 (marca+tipo) em `loadComparison`/`renderCombined` — Dermage
+   incluída na lista de fontes validadas.
+4. Busca simplificada de fallback (2ª tentativa quando o nome completo do
+   produto não acha nada) — Dermage incluída.
+5. Troca de foto (`withPhoto`) — Dermage incluída.
+6. Complemento não-bloqueante em `loadComparison` (mesmo padrão das outras
+   14 farmácias) — bloco novo adicionado depois da Farmácia Indiana.
+7. `sourcesTotal`/`sourcesDone` da Perfumaria (mecanismo de esconder card
+   sem preço) — os dois contadores subiram de 18 pra 19.
+8. `allowedDomains` do `savePromo()` — `dermage.com.br` adicionado (a
+   lição da sessão de 02/09: essa lista não atualiza sozinha).
+
+**Testado de forma mais completa que o normal antes de publicar**, a
+pedido explícito da Priscila ("testa antes pra não estragar o que já está
+pronto"): sintaxe validada; testei a API real da Dermage direto por
+`curl` (dados reais confirmados, "hidratante" e "batom" sem mistura de
+categoria); montei um servidor local que executa as functions de verdade
+(não só arquivos estáticos — as sessões anteriores só testavam HTML/CSS/
+JS estático, nunca uma function nova de ponta a ponta) e testei no
+navegador: busca "dermage" mostra produtos reais dela e de farmácias que
+também revendem a marca, sem quebrar nenhuma das outras 19 fontes;
+categoria Perfumaria continua funcionando normal com o contador novo
+(19); sem erro de JavaScript no console (só erros de extensão do Chrome,
+sem relação com o site). Commit `3c6a7dd`, publicado.
+
+**Contagem de fontes de preço depois desta sessão**: 21 lojas ativas
+(5 via Awin: L'Occitane, Natura, Forever Liss, Boticário, Ama Beleza;
+16 via API direta VTEX: Americanas, Drogaria Catarinense, Drogal,
+Extrafarma, Drogaria Globo, Farmácia Indiana, Mahogany, Pague Menos,
+Payot, Lojas Pompéia, Preço Popular, Drogaria Rosário, Farmácias São
+João, Drogaria Venâncio, WePink, Dermage). Eudora, Época e Lojas Rede
+continuam desligadas por flag reversível.
