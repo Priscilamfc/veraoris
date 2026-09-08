@@ -3246,3 +3246,57 @@ Extrafarma, Drogaria Globo, Farmácia Indiana, Mahogany, Pague Menos,
 Payot, Lojas Pompéia, Preço Popular, Drogaria Rosário, Farmácias São
 João, Drogaria Venâncio, WePink, Dermage). Eudora, Época e Lojas Rede
 continuam desligadas por flag reversível.
+
+## Sessão 08/09/2026 — Portugal sem loja parceira (pesquisa) + ideia nova "Beauty Box da Semana" (planejada, NÃO implementada ainda)
+**Portugal**: Priscila explicou a estratégia — sem parceria de afiliado em
+Portugal ainda, quer "esquentar" o site lá primeiro (mesma lógica que
+funcionou no Brasil antes de ter afiliação: puxar preço de graça direto da
+loja, sem comissão, até crescer o bastante pra negociar parceria de
+verdade). Pesquisa feita (fork, 18 lojas que entregam em Portugal: Well's,
+Continente, Auchan, Perfumes&Companhia, Douglas, Notino, PerfumesClub,
+Druni, Primor, Kiko Milano, Rituals, L'Occitane PT, The Body Shop PT,
+Sephora, Feelunique, MyPharma, Farmácia Barreiros, Farmácias Portuguesas)
+— **resultado ruim: nenhuma tem API pública aberta** como as brasileiras
+(VTEX não é comum na Europa; lojas de porte europeu rodam em plataforma
+própria, Next.js, ou atrás de proteção Cloudflare/WAF forte). Duas pistas
+não fechadas (Douglas e Notino bloquearam por anti-robô, não confirmado se
+tem dado nenhum acessível) — **ainda não investigadas manualmente num
+navegador de verdade**, ficou combinado que eu faria isso se ela quisesse
+continuar essa frente. Sem solução encontrada até aqui — Portugal continua
+sem fonte de preço nenhuma, sem previsão de resolver perto.
+
+**Beauty Box da Semana**: Priscila trouxe um PDF de ideia
+(`Beauty-Deal-Box.pdf`, OneDrive) descrevendo um clube de assinatura de
+beleza com caixa FÍSICA (comprar estoque, cobrar cliente, enviar produto —
+um e-commerce de verdade, modelo bem diferente do VERAORIS de hoje).
+Analisei e expliquei a diferença: isso exigiria virar loja online de
+verdade (estoque, pagamento, logística, direito do consumidor europeu) —
+não é "só código". Ela então propôs uma versão bem mais alinhada com o
+que o site já é: **sem venda nenhuma, só curadoria informativa** — uma
+"caixa virtual" semanal com produtos em promoção de verdade e link direto
+pra comprar na loja parceira (o cliente compra na loja, não no VERAORIS).
+Confirmei que essa versão é viável e leve — na prática é uma evolução do
+sistema de "Promoções" que já existe (mesmo cadastro no painel admin, só
+muda a apresentação).
+
+**Decidido nesta sessão (ainda NÃO implementado — Priscila pediu pra
+deixar pra uma próxima sessão, estava cansada)**:
+1. Gratuito por enquanto (sem cobrança) — objetivo é diferenciação e
+   trazer gente de volta toda semana, não gerar receita direta da
+   assinatura. Ganha só pelo clique de afiliado, como já ganha hoje.
+2. Formato: **Ideia 1 (página "Beauty Box da Semana" com contador
+   regressivo até domingo) + Ideia 4 (filtro por categoria)** — as duas
+   combinadas, aprovadas por ela depois de ver uma prévia (artifact,
+   nunca publicada no site).
+3. **A "Beauty Box da Semana" substitui a seção "Promoções de Hoje"
+   atual, em vez de ser uma coisa nova rodando em paralelo** — mesmo
+   cadastro de sempre no painel admin, só a apresentação evolui (ganha
+   nome de marca, contador, filtro, página própria). Decisão dela depois
+   de eu explicar que manter as duas juntas seria trabalho duplicado sem
+   necessidade. Pode manter uma prévia pequena na home linkando pra
+   página completa, no lugar de onde "Promoções de Hoje" aparece hoje.
+
+**Nada disso foi implementado no código ainda** — nem a evolução das
+Promoções, nem a página nova. Fica pra uma próxima sessão, a pedido dela.
+Antes de implementar, vale reler esta seção pra lembrar as 3 decisões
+acima sem precisar perguntar de novo.
