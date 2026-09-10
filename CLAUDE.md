@@ -3388,3 +3388,90 @@ chegou a ser escrito no `index.html` — só existiu como prévia em artifact.
 **Nada disso foi implementado ainda** — as três ideias que seguem (Beauty
 Box, Provador Virtual, Newsletter) estão só como prévia aprovada,
 aguardando a Priscila decidir quando começar a implementação de verdade.
+
+## Sessão 10/09/2026 — Beauty Box da Semana IMPLEMENTADA de verdade (site + admin + Brevo)
+Priscila deu o sinal verde pra implementar. Antes de programar, ela mesma
+fez a configuração externa que só ela tinha acesso, passo a passo (prints
+de tela guiados um de cada vez, do jeito que ela precisa):
+1. **Brevo**: conta criada, lista "Beauty Box - Assinantes" (ID #3),
+   dois atributos de contato tipo "Category" — `TIPOS_DE_PELE` (6
+   opções) e `TIPOS_DE_CABELO` (5 opções) —, e uma API Key gerada e
+   guardada em local seguro (nunca passou pelo chat).
+2. **Supabase**: tabela nova `beauty_box` criada por ela via SQL Editor
+   (id, data_hora, slot_type, slot_key, brand, name, price_old,
+   price_new, store, link), com RLS ativado e política de leitura
+   pública — mesmo padrão de segurança que a tabela `promos` já usa
+   (leitura anônima liberada, escrita só via function com service key).
+
+**Implementado no código** (commit `eb93711`):
+1. **Cards "Novidade" lado a lado** (Tutorial + Beauty Box) substituindo
+   a faixa única — decisão de sessão anterior, gradiente vivo, clique no
+   card da Beauty Box rola suavemente até a seção.
+2. **Seção "Beauty Box da Semana" na home**, no lugar exato de
+   "Promoções de Hoje" (`#beautyBoxSec`, dentro do mesmo `.promo-sec`) —
+   fluxo: escolher tipo de pele → tipo de cabelo → digitar e-mail →
+   caixa fica clicável → abre com animação (laço/confete) → revela 4
+   produtos (Skincare e Cabelo personalizados pelo tipo escolhido,
+   Maquilhagem e Perfumaria fixos da semana) → resumo de economia total
+   → confirmação do e-mail → botão pra escolher outro tipo de novo.
+   **Código antigo de "Promoções" (`renderPromosHome`, tabela `promos`,
+   aba admin) não foi apagado** — só parou de aparecer na home; continua
+   funcional se ela quiser usar pra outra coisa no futuro.
+3. **`beauty_box` só é lida publicamente** (`supabaseSelect`, mesmo
+   mecanismo anônimo que a `promos` já usa) — nunca hardcoded no
+   JavaScript. Se um card não tiver produto cadastrado ainda, mostra
+   "Em breve um achado nesta categoria" em vez de quebrar.
+4. **Painel admin — aba nova "🎁 Beauty Box"**: 3 tabelas (Skincare por
+   tipo de pele, Cabelo por tipo de cabelo, Fixos da semana) com os 13
+   espaços SEMPRE fixos — nunca se adiciona nem remove linha, só se
+   edita o produto de cada uma. Na primeira vez que a aba é aberta (ou
+   se a tabela estiver vazia), o próprio código semeia as 13 linhas
+   sozinho antes de mostrar.
+5. **`netlify/functions/brevo-subscribe.mjs`** (nova) — recebe e-mail +
+   tipo de pele + tipo de cabelo do formulário da Beauty Box e cadastra/
+   atualiza o contato na Brevo (`BREVO_API_KEY` + `BREVO_LIST_ID`, esta
+   com valor por omissão `3` — o ID real da lista dela) já com os
+   atributos certos, pronta pra segmentação do envio semanal.
+6. **`admin.mjs`**: `beauty_box` adicionada à lista `ALLOWED` (select/
+   insert/update/delete) — sem isso a aba nova ficaria bloqueada.
+7. **Política de Privacidade**: novo item na lista de dados recolhidos,
+   avisando sobre e-mail/tipo de pele/cabelo pra quem se inscrever na
+   Beauty Box, com menção ao cancelamento fácil.
+
+**Bug real encontrado e corrigido ainda durante o teste, antes de
+publicar**: a primeira versão de `renderAdminBeautyBox()`/`seedBbSlots()`
+não conferia se as chamadas ao servidor tinham dado certo — se o
+Netlify não estivesse configurado direito (`ADMIN_PASSWORD`/
+`SUPABASE_SERVICE_KEY` em falta, por exemplo), o código entrava num
+**loop infinito** tentando semear as 13 linhas repetidamente pra sempre
+(confirmado ao vivo: mais de 1000 chamadas ao servidor em poucos
+segundos, testando localmente sem as credenciais reais). Corrigido:
+agora, se qualquer chamada falhar, o loop para e mostra uma mensagem de
+erro nas 3 tabelas em vez de insistir sozinho pra sempre.
+
+**Testado antes de publicar** (rigor extra dado o tamanho da mudança):
+sintaxe de tudo validada; front-end testado num navegador de verdade —
+os dois cards aparecem, a rolagem funciona, o fluxo completo (pele →
+cabelo → e-mail → abrir caixa) funciona e mostra "Em breve um achado
+nesta categoria" corretamente (a tabela `beauty_box` está vazia de
+verdade em produção agora, confirmando que a LEITURA já está ligada ao
+Supabase real dela, não a dado inventado); botão de reset testado.
+Como não tenho a senha admin nem as chaves reais da Priscila neste
+ambiente, o painel admin foi testado com um "banco de dados" simulado
+(só nesta sessão de teste, sem afetar nada real) pra confirmar que
+semear as 13 linhas, abrir o formulário, editar e guardar funcionam do
+início ao fim — aí sim achei e corrigi o bug do loop infinito acima.
+
+**Pendências reais, só a Priscila resolve (fora do meu alcance)**:
+1. Entrar no painel admin (D A S H) → aba "🎁 Beauty Box" → preencher os
+   13 produtos de verdade (só das 5 lojas parceiras: L'Occitane, Natura,
+   Forever Liss, O Boticário, Ama Beleza) — sem isso a caixa abre mas
+   mostra "Em breve" em todas as categorias.
+2. Configurar `BREVO_API_KEY` (a chave gerada, nunca compartilhada aqui)
+   e opcionalmente `BREVO_LIST_ID` (se a lista não for a #3) nas
+   variáveis de ambiente do Netlify — sem isso o e-mail não chega na
+   Brevo (mas a experiência do site continua funcionando normalmente,
+   só a parte da newsletter fica muda até isso ser configurado).
+3. **Ainda não confirmado por ela em produção** — pedir pra testar o
+   fluxo completo no site de verdade, e depois preencher pelo menos
+   alguns dos 13 produtos pra ver a caixa revelando produto de verdade.
