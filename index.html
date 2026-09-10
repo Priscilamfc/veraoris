@@ -426,13 +426,113 @@ footer{background:linear-gradient(135deg,#FFF0F6,#FFDCEC);padding:40px 40px 24px
 .tut-adjust{margin-top:12px;padding:12px 16px;background:var(--gold4);border-left:3px solid var(--gold);border-radius:4px;font-size:13px;color:var(--text);line-height:1.6}
 .tut-adjust b{display:block;font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--gold5);margin-bottom:4px}
 @media (max-width:480px){.tut-step{grid-template-columns:30px 1fr;gap:10px}.tut-step-n{font-size:1.3rem}}
-/* Faixa "Novidade" na home, chamando pro tutorial */
-.tut-ribbon{display:flex;align-items:center;justify-content:center;gap:14px;padding:14px 20px;font-size:14px;font-weight:700;color:#fff;text-align:center;flex-wrap:wrap;background:var(--gg);cursor:pointer;transition:filter .15s;border:none;width:100%;font-family:'Inter',sans-serif;position:relative;z-index:4}
-.tut-ribbon:hover{filter:brightness(1.06)}
-.tut-badge{background:var(--night);color:var(--gold3);font-size:10px;font-weight:800;letter-spacing:1.3px;text-transform:uppercase;padding:4px 12px;border-radius:14px;flex-shrink:0}
-.tut-arrow{display:inline-block;transition:transform .15s}
-.tut-ribbon:hover .tut-arrow{transform:translateX(4px)}
-@media(max-width:900px){.tut-ribbon{font-size:12.5px;padding:12px 16px;gap:8px}}
+/* Cards "Novidade" na home (Tutorial + Beauty Box), lado a lado, acima do hero */
+.novidade-cards{display:grid;grid-template-columns:1fr 1fr;gap:14px;padding:18px 40px;background:var(--marble);position:relative;z-index:4}
+@media(max-width:640px){.novidade-cards{grid-template-columns:1fr;padding:14px 20px}}
+.nov-card{background:var(--gg);border:none;border-radius:14px;padding:16px 18px;display:flex;align-items:center;gap:14px;cursor:pointer;transition:all .2s;text-align:left;box-shadow:0 6px 18px rgba(163,18,86,.25)}
+.nov-card:hover{transform:translateY(-2px);box-shadow:0 12px 30px rgba(163,18,86,.4)}
+.nov-ico{width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,.85);color:var(--gold5);font-size:19px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.nov-body{flex:1;min-width:0}
+.nov-badge{font-size:9px;font-weight:800;letter-spacing:1.2px;text-transform:uppercase;color:var(--gold3);background:var(--night);padding:2px 8px;border-radius:8px;display:inline-block;margin-bottom:4px}
+.nov-title{font-family:'Cormorant Garamond',serif;font-size:15px;font-weight:600;color:#fff;line-height:1.25}
+.nov-arrow{color:#fff;font-size:16px;flex-shrink:0;transition:transform .15s}
+.nov-card:hover .nov-arrow{transform:translateX(3px)}
+
+/* ===== BEAUTY BOX DA SEMANA (substitui "Promoções de Hoje") ===== */
+.bb-stage{max-width:720px;margin:0 auto;background:var(--white);box-shadow:0 20px 60px rgba(30,20,25,.1);border-radius:20px;padding:44px 40px;text-align:center}
+@media(max-width:640px){.bb-stage{padding:30px 22px}}
+.bb-eyebrow{font-size:11px;letter-spacing:3px;text-transform:uppercase;color:var(--gold);font-weight:700;margin-bottom:10px;display:flex;align-items:center;justify-content:center;gap:8px}
+.bb-eyebrow::before,.bb-eyebrow::after{content:'';width:24px;height:1px;background:var(--gg)}
+.bb-title{font-family:Cormorant Garamond,serif;font-size:2.1rem;font-weight:600;color:var(--gold5);line-height:1.15;margin-bottom:8px}
+.bb-title em{color:var(--gold);font-style:italic}
+.bb-sub{font-size:14px;color:var(--muted);max-width:440px;margin:0 auto 34px;line-height:1.6}
+
+.skin-step{margin-bottom:8px}
+.skin-lbl{font-size:12px;font-weight:700;color:var(--night);margin-bottom:14px;letter-spacing:.3px}
+.skin-lbl-sub{font-size:11.5px;color:var(--muted);margin:-8px 0 14px}
+.skin-opts{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-bottom:36px}
+.skin-pill{background:white;border:1.5px solid var(--marble3);border-radius:22px;padding:9px 18px;font-size:13px;font-weight:600;color:var(--muted);transition:all .2s;cursor:pointer}
+.skin-pill:hover{border-color:var(--gold2)}
+.skin-pill.active{background:linear-gradient(135deg,#1E2D3D,#253545);color:var(--gold3);border-color:#1E2D3D}
+
+.gate-form{max-width:320px;margin:0 auto 36px}
+.gate-input{width:100%;border:1.5px solid var(--marble3);border-radius:22px;padding:12px 20px;font-size:14px;text-align:center;outline:none;transition:border-color .2s;font-family:'Inter',sans-serif}
+.gate-input:focus{border-color:var(--gold)}
+
+.box-zone{position:relative;height:260px;display:flex;align-items:center;justify-content:center;margin-bottom:8px;perspective:600px}
+.box-glow{position:absolute;width:220px;height:220px;border-radius:50%;background:radial-gradient(circle,rgba(230,64,125,.35),rgba(230,64,125,0) 70%);opacity:0;transition:opacity .4s}
+.box-wrap.ready~.box-glow{opacity:1;animation:glowPulse 2.4s ease-in-out infinite}
+@keyframes glowPulse{0%,100%{transform:scale(.92)}50%{transform:scale(1.06)}}
+.box-wrap{position:relative;width:210px;height:180px;opacity:.42;filter:grayscale(1);transition:opacity .4s,filter .4s;cursor:not-allowed;z-index:1}
+.box-wrap.ready{opacity:1;filter:none;cursor:pointer}
+.box-wrap.ready .box-base{animation:boxIdle 2.8s ease-in-out infinite}
+.box-shadow-el{position:absolute;bottom:-6px;left:50%;transform:translateX(-50%);width:150px;height:20px;background:radial-gradient(ellipse,rgba(30,20,25,.28),rgba(30,20,25,0) 72%);border-radius:50%}
+.box-base{position:absolute;bottom:14px;left:8px;right:8px;height:112px;background:linear-gradient(150deg,#B01A5D 0%,#E6407D 55%,#F0629D 100%);border-radius:14px;box-shadow:0 16px 34px rgba(163,18,86,.4),inset 0 2px 6px rgba(255,255,255,.25)}
+.box-base::before{content:'';position:absolute;inset:0;border-radius:14px;background:linear-gradient(115deg,rgba(255,255,255,.28) 0%,rgba(255,255,255,0) 30%)}
+.box-base::after{content:'';position:absolute;top:0;bottom:0;left:50%;width:26px;margin-left:-13px;background:linear-gradient(180deg,#FFE3EF,#FFCFE0);box-shadow:inset 0 0 4px rgba(163,18,86,.3)}
+.box-ribbon-h{position:absolute;left:8px;right:8px;top:44px;height:22px;background:linear-gradient(180deg,#FFE3EF,#FFCFE0);box-shadow:inset 0 0 4px rgba(163,18,86,.3);z-index:1}
+.box-lid{position:absolute;top:0;left:-10px;right:-10px;height:52px;background:linear-gradient(150deg,#E6407D,#F0629D 60%,#FFCFE0);border-radius:14px;box-shadow:0 10px 22px rgba(163,18,86,.3),inset 0 2px 5px rgba(255,255,255,.35);transition:transform .6s cubic-bezier(.34,1.56,.64,1),opacity .5s;transform-origin:8% 100%;z-index:2}
+.box-lid::before{content:'';position:absolute;inset:0;border-radius:14px;background:linear-gradient(115deg,rgba(255,255,255,.3) 0%,rgba(255,255,255,0) 35%)}
+.box-lid::after{content:'';position:absolute;top:0;bottom:0;left:50%;width:30px;margin-left:-15px;background:linear-gradient(180deg,#FFE3EF,#FFCFE0);box-shadow:inset 0 0 4px rgba(163,18,86,.3)}
+.box-bow{position:absolute;top:-22px;left:50%;transform:translateX(-50%);width:56px;height:38px;z-index:3;transition:transform .6s cubic-bezier(.34,1.56,.64,1),opacity .5s}
+.box-bow .loop{position:absolute;width:26px;height:30px;border-radius:70% 70% 70% 8%;background:linear-gradient(135deg,#FFCFE0,#F0629D);box-shadow:inset -3px -3px 6px rgba(163,18,86,.35),0 3px 8px rgba(163,18,86,.25);top:2px}
+.box-bow .loop.l{left:0;transform:rotate(-18deg)}
+.box-bow .loop.r{right:0;transform:rotate(18deg) scaleX(-1)}
+.box-bow .knot{position:absolute;left:50%;top:10px;width:16px;height:16px;margin-left:-8px;border-radius:50%;background:linear-gradient(135deg,#E6407D,#A31256);box-shadow:0 2px 5px rgba(163,18,86,.4);z-index:1}
+.box-bow .tail{position:absolute;top:22px;width:8px;height:20px;background:linear-gradient(180deg,#F0629D,#FFCFE0);border-radius:0 0 6px 6px}
+.box-bow .tail.tl{left:16px;transform:rotate(8deg)}
+.box-bow .tail.tr{right:16px;transform:rotate(-8deg)}
+.sparkle{position:absolute;font-size:13px;opacity:0;pointer-events:none;color:var(--gold2)}
+.box-wrap.ready~.sparkle{animation:twinkle 2.2s ease-in-out infinite}
+.sp1{top:6px;left:6px;animation-delay:.2s!important}
+.sp2{top:20px;right:0;animation-delay:1s!important}
+.sp3{bottom:40px;left:-4px;animation-delay:1.6s!important}
+@keyframes twinkle{0%,100%{opacity:0;transform:scale(.6) rotate(0deg)}50%{opacity:1;transform:scale(1.1) rotate(15deg)}}
+.box-hint{font-size:12px;color:var(--gold5);font-weight:700;margin-top:10px;opacity:0;transition:opacity .3s}
+@keyframes boxIdle{0%,100%{transform:translateY(0) rotate(0deg)}50%{transform:translateY(-5px) rotate(-1.5deg)}}
+.box-wrap.opened .box-lid{transform:translateY(-90px) rotate(-30deg);opacity:0}
+.box-wrap.opened .box-bow{transform:translate(-50%,-95px) rotate(-30deg);opacity:0}
+.box-wrap.opened .box-base{box-shadow:0 4px 46px rgba(230,64,125,.55),inset 0 2px 6px rgba(255,255,255,.25)}
+.box-wrap.opened~.box-glow{opacity:0}
+.box-wrap.opened~.sparkle{opacity:0;animation:none}
+
+.confetti{position:absolute;inset:0;pointer-events:none;overflow:visible}
+.confetti span{position:absolute;top:50%;left:50%;width:6px;height:6px;border-radius:1px;opacity:0;background:var(--gold)}
+.box-wrap.opened~.confetti span{animation:bbPop .8s ease-out forwards}
+.confetti span:nth-child(1){background:#E6407D;animation-delay:.05s;--tx:-70px;--ty:-90px}
+.confetti span:nth-child(2){background:#FFCFE0;animation-delay:.1s;--tx:60px;--ty:-100px}
+.confetti span:nth-child(3){background:#A31256;animation-delay:0s;--tx:-40px;--ty:-60px}
+.confetti span:nth-child(4){background:#F0629D;animation-delay:.12s;--tx:80px;--ty:-50px}
+.confetti span:nth-child(5){background:#E6407D;animation-delay:.08s;--tx:20px;--ty:-110px}
+.confetti span:nth-child(6){background:#FFCFE0;animation-delay:.15s;--tx:-90px;--ty:-40px}
+@keyframes bbPop{0%{opacity:1;transform:translate(0,0) scale(1)}100%{opacity:0;transform:translate(var(--tx),var(--ty)) scale(.4)}}
+
+.reveal{max-height:0;overflow:hidden;opacity:0;transition:max-height .6s ease,opacity .5s ease .1s}
+.reveal.show{max-height:900px;opacity:1}
+.reveal-inner{padding-top:26px}
+.reveal-title{font-family:Cormorant Garamond,serif;font-size:1.5rem;color:var(--gold5);margin-bottom:4px}
+.reveal-sub{font-size:12px;color:var(--muted);margin-bottom:22px}
+.reveal-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;text-align:left;margin-bottom:10px}
+@media(max-width:480px){.reveal-grid{grid-template-columns:1fr}}
+.bb-card{background:white;border:1px solid var(--marble3);border-radius:12px;padding:14px;position:relative;animation:bbCardIn .5s ease both}
+.bb-card:nth-child(1){animation-delay:.05s}.bb-card:nth-child(2){animation-delay:.15s}
+.bb-card:nth-child(3){animation-delay:.25s}.bb-card:nth-child(4){animation-delay:.35s}
+@keyframes bbCardIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.bb-cat-tag{font-size:9px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:var(--gold5);background:var(--gold4);display:inline-block;padding:3px 9px;border-radius:8px;margin-bottom:8px}
+.bb-personal-tag{font-size:9px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:#fff;background:var(--gg);display:inline-block;padding:3px 9px;border-radius:8px;margin-bottom:8px;margin-left:6px}
+.bb-brand{font-size:10px;color:var(--gold5);font-weight:700;text-transform:uppercase}
+.bb-name{font-size:13px;font-weight:600;margin:2px 0 8px;line-height:1.3}
+.bb-prices{display:flex;align-items:baseline;gap:8px;margin-bottom:10px}
+.bb-old{font-size:12px;color:var(--muted);text-decoration:line-through}
+.bb-new{font-size:16px;font-weight:700;color:#E63946}
+.bb-buy{width:100%;background:var(--gold5);color:white;border:none;border-radius:14px;padding:8px;font-size:12px;font-weight:600;cursor:pointer}
+
+.confirm-email{font-size:12px;color:var(--ok);font-weight:700;margin-bottom:6px}
+.renews{font-size:11px;color:var(--muted);margin-bottom:20px}
+.back-to-skin{background:none;border:1.5px solid var(--marble3);border-radius:22px;padding:9px 20px;font-size:12px;font-weight:600;color:var(--muted);transition:all .2s;cursor:pointer}
+.back-to-skin:hover{border-color:var(--gold);color:var(--gold5)}
+.bb-empty-note{font-size:13px;color:var(--muted);padding:20px 0}
+
 .how-steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin:24px 0}
 .how-step{background:var(--white);border:1px solid var(--marble3);border-radius:var(--r2);padding:24px 20px;text-align:center;transition:all .25s}
 .how-step:hover{border-color:var(--gold2);transform:translateY(-3px)}
@@ -558,6 +658,8 @@ textarea.form-inp{resize:vertical;min-height:140px}
 .admin-toolbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;gap:12px;flex-wrap:wrap}
 .admin-msg-item{background:var(--white);border:1px solid var(--marble3);border-radius:var(--r2);padding:16px;margin-bottom:10px}
 .admin-msg-item.unread{border-left:3px solid var(--gold)}
+.bb-group-title{font-size:12px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:var(--gold5);margin:22px 0 10px}
+.bb-group-title:first-of-type{margin-top:0}
 .admin-msg-header{display:flex;justify-content:space-between;margin-bottom:6px}
 .admin-msg-name{font-weight:700;color:var(--text)}
 .admin-msg-date{font-size:11px;color:var(--muted)}
@@ -624,6 +726,7 @@ textarea.form-inp{resize:vertical;min-height:140px}
       <button class="admin-tab-btn active" data-tab="stats" onclick="adminTab('stats')">📊 Estatísticas</button>
       <button class="admin-tab-btn" data-tab="products" onclick="adminTab('products')">🛍️ Produtos</button>
       <button class="admin-tab-btn" data-tab="promos" onclick="adminTab('promos')">🔥 Promoções</button>
+      <button class="admin-tab-btn" data-tab="beautybox" onclick="adminTab('beautybox')">🎁 Beauty Box</button>
       <button class="admin-tab-btn" data-tab="dicas" onclick="adminTab('dicas')">💡 Dicas</button>
       <button class="admin-tab-btn" data-tab="affiliates" onclick="adminTab('affiliates')">🔗 Afiliados</button>
       <button class="admin-tab-btn" data-tab="messages" onclick="adminTab('messages')">✉️ Mensagens</button>
@@ -727,6 +830,54 @@ textarea.form-inp{resize:vertical;min-height:140px}
       </div>
     </div>
 
+    <!-- BEAUTY BOX -->
+    <div class="admin-section" id="admin-beautybox">
+      <div class="admin-export-box">
+        ℹ️ Preencha um produto pra cada linha abaixo. Quando alguém escolher o tipo de pele e cabelo dela no site, a Beauty Box da Semana mostra automaticamente o produto certo daqui. Use só produtos das 5 lojas com parceria de afiliado: L'Occitane, Natura, Forever Liss, O Boticário e Ama Beleza.
+      </div>
+
+      <div id="bbFormWrap" style="display:none;background:var(--white);border:1px solid var(--marble3);border-radius:var(--r2);padding:20px;margin-bottom:20px">
+        <h4 style="margin-bottom:14px;font-family:Cormorant Garamond,serif;font-size:1.2rem">Editar produto — <span id="bbFormTag"></span></h4>
+        <input type="hidden" id="bbEditId" value="">
+        <input type="hidden" id="bbEditSlotType" value="">
+        <input type="hidden" id="bbEditSlotKey" value="">
+        <div class="admin-form-grid">
+          <div><label style="font-size:11px;color:var(--muted)">Marca</label><input type="text" id="bbBrand" placeholder="ex: Natura"></div>
+          <div><label style="font-size:11px;color:var(--muted)">Nome do produto</label><input type="text" id="bbName" placeholder="ex: Kaiak Aventura"></div>
+          <div><label style="font-size:11px;color:var(--muted)">Preço original (R$)</label><input type="number" id="bbOld" placeholder="ex: 99.90" step="0.01"></div>
+          <div><label style="font-size:11px;color:var(--muted)">Preço com desconto (R$)</label><input type="number" id="bbNew" placeholder="ex: 74.90" step="0.01"></div>
+          <div><label style="font-size:11px;color:var(--muted)">Loja</label><input type="text" id="bbStore" placeholder="ex: Natura BR"></div>
+          <div><label style="font-size:11px;color:var(--muted)">Link de afiliado</label><input type="text" id="bbLink" placeholder="https://..."></div>
+        </div>
+        <button class="admin-btn" id="btnSaveBb" onclick="saveBeautyBoxSlot()">💾 Guardar</button>
+        <button class="admin-btn secondary" onclick="closeBbForm()">Cancelar</button>
+      </div>
+
+      <p class="bb-group-title">Skincare — por tipo de pele</p>
+      <div class="admin-table-wrap">
+        <table class="admin-table">
+          <thead><tr><th>Tipo</th><th>Produto</th><th>Preço</th><th>Loja</th><th>Acções</th></tr></thead>
+          <tbody id="adBbSkinTable"></tbody>
+        </table>
+      </div>
+
+      <p class="bb-group-title">Cabelo — por tipo de cabelo</p>
+      <div class="admin-table-wrap">
+        <table class="admin-table">
+          <thead><tr><th>Tipo</th><th>Produto</th><th>Preço</th><th>Loja</th><th>Acções</th></tr></thead>
+          <tbody id="adBbHairTable"></tbody>
+        </table>
+      </div>
+
+      <p class="bb-group-title">Fixos da semana</p>
+      <div class="admin-table-wrap">
+        <table class="admin-table">
+          <thead><tr><th>Categoria</th><th>Produto</th><th>Preço</th><th>Loja</th><th>Acções</th></tr></thead>
+          <tbody id="adBbFixedTable"></tbody>
+        </table>
+      </div>
+    </div>
+
     <!-- DICAS -->
     <div class="admin-section" id="admin-dicas">
       <div class="admin-export-box">
@@ -810,11 +961,18 @@ textarea.form-inp{resize:vertical;min-height:140px}
 </div></nav>
 <!-- HOME -->
 <div class="page active" id="page-home">
-<button class="tut-ribbon" onclick="showPage('tutorial')">
-  <span class="tut-badge" id="tutRibbonBadge">Novidade</span>
-  <span id="tutRibbonTxt">✨ Novidade — Tutorial de Maquiagem: da base ao fixador, passo a passo</span>
-  <span class="tut-arrow">→</span>
-</button>
+<div class="novidade-cards">
+  <div class="nov-card" onclick="showPage('tutorial')">
+    <div class="nov-ico">💄</div>
+    <div class="nov-body"><span class="nov-badge" id="tutRibbonBadge">Novidade</span><div class="nov-title" id="tutRibbonTxt">Tutorial de Maquiagem</div></div>
+    <span class="nov-arrow">→</span>
+  </div>
+  <div class="nov-card" onclick="document.getElementById('beautyBoxSec').scrollIntoView({behavior:'smooth'})">
+    <div class="nov-ico">🎁</div>
+    <div class="nov-body"><span class="nov-badge" id="bbRibbonBadge">Novidade</span><div class="nov-title" id="bbRibbonTxt">Beauty Box da Semana</div></div>
+    <span class="nov-arrow">↓</span>
+  </div>
+</div>
 <div class="hero">
   <div class="hero-bg"><img id="heroImg" alt="VERAORIS"><div class="hero-ov"></div></div>
   <div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div>
@@ -1157,15 +1315,79 @@ textarea.form-inp{resize:vertical;min-height:140px}
 </script>
 <!-- DICA DA SEMANA - logo após o hero, bem visível -->
 <div id="dicaHomeWrap" style="display:none"></div>
-<!-- PROMOÇÕES DO DIA -->
-<div class="promo-sec">
-  <div class="promo-head">
-    <div>
-      <h2 class="promo-title"><span class="fire">🔥</span> <span id="promoTitle">Promoções de Hoje</span></h2>
-      <p class="promo-sub" id="promoSub">Os melhores descontos em cosméticos, atualizados todos os dias</p>
+<!-- BEAUTY BOX DA SEMANA (substitui "Promoções de Hoje" na home) -->
+<div class="promo-sec" id="beautyBoxSec">
+  <div class="bb-stage">
+    <p class="bb-eyebrow">✦ Novidade semanal</p>
+    <h2 class="bb-title">Beauty Box — <em>as promoções da semana</em></h2>
+    <p class="bb-sub">Diga o seu tipo de pele e de cabelo e abra a sua caixa: um achado de cada categoria, dois deles escolhidos só pra si.</p>
+
+    <div class="skin-step">
+      <p class="skin-lbl">1. Qual é o seu tipo de pele?</p>
+      <div class="skin-opts" id="skinOpts">
+        <button class="skin-pill" data-skin="N">Normal</button>
+        <button class="skin-pill" data-skin="O">Oleosa</button>
+        <button class="skin-pill" data-skin="S">Seca</button>
+        <button class="skin-pill" data-skin="M">Mista</button>
+        <button class="skin-pill" data-skin="Se">Sensível</button>
+        <button class="skin-pill" data-skin="A">Acneica</button>
+      </div>
+    </div>
+
+    <div class="skin-step">
+      <p class="skin-lbl">2. E o seu tipo de cabelo?</p>
+      <div class="skin-opts" id="hairOpts">
+        <button class="skin-pill" data-hair="liso">Liso</button>
+        <button class="skin-pill" data-hair="oleoso">Oleoso</button>
+        <button class="skin-pill" data-hair="seco">Seco</button>
+        <button class="skin-pill" data-hair="cacheado">Cacheado/Crespo</button>
+        <button class="skin-pill" data-hair="danificado">Danificado/Com química</button>
+      </div>
+    </div>
+
+    <div class="skin-step">
+      <p class="skin-lbl">3. Digite o seu e-mail pra abrir a sua caixa</p>
+      <p class="skin-lbl-sub">As próximas chegam direto aqui, toda semana.</p>
+      <form class="gate-form" id="gateForm">
+        <input class="gate-input" type="email" id="gateEmail" placeholder="O seu melhor e-mail" required>
+      </form>
+    </div>
+
+    <p class="skin-lbl">4. Abra a sua caixa</p>
+    <div class="box-zone">
+      <div class="box-wrap" id="boxWrap">
+        <div class="box-shadow-el"></div>
+        <div class="box-lid"></div>
+        <div class="box-bow">
+          <div class="loop l"></div><div class="loop r"></div>
+          <div class="tail tl"></div><div class="tail tr"></div>
+          <div class="knot"></div>
+        </div>
+        <div class="box-ribbon-h"></div>
+        <div class="box-base"></div>
+      </div>
+      <div class="box-glow"></div>
+      <span class="sparkle sp1">✨</span>
+      <span class="sparkle sp2">✨</span>
+      <span class="sparkle sp3">✨</span>
+      <div class="confetti" id="confetti">
+        <span></span><span></span><span></span><span></span><span></span><span></span>
+      </div>
+    </div>
+    <p class="box-hint" id="boxHint">Toque na caixa para abrir ✨</p>
+
+    <div class="reveal" id="reveal">
+      <div class="reveal-inner">
+        <p class="reveal-title">A sua Beauty Box desta semana</p>
+        <p class="reveal-sub" id="revealSub"></p>
+        <div class="savings-bar" id="savingsBar"></div>
+        <div class="reveal-grid" id="revealGrid"></div>
+        <p class="confirm-email" id="confirmEmail"></p>
+        <p class="renews">🔄 Nova caixa disponível todo domingo, direto no seu e-mail</p>
+        <button class="back-to-skin" id="bbBackBtn">← Escolher outro tipo de pele</button>
+      </div>
     </div>
   </div>
-  <div class="promo-grid" id="promoGrid"></div>
 </div>
 <!-- EM ALTA -->
 <div id="trendingHomeWrap" style="display:none"></div>
@@ -1343,7 +1565,7 @@ textarea.form-inp{resize:vertical;min-height:140px}
 <div class="page" id="page-privacy"><div class="inst-page"><div class="inst-in">
   <button class="back-btn" onclick="showPage('home')" id="privBack">← Voltar</button>
   <div class="inst-hero"><h1 id="privH1">Política de Privacidade</h1><p id="privP">A VERAORIS valoriza a sua privacidade. Saiba como recolhemos e utilizamos os seus dados.</p></div>
-  <div class="inst-section"><h2><span>📋</span> <span id="privSec1Title">Dados que recolhemos</span></h2><ul id="privSec1List"><li>Preferências do quiz (tipo de pele, cabelo, orçamento)</li><li>Localização aproximada (país/região)</li><li>Idioma e moeda seleccionados</li><li>Cliques em produtos e parceiros</li><li>Dados de navegação via cookies de analytics</li></ul></div>
+  <div class="inst-section"><h2><span>📋</span> <span id="privSec1Title">Dados que recolhemos</span></h2><ul id="privSec1List"><li>Preferências do quiz (tipo de pele, cabelo, orçamento)</li><li>Localização aproximada (país/região)</li><li>Idioma e moeda seleccionados</li><li>Cliques em produtos e parceiros</li><li>Dados de navegação via cookies de analytics</li><li>Se se inscrever na Beauty Box da Semana: o seu e-mail, tipo de pele e tipo de cabelo, para lhe enviarmos a seleção semanal personalizada. Pode cancelar a subscrição a qualquer momento, através do link presente em cada e-mail.</li></ul></div>
   <div class="inst-section"><h2><span>🍪</span> <span id="privSec2Title">Cookies</span></h2><p id="privSec2P">Utilizamos cookies essenciais para funcionamento e cookies de analytics. Não utilizamos cookies para publicidade personalizada sem o seu consentimento.</p></div>
   <div class="inst-section"><h2><span>🛡️</span> <span id="privSec3Title">Os seus direitos (LGPD/RGPD)</span></h2><ul id="privSec3List"><li>Direito de acesso, rectificação ou eliminação</li><li>Direito de oposição ao tratamento</li><li>Direito de portabilidade dos dados</li></ul></div>
 </div></div></div>
@@ -2141,6 +2363,7 @@ window.onload=function(){
   loadClicksFromStorage();
   updateDash();
   renderPromosHome();
+  initBeautyBoxHome();
   renderDicaHome();
   renderTrendingHome();
   registerVisit('home');
@@ -2209,7 +2432,8 @@ var TX={
     footAff:'Alguns links são de afiliado. Sem custo adicional para si.',
     fcat2:'Maquilhagem',fnav1:'Como Funciona',fnav3:'Sobre',fnav4:'Contacto',fleg1:'Privacidade',fleg2:'Termos de Uso',
     howBack:'← Voltar',howTitle:'Como Funciona a VERAORIS',howDesc:'Somos um comparador inteligente de cosméticos — como um "Trivago da beleza". Encontramos, comparamos e recomendamos os melhores produtos para si.',
-    tutBack:'← Voltar',tutTitle:'Tutorial de maquiagem: da base ao fixador',tutDesc:'O passo a passo completo, produto por produto — com os ajustes que mudam de acordo com o seu tipo de pele.',tutRibbonBadge:'Novidade',tutRibbonTxt:'✨ Novidade — Tutorial de Maquiagem: da base ao fixador, passo a passo',
+    tutBack:'← Voltar',tutTitle:'Tutorial de maquiagem: da base ao fixador',tutDesc:'O passo a passo completo, produto por produto — com os ajustes que mudam de acordo com o seu tipo de pele.',tutRibbonBadge:'Novidade',tutRibbonTxt:'Tutorial de Maquiagem',
+    bbRibbonBadge:'Novidade',bbRibbonTxt:'Beauty Box da Semana',
     fnavTut:'Tutorial de Maquiagem',
     hs1h:'Compare Aqui',hs1p:'Responda algumas perguntas sobre o seu perfil.',
     hs2h:'Analisamos',hs2p:'Identificamos os produtos mais compatíveis com o seu perfil.',
@@ -2286,7 +2510,8 @@ var TX={
     footAff:'Some links are affiliate links. No extra cost to you.',
     fcat2:'Makeup',fnav1:'How it Works',fnav3:'About',fnav4:'Contact',fleg1:'Privacy',fleg2:'Terms of Use',
     howBack:'← Back',howTitle:'How VERAORIS Works',howDesc:'We are a smart beauty comparator — like a "Trivago for beauty". We find, compare and recommend the best products for you.',
-    tutBack:'← Back',tutTitle:'Makeup tutorial: from base to setting spray',tutDesc:'The full step-by-step, product by product — with the adjustments that change depending on your skin type.',tutRibbonBadge:'New',tutRibbonTxt:'✨ New — Makeup Tutorial: from base to setting spray, step by step',
+    tutBack:'← Back',tutTitle:'Makeup tutorial: from base to setting spray',tutDesc:'The full step-by-step, product by product — with the adjustments that change depending on your skin type.',tutRibbonBadge:'New',tutRibbonTxt:'Makeup Tutorial',
+    bbRibbonBadge:'New',bbRibbonTxt:'Beauty Box of the Week',
     fnavTut:'Makeup Tutorial',
     hs1h:'Compare Here',hs1p:'Answer a few questions about your profile.',
     hs2h:'We Analyse',hs2p:'We identify the products most compatible with your profile.',
@@ -2965,6 +3190,7 @@ function adminTab(tab){
   if(tab==='stats') renderAdminStats();
   if(tab==='products') renderAdminProducts();
   if(tab==='promos') renderAdminPromos();
+  if(tab==='beautybox') renderAdminBeautyBox();
   if(tab==='dicas') renderAdminDicas();
   if(tab==='affiliates') renderAdminAffiliates();
   if(tab==='messages') renderAdminMessages();
@@ -3074,6 +3300,115 @@ function savePromo(){
   var extra = editId>=0 ? {id:editId, data:p} : {data:p};
   adminApi(action, 'promos', extra, function(ok){
     if(ok){ closePromoForm(); renderAdminPromos(); renderPromosHome(); showToast('Promoção guardada ✓'); }
+    else { showToast('Erro ao guardar — verifica a ligação'); }
+  });
+}
+
+// ── BEAUTY BOX DA SEMANA ──
+// 13 espaços fixos (6 tipos de pele + 5 tipos de cabelo + 2 fixos). Nunca se adiciona nem
+// remove linha — só se edita o produto de cada espaço. Se a tabela estiver vazia (1ª vez),
+// semeia as 13 linhas sozinho antes de mostrar.
+var BB_SLOTS={
+  skin:[{key:'N',label:'Normal'},{key:'O',label:'Oleosa'},{key:'S',label:'Seca'},{key:'M',label:'Mista'},{key:'Se',label:'Sensível'},{key:'A',label:'Acneica'}],
+  hair:[{key:'liso',label:'Liso'},{key:'oleoso',label:'Oleoso'},{key:'seco',label:'Seco'},{key:'cacheado',label:'Cacheado/Crespo'},{key:'danificado',label:'Danificado/Com química'}],
+  fixed:[{key:'maquiagem',label:'Maquilhagem'},{key:'perfumaria',label:'Perfumaria'}]
+};
+var _bbCache=[];
+function renderAdminBeautyBox(){
+  ['adBbSkinTable','adBbHairTable','adBbFixedTable'].forEach(function(id){
+    document.getElementById(id).innerHTML='<tr><td colspan="5" class="admin-empty">A carregar...</td></tr>';
+  });
+  adminApi('select', 'beauty_box', {}, function(ok, rows, err){
+    if(!ok){
+      ['adBbSkinTable','adBbHairTable','adBbFixedTable'].forEach(function(id){
+        document.getElementById(id).innerHTML='<tr><td colspan="5" class="admin-empty">Erro ao carregar — '+(err||'verifica a ligação')+'</td></tr>';
+      });
+      return;
+    }
+    _bbCache = rows || [];
+    var needed=[];
+    ['skin','hair','fixed'].forEach(function(type){
+      BB_SLOTS[type].forEach(function(s){
+        var exists=_bbCache.some(function(r){ return r.slot_type===type && r.slot_key===s.key; });
+        if(!exists) needed.push({slot_type:type, slot_key:s.key, brand:'', name:'', price_old:null, price_new:null, store:'', link:''});
+      });
+    });
+    if(needed.length){
+      seedBbSlots(needed, function(seedOk){
+        if(!seedOk){
+          ['adBbSkinTable','adBbHairTable','adBbFixedTable'].forEach(function(id){
+            document.getElementById(id).innerHTML='<tr><td colspan="5" class="admin-empty">Erro ao preparar os espaços da Beauty Box — verifica a ligação e tenta de novo.</td></tr>';
+          });
+          return;
+        }
+        renderAdminBeautyBox();
+      });
+      return;
+    }
+    renderBbTable('adBbSkinTable','skin');
+    renderBbTable('adBbHairTable','hair');
+    renderBbTable('adBbFixedTable','fixed');
+  });
+}
+function seedBbSlots(needed, done){
+  var i=0;
+  function next(){
+    if(i>=needed.length){ done(true); return; }
+    var item=needed[i]; i++;
+    adminApi('insert', 'beauty_box', {data:item}, function(ok){
+      if(!ok){ done(false); return; }
+      next();
+    });
+  }
+  next();
+}
+function renderBbTable(tblId, type){
+  var tbody=document.getElementById(tblId);
+  tbody.innerHTML=BB_SLOTS[type].map(function(s){
+    var row=_bbCache.find(function(r){ return r.slot_type===type && r.slot_key===s.key; }) || {};
+    var hasProduct=row.brand && row.name;
+    var priceTxt=hasProduct ? ('<span style="color:var(--muted);text-decoration:line-through">R$ '+(row.price_old||0).toFixed(2)+'</span> <span style="color:#E63946;font-weight:700">R$ '+(row.price_new||0).toFixed(2)+'</span>') : '<span style="color:var(--muted)">— vazio —</span>';
+    return '<tr><td><span class="tag-pill" style="background:var(--night);color:var(--gold3);font-size:10.5px;font-weight:700;padding:4px 10px;border-radius:10px">'+s.label+'</span></td>'
+      +'<td>'+(hasProduct ? ('<b>'+row.brand+'</b> — '+row.name) : '<span style="color:var(--muted)">Nenhum produto ainda</span>')+'</td>'
+      +'<td>'+priceTxt+'</td>'
+      +'<td>'+(row.store||'—')+'</td>'
+      +'<td><button class="admin-btn secondary" onclick="openBbEdit(\''+type+'\',\''+s.key+'\',\''+s.label+'\')">✏️ Editar</button></td></tr>';
+  }).join('');
+}
+function openBbEdit(type, key, label){
+  var row=_bbCache.find(function(r){ return r.slot_type===type && r.slot_key===key; }) || {};
+  document.getElementById('bbFormWrap').style.display='block';
+  document.getElementById('bbFormTag').textContent=label;
+  document.getElementById('bbEditId').value=row.id||'';
+  document.getElementById('bbEditSlotType').value=type;
+  document.getElementById('bbEditSlotKey').value=key;
+  document.getElementById('bbBrand').value=row.brand||'';
+  document.getElementById('bbName').value=row.name||'';
+  document.getElementById('bbOld').value=row.price_old||'';
+  document.getElementById('bbNew').value=row.price_new||'';
+  document.getElementById('bbStore').value=row.store||'';
+  document.getElementById('bbLink').value=row.link||'';
+  document.getElementById('bbFormWrap').scrollIntoView({behavior:'smooth', block:'center'});
+}
+function closeBbForm(){
+  document.getElementById('bbFormWrap').style.display='none';
+}
+function saveBeautyBoxSlot(){
+  var id=document.getElementById('bbEditId').value;
+  var priceOld=parseFloat(document.getElementById('bbOld').value);
+  var priceNew=parseFloat(document.getElementById('bbNew').value);
+  var d={
+    brand:document.getElementById('bbBrand').value.trim(),
+    name:document.getElementById('bbName').value.trim(),
+    price_old:isNaN(priceOld)?null:priceOld,
+    price_new:isNaN(priceNew)?null:priceNew,
+    store:document.getElementById('bbStore').value.trim(),
+    link:document.getElementById('bbLink').value.trim()
+  };
+  if(!d.brand||!d.name||!d.store||!d.link||isNaN(priceOld)||isNaN(priceNew)){ showToast('Preenche todos os campos correctamente'); return; }
+  if(priceNew>=priceOld){ showToast('O preço com desconto deve ser menor que o original'); return; }
+  adminApi('update', 'beauty_box', {id:parseInt(id), data:d}, function(ok){
+    if(ok){ closeBbForm(); renderAdminBeautyBox(); showToast('Produto guardado ✓'); }
     else { showToast('Erro ao guardar — verifica a ligação'); }
   });
 }
@@ -3198,6 +3533,105 @@ function renderPromosHome(){
       promos.forEach(function(p,i){ preloadEudoraImage(promoImgIds[i], p.brand+' '+p.name, null, null, p.brand); });
     }
   });
+}
+
+// ── BEAUTY BOX DA SEMANA (home) ──
+// Conteúdo vem da tabela `beauty_box` (leitura pública, mesma via `supabaseSelect` que as
+// Promoções já usam) — nunca hardcoded. Cada card personalizado (Skincare/Cabelo) busca o
+// slot certo pelo tipo escolhido; Maquilhagem/Perfumaria são sempre os dois slots fixos.
+var BB_DATA=null;
+var BB_SKIN_LABELS={N:'Normal',O:'Oleosa',S:'Seca',M:'Mista',Se:'Sensível',A:'Acneica'};
+var BB_HAIR_LABELS={liso:'liso',oleoso:'oleoso',seco:'seco',cacheado:'cacheado/crespo',danificado:'danificado/com química'};
+var bbChosenSkin=null, bbChosenHair=null, bbChosenEmail='';
+
+function loadBeautyBoxData(cb){
+  supabaseSelect('beauty_box', function(rows){ BB_DATA=rows||[]; if(cb)cb(BB_DATA); });
+}
+function bbFindSlot(type, key){
+  return (BB_DATA||[]).find(function(r){ return r.slot_type===type && r.slot_key===key; });
+}
+function bbCheckReady(){
+  var box=document.getElementById('boxWrap');
+  if(box) box.classList.toggle('ready', !!(bbChosenSkin && bbChosenHair && bbChosenEmail));
+}
+function initBeautyBoxHome(){
+  if(!document.getElementById('beautyBoxSec')) return;
+  loadBeautyBoxData();
+  document.getElementById('skinOpts').addEventListener('click', function(e){
+    var btn=e.target.closest('.skin-pill'); if(!btn) return;
+    bbChosenSkin=btn.dataset.skin;
+    document.querySelectorAll('#skinOpts .skin-pill').forEach(function(b){ b.classList.toggle('active', b===btn); });
+    bbCheckReady();
+  });
+  document.getElementById('hairOpts').addEventListener('click', function(e){
+    var btn=e.target.closest('.skin-pill'); if(!btn) return;
+    bbChosenHair=btn.dataset.hair;
+    document.querySelectorAll('#hairOpts .skin-pill').forEach(function(b){ b.classList.toggle('active', b===btn); });
+    bbCheckReady();
+  });
+  document.getElementById('gateEmail').addEventListener('input', function(){ bbChosenEmail=this.value.trim(); bbCheckReady(); });
+  document.getElementById('gateForm').addEventListener('submit', function(e){ e.preventDefault(); });
+  document.getElementById('boxWrap').addEventListener('click', function(){
+    if(!bbChosenSkin || !bbChosenHair || !bbChosenEmail || this.classList.contains('opened')) return;
+    this.classList.add('opened');
+    document.getElementById('boxHint').style.opacity='0';
+    bbBuildReveal();
+    setTimeout(function(){ document.getElementById('reveal').classList.add('show'); }, 300);
+    brevoSubscribe(bbChosenEmail, BB_SKIN_LABELS[bbChosenSkin], BB_HAIR_LABELS[bbChosenHair]);
+  });
+  document.getElementById('bbBackBtn').addEventListener('click', function(){
+    document.getElementById('reveal').classList.remove('show');
+    var box=document.getElementById('boxWrap');
+    box.classList.remove('opened','ready');
+    document.querySelectorAll('#skinOpts .skin-pill,#hairOpts .skin-pill').forEach(function(b){ b.classList.remove('active'); });
+    document.getElementById('boxHint').style.opacity='0';
+    document.getElementById('gateEmail').value='';
+    bbChosenSkin=null; bbChosenHair=null; bbChosenEmail='';
+    document.getElementById('beautyBoxSec').scrollIntoView({behavior:'smooth'});
+  });
+}
+function bbCard(catLabel, slot, personal){
+  if(!slot || !slot.brand || !slot.name){
+    return '<div class="bb-card"><span class="bb-cat-tag">'+catLabel+'</span><p class="bb-empty-note">Em breve um achado nesta categoria.</p></div>';
+  }
+  var priceOld=Number(slot.price_old||0), priceNew=Number(slot.price_new||0);
+  return '<div class="bb-card"><span class="bb-cat-tag">'+catLabel+'</span>'+(personal?'<span class="bb-personal-tag">pra você</span>':'')
+    +'<div class="bb-brand">'+slot.brand+'</div>'
+    +'<div class="bb-name">'+slot.name+'</div>'
+    +'<div class="bb-prices"><span class="bb-old">R$ '+priceOld.toFixed(2).replace('.',',')+'</span><span class="bb-new">R$ '+priceNew.toFixed(2).replace('.',',')+'</span></div>'
+    +'<a href="'+slot.link+'" target="_blank" rel="noopener" onclick="trackClick(\''+(slot.store||'').replace(/'/g,"")+'\',\''+(slot.brand+' '+slot.name).replace(/'/g,"")+'\',0,\''+slot.brand.replace(/'/g,"")+'\',\''+slot.name.replace(/'/g,"")+'\')"><button class="bb-buy">Ver na '+slot.store+' →</button></a>'
+    +'</div>';
+}
+function bbBuildReveal(){
+  var skin=bbFindSlot('skin', bbChosenSkin);
+  var hair=bbFindSlot('hair', bbChosenHair);
+  var maq=bbFindSlot('fixed','maquiagem');
+  var perf=bbFindSlot('fixed','perfumaria');
+  document.getElementById('revealGrid').innerHTML=[
+    bbCard('Skincare', skin, true),
+    bbCard('Cabelo', hair, true),
+    bbCard('Maquilhagem', maq, false),
+    bbCard('Perfumaria', perf, false)
+  ].join('');
+  document.getElementById('revealSub').textContent='Skincare pra pele '+BB_SKIN_LABELS[bbChosenSkin].toLowerCase()+' e Cabelo pra cabelo '+BB_HAIR_LABELS[bbChosenHair]+' — Maquilhagem e Perfumaria são a curadoria da semana pra todo mundo.';
+  var parts=[skin,hair,maq,perf].filter(function(s){ return s && s.price_old && s.price_new; });
+  var bar=document.getElementById('savingsBar');
+  if(parts.length){
+    var totalOld=parts.reduce(function(a,s){return a+Number(s.price_old);},0);
+    var totalNow=parts.reduce(function(a,s){return a+Number(s.price_new);},0);
+    bar.style.display='';
+    bar.textContent='💰 Valor total: R$ '+totalOld.toFixed(2).replace('.',',')+' → R$ '+totalNow.toFixed(2).replace('.',',')+' nas lojas parceiras (economia de R$ '+(totalOld-totalNow).toFixed(2).replace('.',',')+')';
+  } else {
+    bar.style.display='none';
+  }
+  document.getElementById('confirmEmail').textContent='✓ Enviaremos as próximas Beauty Box para '+bbChosenEmail;
+}
+function brevoSubscribe(email, skinLabel, hairLabel){
+  fetch('/.netlify/functions/brevo-subscribe', {
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({email:email, skin:skinLabel, hair:hairLabel})
+  }).catch(function(err){ console.log('Brevo subscribe falhou:', err); });
 }
 
 // ── STATS TAB ──

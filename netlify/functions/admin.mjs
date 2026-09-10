@@ -9,7 +9,8 @@ const ALLOWED = {
   quiz_completados: ['select', 'deleteAll'],
   mensagens: ['select', 'delete', 'deleteAll'],
   dicas: ['insert', 'delete'],
-  promos: ['select', 'insert', 'update', 'delete']
+  promos: ['select', 'insert', 'update', 'delete'],
+  beauty_box: ['select', 'insert', 'update', 'delete']
 };
 
 export default async (request) => {
