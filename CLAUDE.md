@@ -3475,3 +3475,121 @@ início ao fim — aí sim achei e corrigi o bug do loop infinito acima.
 3. **Ainda não confirmado por ela em produção** — pedir pra testar o
    fluxo completo no site de verdade, e depois preencher pelo menos
    alguns dos 13 produtos pra ver a caixa revelando produto de verdade.
+
+**Atualização da mesma sessão**: Priscila configurou `BREVO_API_KEY` no
+Netlify, disparou o "Trigger deploy" manual, testou o formulário da
+Beauty Box de verdade e **confirmou que o contato apareceu certinho na
+Brevo**, já com tipo de pele e cabelo preenchidos. A conexão com a Brevo
+está funcionando de ponta a ponta.
+
+## PENDÊNCIAS PRA PRÓXIMA SESSÃO (11/09/2026) — anotado a pedido dela antes de dormir
+Priscila pediu explicitamente pra anotar 3 coisas antes de descansar,
+pra retomar amanhã sem precisar explicar de novo:
+
+**1. Como usar a Brevo pra mandar e-mail toda semana pra quem se
+cadastrar** — já expliquei o conceito nesta sessão (ela não precisa
+criar e-mail diferente por tipo de pele/cabelo — isso já é resolvido no
+site quando a pessoa volta e abre a caixa; o e-mail só precisa convidar
+ela a voltar, com um link tipo `https://veraoris.com/#beautyBoxSec`).
+Faltou fazer o passo a passo prático GUIADO com prints (criar a
+campanha de verdade na Brevo, botão, escolher a lista, enviar) — ela
+pediu pra deixar pra amanhã, ainda não foi feito ao vivo.
+
+**2. Promoção da Eudora, por tempo limitado, vale destacar no site** —
+Priscila recebeu uma promoção direto da Eudora (fora do feed automático
+— a Eudora está desligada como fonte ao vivo desde julho, `EUDORA_ENABLED
+=false` em `awin-search.mjs`, por causa do link de produto não confiável).
+Isso não é um problema aqui: como ela recebeu o link promocional direto
+da própria loja (não do feed automático), pode cadastrar essa promoção
+manualmente — either na aba "Promoções" (antiga, ainda funcional, só não
+aparece mais na home) ou como um dos 13 espaços da Beauty Box (se fizer
+sentido categoria/tipo). **Decisão de amanhã**: onde exatamente ela quer
+destacar essa promoção específica, dado que "Promoções de Hoje" não tem
+mais vitrine na home (foi substituída pela Beauty Box) — se for pra
+aparecer com destaque de verdade, pode precisar de uma solução pontual
+(banner temporário?), a combinar com ela.
+
+**3. Mudar a ordenação padrão dos resultados do comparador — pedido
+importante, ainda não implementado**. Resumo do que ela quer, nas
+palavras dela conferidas com cuidado:
+- **Hoje**: a ordenação inicial (antes da pessoa escolher qualquer
+  coisa no seletor "Menor preço/Maior preço/Mais vendidos") efetivamente
+  se comporta como se fosse por menor preço — e como isso é calculado
+  loja por loja, uma loja SEM afiliado (ex: Americanas, farmácias) pode
+  ter preço mais baixo que uma loja COM afiliado (ex: Natura, Boticário)
+  pro mesmo produto, empurrando a linha da loja afiliada pra baixo
+  dentro do card, ou empurrando o PRODUTO inteiro pra baixo na grade se
+  comparado a outros produtos.
+- **O que ela quer**: 
+  (a) a ordenação **padrão** (antes de qualquer escolha manual da
+      pessoa) deve ser **"Mais vendidos"**, não menor preço;
+  (b) dentro dessa visão padrão, os **cards/produtos que têm pelo menos
+      uma loja com afiliado de verdade** (hoje: L'Occitane, Natura,
+      Forever Liss, O Boticário, Ama Beleza) devem aparecer **primeiro**
+      na grade, antes dos produtos que só têm lojas sem afiliado;
+  (c) **se a pessoa escolher manualmente "Maior preço" ou "Menor
+      preço"** no seletor, aí sim a ordenação deve respeitar o preço de
+      verdade, sem viés nenhum pra afiliado — o comportamento especial
+      do item (b) vale só pra visão padrão/"Mais vendidos".
+- **Ainda não confirmado com ela**: se o "aparecer primeiro" da regra
+  (b) vale só pra ordem dos PRODUTOS na grade (qual card vem antes de
+  qual), ou também pra ordem das LINHAS de loja dentro de um mesmo card
+  (ex: dentro do card de um produto vendido tanto pela Natura quanto
+  pela Americanas, a linha da Natura apareceria antes mesmo que mais
+  cara) — pelo texto dela ("os cards que aparecem primeiro tem que ser
+  das afiliadas") parece que ela quer as DUAS coisas, mas vale confirmar
+  antes de implementar, dado que mexe na lógica central do comparador
+  (`loadComparison`, `renderCombined`, `applySortOrder`, variável `srt`)
+  usada em várias páginas (comparador, quiz, Beauty Box não usa isso).
+
+**Atualização, ainda na madrugada de 11/09/2026**: ela confirmou que a
+regra (b) vale pras DUAS coisas — cards na grade E linhas dentro do
+card — e pediu pra eu já adiantar a implementação (commit `5a06508`,
+publicado):
+
+1. **Ordenação padrão mudou de "Menor preço" pra "Mais vendidos"**
+   (`var srt`/`srtQuiz` agora começam em `'popular'`, `<select>` do
+   comparador e do quiz com `selected` na opção certa).
+2. **Linhas de loja dentro de cada card** (`renderCombined`, onde os até
+   3 resultados diversificados por loja são escolhidos e ordenados):
+   na visão padrão ("Mais vendidos"), lojas com `_source==='awin'`
+   (as 5 com afiliado de verdade) vêm sempre antes das sem afiliado —
+   preço só desempata dentro de cada grupo. Se a pessoa escolher Menor/
+   Maior preço manualmente, essa regra desliga e volta a ser só preço,
+   sem viés nenhum — exatamente como ela pediu.
+3. **Cards na grade** (`applySortOrder`, chamada tanto na troca manual
+   do seletor quanto automaticamente conforme cada card termina de
+   comparar — `scheduleSortOrder`, que agora também dispara no modo
+   "popular", não só nos dois modos de preço): produtos com pelo menos
+   uma loja afiliada sobem pro topo da grade. O sort é **estável**, então
+   a ordem de popularidade que já existia dentro de cada grupo (com/sem
+   afiliado) não se perde — só o grupo inteiro de "tem afiliado" passa
+   na frente do grupo "não tem".
+4. **Cuidado importante que já tomei sem ela pedir**: o selo "🏆 Melhor
+   preço" **nunca** foi religado à posição visual — ele continua sempre
+   marcando o preço mais barato de verdade entre os até 3 exibidos,
+   mesmo que essa loja não seja a primeira da lista agora. Não queria
+   fingir que a loja afiliada promovida pra cima é "a mais barata" se
+   não for — só a posição muda, a informação de preço/menor preço
+   continua 100% honesta. Mesma lógica pro valor usado no ordenar-por-
+   preço da grade (`data-price` do card): sempre o preço mais barato de
+   verdade, nunca o da loja promovida.
+
+**Testado antes de publicar**: sintaxe validada; a lógica nova
+(ordenação de linhas e de cards) foi testada isoladamente em Node com
+dados de exemplo simulando loja afiliada mais cara e mais barata — 
+confirmado que a afiliada aparece primeiro só no modo padrão, some o
+viés nos modos de preço explícito, e o selo de melhor preço nunca erra.
+Testado também ao vivo no navegador local: card sem nenhuma loja
+afiliada (CeraVe) continua ordenando só por preço normalmente, sem
+quebrar nada. **Limitação honesta desta sessão**: não consegui ver o
+comportamento com dado REAL de afiliado ao vivo no navegador, porque
+este ambiente de teste local não tem acesso às variáveis de ambiente
+secretas dos feeds da Awin (só existem no Netlify de produção) — toda
+busca por produto de loja afiliada (testei "Boticário", "Malbec") deu
+zero resultado aqui por causa disso, não por bug. A lógica em si foi
+validada com rigor fora do navegador; falta só a Priscila confirmar
+visualmente em produção que uma loja afiliada real aparece primeiro
+quando disponível.
+
+**Ainda não confirmado por ela em produção.**
