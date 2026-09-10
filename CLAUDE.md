@@ -3300,3 +3300,91 @@ deixar pra uma próxima sessão, estava cansada)**:
 Promoções, nem a página nova. Fica pra uma próxima sessão, a pedido dela.
 Antes de implementar, vale reler esta seção pra lembrar as 3 decisões
 acima sem precisar perguntar de novo.
+
+## Sessão 09-10/09/2026 — Beauty Box detalhada, Provador Virtual, newsletter e "Tinder" arquivado (tudo ainda planejamento, NADA implementado)
+Continuação da sessão anterior, só em prévias (artifacts) — nenhuma
+mudança em `index.html` até aqui. Resumo do que ficou decidido, pra não
+perder o fio quando for implementar de verdade:
+
+**Beauty Box da Semana — visual/interação fechados**:
+- Não é mais só uma grade de cards — é uma **caixa de presente clicável**
+  (laço com nó, gradiente, sombra, brilho ao redor quando pronta) que a
+  pessoa abre com animação (tampa voa, confete) depois de responder tipo
+  de pele E tipo de cabelo.
+- **2 dos 4 produtos revelados são personalizados**: o de Skincare muda
+  conforme o tipo de pele escolhido, o de Cabelo muda conforme o tipo de
+  cabelo — Maquilhagem e Perfumaria continuam sendo a curadoria fixa da
+  semana, igual pra todo mundo (skincare/cabelo são as duas categorias
+  onde o tipo de pele/cabelo realmente muda a recomendação; maquiagem e
+  perfume não têm esse critério claro).
+- Botão "← Escolher outro tipo de pele" depois de abrir, pra testar outra
+  combinação sem recarregar a página.
+- **Decidido nesta sessão**: só produtos das 5 lojas com afiliado de
+  verdade (L'Occitane, Natura, Forever Liss, Boticário, Ama Beleza) entram
+  na Beauty Box e na newsletter — as outras 16 lojas de graça (sem
+  comissão) ficam de fora dessas duas, mesmo continuando normalmente no
+  comparador. Isso não é mudança de código, é regra de curadoria que a
+  Priscila segue na hora de escolher os produtos.
+- Reabastecimento: explicado que o site não pode inventar promoção
+  sozinho (precisa de curadoria humana pra não errar), mas pode
+  **revezar automaticamente** entre um estoque que a Priscila cadastra de
+  uma vez só (ex: um mês de opções por tipo de pele/cabelo), trocando
+  sozinho toda semana sem ela precisar entrar toda semana pra atualizar.
+
+**Provador Virtual — mockup validado, abordagem técnica dada**:
+- Prévia simulada (rosto ilustrado em SVG, sem câmera) confirmou o
+  conceito visualmente — a versão de câmera ao vivo de verdade só
+  funcionaria no site real (existe tecnologia gratuita do Google,
+  MediaPipe, pra reconhecimento facial no navegador), não dá pra testar
+  isso dentro do ambiente de prévia (Claude Artifacts bloqueia esse tipo
+  de chamada de rede em tempo de execução).
+- **Pergunta de onde vêm as cores reais, respondida**: em vez de cadastrar
+  cor por cor manualmente (viável só pra poucos produtos) ou tentar
+  extrair da foto da embalagem (pouco confiável), a ideia melhor que
+  surgiu foi **ler o nome da cor no título do produto** (muitos produtos
+  brasileiros já têm isso, tipo "Batom Vult Cor Nude 04") e mapear pra uma
+  paleta de cores genéricas prontas — cobre boa parte do catálogo sem
+  trabalho manual, produto sem cor identificável simplesmente fica de fora
+  do provador (nunca mostra cor errada).
+- Plano: começar pequeno, só com produtos curados manualmente (10-15),
+  crescer depois.
+
+**Newsletter por e-mail — plano definido**:
+- Formulário de cadastro (nome opcional, e-mail, tipo de pele, tipo de
+  cabelo) — prévia aprovada, com tela de confirmação depois de enviar.
+- Aparece num momento natural (depois da pessoa já ter aberto a Beauty
+  Box ou terminado o quiz), não como parede obrigatória antes de usar o
+  site — decisão explícita contra exigir cadastro pra liberar quiz/Beauty
+  Box/Provador: isso mataria a fricção zero que faz essas ferramentas
+  funcionarem como isca de atração (objetivo principal da Priscila agora
+  é tornar o site conhecido, não vender assinatura).
+- Ferramenta sugerida: **Brevo** (plano grátis generoso, usada no Brasil/
+  Portugal, cancelamento de inscrição automático em todo e-mail — resolve
+  a exigência legal da LGPD sozinha). A Priscila mesma montaria e mandaria
+  o e-mail toda semana, numa tela visual (sem código) — mesmo trabalho que
+  já faz hoje cadastrando promoção, só que numa ferramenta de e-mail.
+  Personalização por tipo de pele/cabelo funciona por "etiquetas"/
+  segmentação dentro da própria ferramenta.
+- **Confirmado**: link de afiliado funciona igual custe onde for clicado
+  (site, e-mail, WhatsApp) — não precisa mandar a pessoa voltar pro site,
+  o e-mail pode linkar direto pra loja parceira e a comissão registra do
+  mesmo jeito. Só as 5 lojas com afiliado de verdade geram comissão,
+  como já é hoje no comparador.
+- **Proteção de dados**: vai exigir atualizar a Política de Privacidade
+  (novo parágrafo avisando sobre coleta de e-mail/pele/cabelo pra
+  newsletter) quando isso for implementado de verdade — ainda não feito,
+  fica pendente pra quando o formulário for ao ar.
+
+**"Estilo Tinder" (curtir/passar produtos) — ARQUIVADO, não vamos fazer
+por enquanto**. Motivo dado pela própria Priscila, e que faz total
+sentido: o mecanismo só funciona quando a pessoa está navegando sem saber
+o que quer ainda (tipo redes sociais) — no VERAORIS ela já escolhe
+categoria/tipo de pele/tipo de produto ANTES de ver qualquer coisa (via
+quiz ou filtro), então não sobra "descoberta" nenhuma pra fazer curtindo.
+Só funcionaria como uma tela solta e desconectada do resto do fluxo do
+site, o que não faz sentido. Puro planejamento descartado, nenhum código
+chegou a ser escrito no `index.html` — só existiu como prévia em artifact.
+
+**Nada disso foi implementado ainda** — as três ideias que seguem (Beauty
+Box, Provador Virtual, Newsletter) estão só como prévia aprovada,
+aguardando a Priscila decidir quando começar a implementação de verdade.
