@@ -2805,6 +2805,33 @@ function termMatchesWord(hay, term){
   var esc = t.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
   return new RegExp('(^|[^a-z0-9])'+esc+'([^a-z0-9]|$)','i').test(h);
 }
+// Achado real (11/09/2026): quiz de Skincare com preocupação "Acne" e nenhum produto
+// específico escolhido caía num termo genérico de busca ("hidratante") que não sabe nada
+// sobre acne — trazia hidratante CORPORAL, creme de mãos e até óleo firmador (contraindicado
+// pra pele acneica, pode piorar cravos/espinhas). Rede de segurança: mesmo que o termo de
+// busca já tenha sido melhorado (ver quizSearchTerms), qualquer resultado — de qualquer
+// termo, catálogo ou loja parceira — que pareça corpo/mãos/óleo/anti-idade nunca deve
+// aparecer quando a preocupação é acne.
+var ACNE_UNSAFE_HINTS=['corporal','corpo','banho','maos','firmador','firmeza','antissinais','anti-idade','antiidade','rugas','colageno'];
+function isAcneUnsafeTitle(title){
+  var t=foldAccents((title||'').toLowerCase());
+  if(/\boleo\b/.test(t)) return true;
+  return ACNE_UNSAFE_HINTS.some(function(w){ return t.indexOf(w)>=0; });
+}
+// Pro CATÁLOGO fixo (curado, majoritariamente facial de verdade) o bloqueio acima já basta —
+// só tira a minoria de itens de corpo/mão que entraram por engano no mesmo `sub:'hidratante'`.
+// Pra busca AO VIVO nas lojas parceiras (menos curada, termo de busca mais amplo) isso não é
+// suficiente — "Loção Desodorante Hidratante Ma Chérie"/"Hidratante Granita Citrus Verbena"
+// (achado real, 11/09/2026) são linhas de CORPO da Natura mas o título não denuncia isso com
+// nenhuma palavra da lista acima. Pra busca ao vivo a regra é ao contrário: só aceita se o
+// título REALMENTE provar que é facial/tratamento de acne — mesma estratégia já usada em
+// Perfumaria (prova positiva, não lista de exclusão).
+var ACNE_SAFE_HINTS=['facial','rosto','sabonete','limpeza','micelar','serum','sérum','tonico','tônico','esfoliante','salicilico','salicílico','acne','oleosa','oleoso','oil free','oil-free','mascara facial','máscara facial'];
+function isAcneSafeTitle(title){
+  var t=foldAccents((title||'').toLowerCase());
+  if(isAcneUnsafeTitle(title)) return false;
+  return ACNE_SAFE_HINTS.some(function(w){ return t.indexOf(foldAccents(w))>=0; });
+}
 function renderProds(){
   var g=document.getElementById('productGrid');if(!g)return;
 
@@ -8781,6 +8808,12 @@ function renderAmazonResults(){
   if(qD.cat && qD.cat!=='todos'){
     pool=pool.filter(function(p){return p.cat===qD.cat;});
   }
+  // Mesma rede de segurança da busca ao vivo (ver isAcneUnsafeTitle): o catálogo fixo guarda
+  // hidratante CORPORAL e creme de mãos sob o mesmo `sub:'hidratante'` do rosto — sem isso,
+  // um quiz de Acne podia sugerir "Loção Hidratante Corporal" da estante de skincare.
+  if(qD.cat==='skincare' && (qD.concern||[]).indexOf('acne')>=0){
+    pool=pool.filter(function(p){ return !isAcneUnsafeTitle((p.brand||'')+' '+(p.name||'')); });
+  }
   pool.forEach(function(p){p._score=matchScore(p);});
   pool.sort(function(a,b){return b._score-a._score;});
 
@@ -8843,6 +8876,14 @@ function quizSearchTerms(){
     // "Base Unhas Impala" são esmalte/tratamento de unha, não maquiagem — "base líquida" é
     // específico o bastante pra não confundir, mesmo termo já usado em MAKEUP_ONLY_NOUNS.
     else if(qD.cat==='maquiagem') terms=['batom','base líquida'];
+    else if((qD.concern||[]).indexOf('acne')>=0){
+      // Achado real (11/09/2026): o termo genérico "hidratante" ignorava por completo a
+      // preocupação "Acne" escolhida no quiz e trazia hidratante corporal/óleo/creme de mãos
+      // — nada disso serve, e óleo é contraindicado. Termos testados ao vivo contra as lojas
+      // parceiras antes de publicar (Extrafarma/Awin): trazem sabonete antiacne, sérum com
+      // ácido salicílico e gel de limpeza de verdade.
+      terms=['sabonete facial oleosa','ácido salicílico'];
+    }
     else terms=['hidratante','protetor solar'];
   }
   return terms.slice(0,3);
@@ -8867,6 +8908,9 @@ function renderLiveQuizResults(){
         // Manicure precisa ser filtrado sempre, mesmo com qD.cat==='todos' — achado ao vivo
         // (07/08/2026) junto com o bug do termo "base" genérico, mesmo padrão do comparador.
         results=results.filter(function(r){ return !conflictsWithCategory(qD.cat||'todos', r.title, r.category); });
+        if(qD.cat==='skincare' && (qD.concern||[]).indexOf('acne')>=0){
+          results=results.filter(function(r){ return isAcneSafeTitle(r.title); });
+        }
         allResults=allResults.concat(results);
       }
       if(pending<=0 && allResults.length){
