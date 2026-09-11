@@ -3627,3 +3627,124 @@ aparece na posição certa, contador calcula certo (bateu "3d Xh" partindo
 de 11/09 à noite até 15/09 00h), sem erro no console. **Ainda não
 confirmado por ela em produção** — dado o prazo curto (expira em poucos
 dias), pedir pra ela conferir o quanto antes.
+
+## Sessão 11/09/2026 (continuação) — regressão real: prioridade de afiliado só funcionava no catálogo, não no quiz/busca ao vivo
+Depois de ver o banner da Eudora no ar, a Priscila reportou uma regressão:
+"os produtos de afiliados estavam aparecendo primeiro, mas agora não
+estão mais" — reproduzido por ela no quiz (Cabelo → Oleoso → Shampoo e
+Condicionador, resto em branco).
+
+**Causa raiz**: a priorização de afiliado (ordenação padrão "Mais
+vendidos" + lojas com afiliado real primeiro, implementada mais cedo
+nesta mesma leva de sessões) só tinha sido aplicada em `renderCombined()`
+— o caminho usado pelos cards do CATÁLOGO fixo. O quiz e boa parte da
+busca de produto (quando o catálogo tem poucos resultados) usam um
+caminho DIFERENTE e mais antigo — `groupLiveResults()`/`liveResultCard()`
+— que nunca recebeu o mesmo ajuste. Corrigido: mesma lógica de
+prioridade de afiliado + selo "🏆 Melhor preço" desacoplado da posição
+(sempre = menor preço de verdade, nunca da ordem visual) replicada nas
+duas funções; os dois pontos que chamam `groupLiveResults`
+(`finishRenderProds` e `renderLiveQuizResults`) passaram a mandar
+`srt`/`srtQuiz` e pré-ordenar o array por presença de afiliado antes de
+desenhar os cards. Commit `df02faa`.
+
+**Confirmado ao vivo em produção**: reproduzido o caminho exato do quiz
+que ela relatou (Cabelo → Oleoso → Shampoo) — 16 de 16 cards com loja
+afiliada real ficaram nas primeiras 16 posições de 257 resultados totais.
+
+## Sessão 11/09/2026 (continuação) — segundo bug: produto de couro cabeludo vazando pro filtro de Skincare
+Ainda testando, a Priscila reportou: quiz de Skincare (Pele Seca →
+Hidratante e Sérum) trazia "Sérum Noturno para o Couro Cabeludo
+Aromacologia" e "Sérum Tratamento Capilar Antiqueda Aromacologia" — os
+dois são produto de CABELO, não deviam aparecer em Skincare.
+
+**Causa raiz**: `HAIR_ONLY_NOUNS` não tinha a palavra solta "capilar" nem
+a frase "couro cabeludo" — só tinha frases compostas mais específicas
+("máscara capilar", "óleo capilar" etc.), que não batiam com esses dois
+títulos reais. Corrigido: `capilar` (palavra solta) e `couro cabeludo`
+adicionados à lista. Testado com os 2 títulos exatos do relato dela +
+6 casos de controle (batom hidratante, sérum facial etc., pra confirmar
+que a adição não excluía nada que devia continuar aparecendo). Commit
+`dff2693`.
+
+## Sessão 11/09/2026 (continuação) — "Tem que corrigir antes de publicar, faz uma auditoria minuciosa!!!!!!!!!!!!"
+Terceiro bug na mesma sessão: um produto "Base" (maquiagem) apareceu no
+meio de resultados de Skincare. Dessa vez a Priscila pediu explicitamente
+pra **parar de corrigir sintoma por sintoma** e fazer uma auditoria de
+verdade, com dado real, ANTES de publicar qualquer correção nova.
+
+**Auditoria rodada em segundo plano** (fork), testando com produto real
+das lojas parceiras (não só teoria). Achado real: das ~19 fontes de
+busca ao vivo, **4 marcas próprias — Dermage, Mahogany, WePink, Payot —
+nunca tinham a mesma proteção estrutural que as outras 14 farmácias/lojas
+já tinham** (um campo `category` derivado do `categories` real da API
+VTEX, chamado `structCat` no site, que confirma a categoria de verdade
+em vez de só adivinhar pela palavra do título). O comentário antigo
+dessas 4 functions dizia "marca própria, sem risco de categoria" — falso;
+testado direto nas 4 APIs reais (curl, 311 produtos únicos coletados),
+todas vendem mais de uma categoria.
+
+**Causa exata do "Base" em Skincare**: a Dermage tem uma linha de
+protetor solar com cor que funciona como base de maquiagem (ex: "Base
+Alta Cobertura FPS45", "Base Oil Free FPS 30"). A lista de exclusão de
+maquiagem (`MAKEUP_ONLY_NOUNS`) só tinha a frase "base líquida"/"base
+liquida" (de propósito, pra não excluir "Base Fortalecedora" de unha) —
+"base" sozinho nunca esteve na lista, então esses títulos passavam
+batido pro filtro de Skincare. A própria Dermage, porém, já marca esses
+produtos como `/Maquiagem/Base/` no catálogo dela — só nunca líamos essa
+informação.
+
+**Corrigido em duas partes**:
+1. As 4 functions (`dermage-search.mjs`, `mahogany-search.mjs`,
+   `wepink-search.mjs`, `payot-search.mjs`) ganharam `guessSubcat()` —
+   mesmo padrão das outras 14, adaptado ao vocabulário real de cada uma
+   (confirmado testando a API de cada loja, não chutado). A Dermage
+   precisou de uma regra mais fina: como ela marca protetor solar puro E
+   "Base"/tinted sunscreen sob a MESMA raiz genérica
+   `/Maquiagem/Proteção Solar/`, só a raiz genérica não bastava — exige
+   uma subcategoria de maquiagem ESPECÍFICA (Base, Batom, Corretivo, Pó
+   Facial, Máscara de Cílios, Olhos, Lábios, Acessórios) pra classificar
+   como maquiagem de verdade; sem subcategoria específica, fica ambíguo
+   (`null`, cai no palpite por título de antes, sem regressão).
+2. `conflictsWithCategory()` (`index.html`) ganhou um atalho: quando a
+   própria loja já confirma (`structCat`) que o produto É da categoria
+   ativa, não rejeita mais pelo palpite de palavra do título (que nunca
+   cobre tudo). Não vale pra Perfumaria, que já tem regra própria
+   diferente (prova positiva, não lista de exclusão).
+
+**Achado bônus da auditoria, mais sério que o bug original**: a WePink
+tem uma linha de produtos **íntimos/sensuais** ("wehot" — gel excitante,
+calda beijável, óleo de massagem erótica) e uma linha "Bem estar" (óleo
+essencial) que **nunca tinham filtro nenhum** — uma busca comum como
+"óleo" trazia esses produtos junto com óleo corporal de verdade, sem
+distinção. Isso é mais grave que um erro de categoria: é um produto
+fora do tema do site, potencialmente constrangedor, aparecendo numa
+busca qualquer. Corrigido: excluído por completo na origem
+(`wepink-search.mjs`, `isOutOfScope()`), não só escondido de uma
+categoria — nunca mais chega no site, nenhuma busca.
+
+**Testado antes de publicar** (seguindo à risca o pedido dela): sintaxe
+de todo o `<script>` do `index.html` + das 4 functions; teste de
+integração de ponta a ponta nos arquivos `.mjs` reais (mockando a
+resposta da API com dado real salvo, chamando o `export default` de
+verdade) — 9 casos, todos passando; teste de regressão rodando
+`conflictsWithCategory()` real contra os 311 produtos únicos coletados
+das 4 lojas — **0 vazamentos encontrados**; reconferido que os 2 bugs
+anteriores desta sessão (afiliado no quiz, couro cabeludo) continuam
+corrigidos. Só depois de toda essa validação local o commit foi feito e
+publicado (`98f09b0`).
+
+**Confirmado ao vivo em produção** depois do deploy: `dermage-search`
+real devolve `"Base Alta Cobertura FPS45"` com `category:"maquiagem"`
+(a causa raiz confirmada corrigida de ponta a ponta); `mahogany-search`
+separa corretamente a mesma linha em skincare vs. perfumaria; `payot-
+search` classifica "Batom Hidratante" como maquiagem; `wepink-search`
+não traz mais nenhum produto da linha "wehot" numa busca de "óleo" (só
+óleo capilar/corporal de verdade).
+
+**Nota pra próxima vez que uma loja nova (marca própria ou multimarca)
+for integrada**: nunca assumir "essa marca só vende uma categoria, não
+precisa de guessSubcat" sem testar contra o `categories` real da API
+primeiro — essa suposição já se provou falsa 2 vezes (Dermage, e agora
+confirmado de novo que Mahogany/WePink/Payot também tinham categorias
+que o comentário antigo não previa).
