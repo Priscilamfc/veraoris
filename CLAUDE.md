@@ -3593,3 +3593,37 @@ visualmente em produção que uma loja afiliada real aparece primeiro
 quando disponível.
 
 **Ainda não confirmado por ela em produção.**
+
+## Sessão 11/09/2026 (continuação) — Item 2: banner da promoção Eudora (cupom RECHEADA)
+Priscila recebeu um e-mail da Eudora oferecendo uma ação exclusiva de
+afiliado: cupom **RECHEADA**, compras acima de R$199 em eudora.com.br
+ganham uma nécessaire + kit de 10 amostras, válido só **11-15/09/2026 às
+00h**. Diferente de um produto com preço, é uma campanha de cupom — ela
+usa o **link geral da Awin pra eudora.com.br** (não um link de produto
+específico, que já sabemos que quebra) — link real gerado por ela:
+`https://tidd.ly/4cIpFsl`.
+
+**Implementado** (commit `336159e`): banner novo (`#eudoraPromoSec`),
+com selo "🔥 Por tempo limitado", cupom em destaque, descrição do
+brinde, contador regressivo real até o prazo, e botão pro link da Awin.
+**Posição decidida por ela em tempo real, depois de ver a primeira
+versão** (que eu tinha colocado mais abaixo, antes da Beauty Box): pediu
+pra mover pra **logo no início da página**, entre os cards "Novidade" e
+a foto principal do hero — bem visível assim que a página abre, sem
+precisar rolar nada.
+
+**Some sozinho depois do prazo**: `initEudoraPromo()` (chamada no
+`window.onload`) verifica a data logo ao carregar — se já passou de
+15/09/2026 00h, aplica `display:none` na seção inteira; o contador
+regressivo também para e esconde a seção sozinho se a página ficar
+aberta atravessando o prazo. **Pendência real anotada no próprio
+código**: depois que a campanha acabar de verdade, alguém (Priscila ou
+eu numa sessão futura) deve **remover o bloco HTML/CSS/JS inteiro**
+(não só confiar no auto-esconder) pra não acumular código morto de
+campanha antiga — comentário deixado no HTML pra lembrar disso.
+
+Testado: sintaxe validada, testado ao vivo no navegador local — banner
+aparece na posição certa, contador calcula certo (bateu "3d Xh" partindo
+de 11/09 à noite até 15/09 00h), sem erro no console. **Ainda não
+confirmado por ela em produção** — dado o prazo curto (expira em poucos
+dias), pedir pra ela conferir o quanto antes.
