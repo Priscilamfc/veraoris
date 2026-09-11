@@ -1,15 +1,29 @@
 // Mahogany — chamada DIRETA na API pública do VTEX, mesmo padrão de Época/WePink/Americanas.
 // Marca própria de cosméticos (perfumaria, corpo e banho, cabelo) desde 1991 — achada
 // pesquisando "loja de cosméticos VTEX Brasil" a pedido da Priscila (01/08/2026, pedido pra
-// aumentar a quantidade de lojas/produtos do site, mesmo sem comissão). Testado ao vivo:
-// API responde sem autenticação nem custo, catálogo inteiro é beleza (sem risco de produto
-// fora do tema, por isso sem filtro de categoria como a Americanas/Lojas Pompéia precisam).
-// Não vende maquiagem (só perfumaria/corpo/cabelo) — normal não achar resultado pra "batom".
+// aumentar a quantidade de lojas/produtos do site, mesmo sem comissão). Não vende maquiagem
+// (só perfumaria/corpo/cabelo) — normal não achar resultado pra "batom".
+// Auditoria de 11/09/2026: apesar de o catálogo inteiro ser beleza (sem risco de produto FORA
+// do tema), a suposição antiga de "sem risco de categoria" era falsa dentro do próprio tema —
+// "Hidratante Desodorante Corporal Wild Cat" (skincare) e "Fragrância Desodorante Corporal
+// Wild Cat" (perfumaria) são literalmente a mesma linha em formatos diferentes, sem nenhuma
+// palavra que distinga um do outro no título. `guessSubcat()` usa o campo `categories` real
+// (Corpo e Banho vs. Perfumaria/Fragrância) pra separar os dois de verdade.
 const CACHE_TTL_MS = 30 * 60 * 1000;
 const FETCH_TIMEOUT_MS = 8000;
 const API_URL = 'https://www.mahogany.com.br/api/catalog_system/pub/products/search';
 
 let cache = {}; // { [query]: { data, fetchedAt } }
+
+function guessSubcat(categories) {
+  const joined = (categories || []).join(' ').toLowerCase();
+  if (joined.indexOf('/maquiagem') >= 0) return 'maquiagem';
+  if (joined.indexOf('/cabelos') >= 0) return 'cabelo';
+  if (joined.indexOf('/corpo e banho') >= 0 || joined.indexOf('/rosto') >= 0 ||
+      joined.indexOf('/homem/barba') >= 0 || joined.indexOf('/homem/desodorante') >= 0) return 'skincare';
+  if (joined.indexOf('perfum') >= 0) return 'perfumaria';
+  return null;
+}
 
 function bestAvailablePrice(product) {
   let best = null;
@@ -38,7 +52,8 @@ function normalizeItems(raw) {
         store: 'Mahogany',
         link: 'https://www.mahogany.com.br/' + encodeURIComponent(p.linkText) + '/p',
         image: image || null,
-        brand: p.brand || null
+        brand: p.brand || null,
+        category: guessSubcat(p.categories)
       };
     })
     .filter(Boolean);

@@ -4,11 +4,34 @@
 //
 // MIGRADA (24/07/2026) pro runtime moderno do Netlify Functions — ver epoca-search.mjs pro
 // contexto completo (elimina o limite de 4KB de variáveis de ambiente do modo antigo).
+//
+// Auditoria de 11/09/2026: a WePink não vende só maquiagem/cabelo/skincare — tem uma linha
+// "wehot" de produtos íntimos/sensuais (gel excitante, calda beijável, óleo de massagem
+// erótica) e uma linha "Bem estar" (óleo essencial de aromaterapia). Nenhuma das duas é
+// beleza no sentido do site — e um termo comum de busca como "óleo" trazia esses produtos
+// junto com óleo corporal de verdade, sem filtro nenhum até agora. `isOutOfScope()` exclui os
+// dois inteiramente antes de chegar no site; `guessSubcat()` classifica o resto certo entre
+// as 4 categorias usando o campo `categories` real.
 const CACHE_TTL_MS = 30 * 60 * 1000; // 30 minutos, mesmo padrão das outras fontes
 const FETCH_TIMEOUT_MS = 8000;
 const API_URL = 'https://www.wepink.com.br/api/catalog_system/pub/products/search';
 
 let cache = {}; // { [query]: { data, fetchedAt } }
+
+function isOutOfScope(categories) {
+  const joined = (categories || []).join(' ').toLowerCase();
+  return joined.indexOf('wehot') >= 0 || joined.indexOf('bem estar') >= 0;
+}
+
+function guessSubcat(categories) {
+  const joined = (categories || []).join(' ').toLowerCase();
+  if (joined.indexOf('/make') >= 0) return 'maquiagem';
+  if (joined.indexOf('/hair') >= 0) return 'cabelo';
+  if (joined.indexOf('/skincare') >= 0 || joined.indexOf('the cream') >= 0 ||
+      joined.indexOf('bath&body') >= 0 || joined.indexOf('/body') >= 0) return 'skincare';
+  if (joined.indexOf('perfum') >= 0) return 'perfumaria';
+  return null;
+}
 
 function bestAvailablePrice(product) {
   let best = null;
@@ -26,6 +49,7 @@ function bestAvailablePrice(product) {
 
 function normalizeItems(raw) {
   return (raw || [])
+    .filter((p) => !isOutOfScope(p.categories))
     .map((p) => {
       const price = bestAvailablePrice(p);
       if (!price || !p.productName || !p.linkText) return null; // sem estoque em nenhum vendedor
@@ -37,7 +61,8 @@ function normalizeItems(raw) {
         store: 'WePink',
         link: 'https://www.wepink.com.br/' + encodeURIComponent(p.linkText) + '/p',
         image: image || null,
-        brand: p.brand || null
+        brand: p.brand || null,
+        category: guessSubcat(p.categories)
       };
     })
     .filter(Boolean);

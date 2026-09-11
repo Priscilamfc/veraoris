@@ -2202,6 +2202,14 @@ function conflictsWithCategory(cat, title, structCat){
   var has=function(list){ return list.some(function(w){ return t.indexOf(w)>=0; }); };
   if(has(NAIL_ONLY_NOUNS)) return true; // manicure nunca entra, mesmo em "Todas"
   if(structCat && cat && cat!=='todas' && cat!==structCat) return true;
+  // Quando a própria loja já confirma que o produto É da categoria ativa (ex: Dermage marcou
+  // "Base Alta Cobertura FPS45" como /Maquiagem/Base/), não faz sentido ainda rejeitar pelo
+  // palpite de palavra do título — a lista de palavras nunca cobre tudo (esse título nem tem
+  // "base líquida"), e a confirmação estruturada é mais confiável. Não vale pra perfumaria,
+  // que já tem regra própria mais embaixo (prova positiva, não lista de exclusão). Achado na
+  // auditoria de 11/09/2026 que corrigiu o vazamento de "Base" (maquiagem) pro filtro de
+  // Skincare.
+  if(structCat && cat && structCat===cat && cat!=='perfumaria') return false;
   if(cat==='skincare') return has(MAKEUP_ONLY_NOUNS) || has(HAIR_ONLY_NOUNS) || has(PERFUME_ONLY_NOUNS);
   if(cat==='maquiagem') return has(SKINCARE_ONLY_NOUNS) || has(HAIR_ONLY_NOUNS) || has(PERFUME_ONLY_NOUNS) || isGenericHidratante(t);
   if(cat==='cabelo') return has(MAKEUP_ONLY_NOUNS) || has(SKINCARE_ONLY_NOUNS) || has(PERFUME_ONLY_NOUNS) || isGenericHidratante(t);

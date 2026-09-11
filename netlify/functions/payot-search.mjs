@@ -1,15 +1,25 @@
 // Payot — chamada DIRETA na API pública do VTEX, mesmo padrão de Época/WePink/Americanas/
 // Mahogany. Marca própria de skincare e maquiagem (loja oficial, lojapayot.com.br) — achada
 // pesquisando mais lojas VTEX a pedido da Priscila (04-05/08/2026, aumentar quantidade de
-// lojas/produtos, mesmo sem comissão). Testado ao vivo: API responde sem autenticação nem
-// custo, catálogo inteiro é beleza própria (skincare, corpo, maquiagem) — sem risco de
-// produto fora do tema, por isso sem filtro de categoria como as farmácias precisam (mesmo
-// tratamento que Mahogany/WePink, marcas próprias).
+// lojas/produtos, mesmo sem comissão). Catálogo inteiro é beleza própria (skincare, corpo,
+// maquiagem) — sem risco de produto FORA do tema, mas a auditoria de 11/09/2026 confirmou
+// categorias bem separadas (Maquiagem/Skincare/Cuidado Corporal/Cabelos) — `guessSubcat()`
+// usa o campo `categories` real pra classificar certo entre elas, em vez de confiar só no
+// título (mesmo padrão agora usado em Dermage/Mahogany/WePink).
 const CACHE_TTL_MS = 30 * 60 * 1000;
 const FETCH_TIMEOUT_MS = 8000;
 const API_URL = 'https://www.lojapayot.com.br/api/catalog_system/pub/products/search';
 
 let cache = {}; // { [query]: { data, fetchedAt } }
+
+function guessSubcat(categories) {
+  const joined = (categories || []).join(' ').toLowerCase();
+  if (joined.indexOf('/maquiagem') >= 0) return 'maquiagem';
+  if (joined.indexOf('/cabelos') >= 0) return 'cabelo';
+  if (joined.indexOf('/skincare') >= 0 || joined.indexOf('cuidado corporal') >= 0) return 'skincare';
+  if (joined.indexOf('perfum') >= 0) return 'perfumaria';
+  return null;
+}
 
 function bestAvailablePrice(product) {
   let best = null;
@@ -38,7 +48,8 @@ function normalizeItems(raw) {
         store: 'Payot',
         link: 'https://www.lojapayot.com.br/' + encodeURIComponent(p.linkText) + '/p',
         image: image || null,
-        brand: p.brand || null
+        brand: p.brand || null,
+        category: guessSubcat(p.categories)
       };
     })
     .filter(Boolean);
