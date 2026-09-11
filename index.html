@@ -428,7 +428,7 @@ footer{background:linear-gradient(135deg,#FFF0F6,#FFDCEC);padding:40px 40px 24px
 @media (max-width:480px){.tut-step{grid-template-columns:30px 1fr;gap:10px}.tut-step-n{font-size:1.3rem}}
 /* Cards "Novidade" na home (Tutorial + Beauty Box), lado a lado, acima do hero */
 .novidade-cards{display:grid;grid-template-columns:1fr 1fr;gap:14px;padding:18px 40px;background:var(--marble);position:relative;z-index:4}
-@media(max-width:640px){.novidade-cards{grid-template-columns:1fr;padding:14px 20px}}
+@media(max-width:640px){.novidade-cards{grid-template-columns:1fr;padding:14px 20px}#eudoraPromoSec{padding:0 20px 14px!important}}
 .nov-card{background:var(--gg);border:none;border-radius:14px;padding:16px 18px;display:flex;align-items:center;gap:14px;cursor:pointer;transition:all .2s;text-align:left;box-shadow:0 6px 18px rgba(163,18,86,.25)}
 .nov-card:hover{transform:translateY(-2px);box-shadow:0 12px 30px rgba(163,18,86,.4)}
 .nov-ico{width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,.85);color:var(--gold5);font-size:19px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
@@ -531,6 +531,25 @@ footer{background:linear-gradient(135deg,#FFF0F6,#FFDCEC);padding:40px 40px 24px
 .renews{font-size:11px;color:var(--muted);margin-bottom:20px}
 .back-to-skin{background:none;border:1.5px solid var(--marble3);border-radius:22px;padding:9px 20px;font-size:12px;font-weight:600;color:var(--muted);transition:all .2s;cursor:pointer}
 .back-to-skin:hover{border-color:var(--gold);color:var(--gold5)}
+
+/* ===== Banner de promoção por tempo limitado (Eudora, 11-15/09/2026) ===== */
+.eudora-banner{max-width:1100px;margin:0 auto;background:linear-gradient(120deg,#2B1B33 0%,#4A2A52 60%,#6B3A54 100%);border-radius:18px;padding:32px 36px;display:flex;align-items:center;gap:28px;flex-wrap:wrap;color:#fff;position:relative;overflow:hidden}
+.eudora-banner::before{content:'✦';position:absolute;font-size:200px;color:rgba(255,255,255,.05);right:-20px;bottom:-60px;font-family:Cormorant Garamond,serif}
+.eudora-badge{background:#E63946;color:#fff;font-size:10px;font-weight:800;letter-spacing:1.3px;text-transform:uppercase;padding:5px 12px;border-radius:12px;display:inline-flex;align-items:center;gap:5px;margin-bottom:12px}
+.eudora-main{flex:1;min-width:260px;position:relative;z-index:1}
+.eudora-title{font-family:Cormorant Garamond,serif;font-size:1.7rem;font-weight:600;margin-bottom:8px;line-height:1.2}
+.eudora-title em{color:var(--gold3);font-style:italic}
+.eudora-desc{font-size:13.5px;color:rgba(255,255,255,.82);line-height:1.65;max-width:440px}
+.eudora-desc b{color:#fff}
+.eudora-coupon-row{display:flex;align-items:center;gap:10px;margin-top:16px;flex-wrap:wrap}
+.eudora-coupon{background:rgba(255,255,255,.12);border:1.5px dashed rgba(255,255,255,.5);border-radius:10px;padding:8px 18px;font-family:Cormorant Garamond,serif;font-size:1.3rem;font-weight:700;letter-spacing:2px;color:#fff}
+.eudora-min{font-size:11.5px;color:rgba(255,255,255,.7)}
+.eudora-side{position:relative;z-index:1;text-align:center;flex-shrink:0;display:flex;flex-direction:column;align-items:center;gap:12px}
+.eudora-count-lbl{font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:rgba(255,255,255,.6);margin-bottom:4px}
+.eudora-count{font-family:Cormorant Garamond,serif;font-size:1.8rem;font-weight:600;color:#fff}
+.eudora-btn{background:var(--gg);color:var(--night);border:none;border-radius:24px;padding:13px 28px;font-size:13.5px;font-weight:800;white-space:nowrap;box-shadow:0 6px 18px rgba(230,64,125,.4);transition:transform .15s;cursor:pointer}
+.eudora-btn:hover{transform:translateY(-2px)}
+@media(max-width:640px){.eudora-banner{padding:24px 22px;justify-content:center;text-align:center}.eudora-desc{max-width:none}}
 .bb-empty-note{font-size:13px;color:var(--muted);padding:20px 0}
 
 .how-steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin:24px 0}
@@ -971,6 +990,29 @@ textarea.form-inp{resize:vertical;min-height:140px}
     <div class="nov-ico">🎁</div>
     <div class="nov-body"><span class="nov-badge" id="bbRibbonBadge">Novidade</span><div class="nov-title" id="bbRibbonTxt">Beauty Box da Semana</div></div>
     <span class="nov-arrow">↓</span>
+  </div>
+</div>
+<!-- PROMOÇÃO POR TEMPO LIMITADO — Eudora (cupom RECHEADA, 11-15/09/2026). Some sozinho depois
+     do prazo (ver initEudoraPromo()) — remover este bloco de vez depois que a campanha
+     acabar de verdade, pra não deixar código morto acumulando. -->
+<div id="eudoraPromoSec" style="padding:0 40px 18px;background:var(--marble)">
+  <div class="eudora-banner">
+    <div class="eudora-main">
+      <span class="eudora-badge">🔥 Por tempo limitado</span>
+      <h2 class="eudora-title">Ganhe uma <em>Nécessaire Recheada de Mimos</em></h2>
+      <p class="eudora-desc">Compras acima de <b>R$ 199</b> na Eudora ganham de brinde uma nécessaire exclusiva + kit com 10 amostras (Absolu, Prestige, Pink Peônia e Siàge).</p>
+      <div class="eudora-coupon-row">
+        <span class="eudora-coupon">RECHEADA</span>
+        <span class="eudora-min">use este cupom no carrinho</span>
+      </div>
+    </div>
+    <div class="eudora-side">
+      <div>
+        <div class="eudora-count-lbl">Termina em</div>
+        <div class="eudora-count" id="eudoraCountdown">—</div>
+      </div>
+      <a href="https://tidd.ly/4cIpFsl" target="_blank" rel="noopener" onclick="trackClick('Eudora','Cupom RECHEADA',0,'Eudora','Nécessaire Recheada de Mimos')"><button class="eudora-btn">Aproveitar na Eudora →</button></a>
+    </div>
   </div>
 </div>
 <div class="hero">
@@ -2364,6 +2406,7 @@ window.onload=function(){
   updateDash();
   renderPromosHome();
   initBeautyBoxHome();
+  initEudoraPromo();
   renderDicaHome();
   renderTrendingHome();
   registerVisit('home');
@@ -3643,6 +3686,28 @@ function brevoSubscribe(email, skinLabel, hairLabel){
     headers:{'Content-Type':'application/json'},
     body:JSON.stringify({email:email, skin:skinLabel, hair:hairLabel})
   }).catch(function(err){ console.log('Brevo subscribe falhou:', err); });
+}
+
+// ── PROMOÇÃO POR TEMPO LIMITADO (Eudora, cupom RECHEADA) ──
+// Termina sozinho, sem precisar lembrar de tirar do site manualmente — depois de
+// 15/09/2026 00h a seção some (display:none) na próxima vez que a home carregar.
+var EUDORA_PROMO_DEADLINE = new Date(2026, 8, 15, 0, 0, 0); // mês 8 = setembro (0-indexado)
+function initEudoraPromo(){
+  var sec=document.getElementById('eudoraPromoSec');
+  if(!sec) return;
+  if(new Date() >= EUDORA_PROMO_DEADLINE){ sec.style.display='none'; return; }
+  function tick(){
+    var diff = EUDORA_PROMO_DEADLINE - new Date();
+    var el=document.getElementById('eudoraCountdown');
+    if(!el) return;
+    if(diff<=0){ sec.style.display='none'; clearInterval(_eudoraTimer); return; }
+    var d=Math.floor(diff/(1000*60*60*24));
+    var h=Math.floor((diff/(1000*60*60))%24);
+    var m=Math.floor((diff/(1000*60))%60);
+    el.textContent=d+'d '+h+'h '+m+'m';
+  }
+  tick();
+  var _eudoraTimer=setInterval(tick, 60000);
 }
 
 // ── STATS TAB ──
