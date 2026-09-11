@@ -2128,7 +2128,18 @@ var MAKEUP_ONLY_NOUNS=['batom','gloss','sombra','delineador','rímel','rimel','b
 // em `conflictsWithCategory`, exclui de TODAS as 4 categorias (inclusive "Todas"), não só
 // reclassifica. Achado ao vivo (07/08/2026): "Base Fortalecedora Risqué", "Base Unhas
 // Impala" passavam pelo termo genérico "base" do quiz e apareciam como maquiagem.
-var NAIL_ONLY_NOUNS=['esmalte','base fortalecedora','base para unhas','base unhas','top coat','fortalecedor de unhas','removedor de esmalte','unha postiça','unha postica','cutícula','cuticula'];
+// "base niveladora"/"fortalecedor de unha" (singular) entraram na auditoria de 11/09/2026:
+// "Base Niveladora Hipoalergênica Risqué" escapava da lista (só tinha "base fortalecedora"/
+// "base para unhas"/"base unhas") e aparecia em Perfumaria por causa da raiz genérica "Beleza
+// e perfumaria" da Americanas confundindo `guessSubcat`.
+var NAIL_ONLY_NOUNS=['esmalte','base fortalecedora','base niveladora','base para unhas','base unhas','top coat','fortalecedor de unhas','fortalecedor de unha','removedor de esmalte','unha postiça','unha postica','cutícula','cuticula'];
+// Produto fora do tema do site inteiro (nem beleza é) — nunca deve aparecer em NENHUMA
+// categoria, igual ao tratamento de manicure acima. Achado na auditoria de 11/09/2026:
+// "Protetor Diário" (absorvente/higiene íntima feminina) e shampoo/colônia de PET apareciam
+// misturados em busca comum como "protetor solar" ou "shampoo" — nenhuma das duas coisas é
+// vendida pelo site, mas nenhuma lista de categoria barrava (a palavra "perfumado"/"colônia"
+// nem sempre denuncia).
+var OUT_OF_SCOPE_NOUNS=['protetor diário','protetor diario','absorvente','calcinha',' pets',' pet ','para cães','para caes','para gatos','ração','racao','veterinár'];
 // Achado real (27/07/2026): as frases compostas exatas ("hidratante facial") quase nunca
 // aparecem literalmente em título de produto de verdade — as lojas escrevem "Leite Hidratante
 // Rosto e Corpo", "Fluído Hidratante Relaxante", "Creme de Barbear Hidratante" etc., nenhuma
@@ -2152,7 +2163,10 @@ var SKINCARE_ONLY_NOUNS=['hidratante facial','hidratante corporal','corporal hid
 // "raiz oleosa"/"pontas secas" são vocabulário de cabelo mesmo sem dizer "capilar"/"cabelo"
 // literalmente (achado ao vivo, 28/07/2026: "Máscara de Tratamento... Niely Gold Detox Raiz
 // Oleosa e Pontas Secas" passava batido pro filtro de Maquiagem).
-var HAIR_ONLY_NOUNS=['shampoo','condicionador','leave-in','leave in','óleo capilar','oleo capilar','máscara capilar','mascara capilar','tônico capilar','tonico capilar','ampola capilar','cabelo','raiz oleosa','pontas secas','capilar','couro cabeludo'];
+// "protetor térmico" entrou na auditoria de 11/09/2026: protetor térmico capilar (Forever
+// Liss) é vendido pela Awin, que ainda não tem `structCat` (depende de coluna nova no feed,
+// pendência da Priscila) — sem essa frase, escapava do filtro de Skincare.
+var HAIR_ONLY_NOUNS=['shampoo','condicionador','leave-in','leave in','óleo capilar','oleo capilar','máscara capilar','mascara capilar','tônico capilar','tonico capilar','ampola capilar','protetor térmico','protetor termico','cabelo','raiz oleosa','pontas secas','capilar','couro cabeludo'];
 // "parfum"/"eau fraiche" entraram na sessão de 05/08/2026: achado ao vivo que "hidratante
 // pele oleosa" ordenado por Maior preço mostrava perfume (Drogaria Venâncio) dentro do
 // filtro de Skincare — os títulos usam grafia francesa/inglesa sem a palavra "perfume" em
@@ -2200,19 +2214,29 @@ function isGenericHidratante(t){
 function conflictsWithCategory(cat, title, structCat){
   var t=(title||'').toLowerCase();
   var has=function(list){ return list.some(function(w){ return t.indexOf(w)>=0; }); };
+  // "perfume" aparece dentro de "SEM perfume" (fragrance-free) o tempo todo — sem checar as
+  // frases de falso-positivo aqui também (já existiam só pro filtro de Perfumaria), qualquer
+  // hidratante/desodorante "Sem Perfume" era tratado como se FOSSE perfume e ficava
+  // erroneamente de fora de Skincare/Maquiagem/Cabelo. Achado real na auditoria de 11/09/2026
+  // (21 produtos reais afetados, ex: "Loção Hidratante Corporal Nutriol Sem Perfume").
+  var hasRealPerfume=function(){ return has(PERFUME_ONLY_NOUNS) && !has(PERFUME_FALSE_POSITIVE_HINTS); };
   if(has(NAIL_ONLY_NOUNS)) return true; // manicure nunca entra, mesmo em "Todas"
+  if(has(OUT_OF_SCOPE_NOUNS)) return true; // produto de pet/higiene íntima, fora do tema do site
   if(structCat && cat && cat!=='todas' && cat!==structCat) return true;
-  // Quando a própria loja já confirma que o produto É da categoria ativa (ex: Dermage marcou
-  // "Base Alta Cobertura FPS45" como /Maquiagem/Base/), não faz sentido ainda rejeitar pelo
-  // palpite de palavra do título — a lista de palavras nunca cobre tudo (esse título nem tem
-  // "base líquida"), e a confirmação estruturada é mais confiável. Não vale pra perfumaria,
-  // que já tem regra própria mais embaixo (prova positiva, não lista de exclusão). Achado na
-  // auditoria de 11/09/2026 que corrigiu o vazamento de "Base" (maquiagem) pro filtro de
-  // Skincare.
-  if(structCat && cat && structCat===cat && cat!=='perfumaria') return false;
-  if(cat==='skincare') return has(MAKEUP_ONLY_NOUNS) || has(HAIR_ONLY_NOUNS) || has(PERFUME_ONLY_NOUNS);
-  if(cat==='maquiagem') return has(SKINCARE_ONLY_NOUNS) || has(HAIR_ONLY_NOUNS) || has(PERFUME_ONLY_NOUNS) || isGenericHidratante(t);
-  if(cat==='cabelo') return has(MAKEUP_ONLY_NOUNS) || has(SKINCARE_ONLY_NOUNS) || has(PERFUME_ONLY_NOUNS) || isGenericHidratante(t);
+  // NÃO existe mais um atalho "structCat confirma a categoria ativa → aceita sem checar
+  // palavra nenhuma". Existiu por um dia (11/09/2026) pra resolver o vazamento de "Base"
+  // (Dermage) — mas a mesma auditoria achou 2 casos reais onde a PRÓPRIA loja classifica
+  // errado (Drogaria Globo marcou "Máscara Capilar Siage Hair Plastia" como `category:
+  // "skincare"`, mesmo o título dizendo "Capilar" bem claro) — confiar cegamente nisso
+  // AMPLIFICAVA o erro da loja em vez de servir de rede de segurança. A checagem de palavra
+  // abaixo já resolvia o caso do "Base" sozinha (o título não tem NENHUMA palavra de
+  // Skincare/Cabelo/Perfume que pudesse excluí-lo por engano) — o atalho nunca foi necessário
+  // pra esse bug, só escondia este outro. `structCat` continua usado (ver checagem acima) só
+  // pra CONFIRMAR conflito quando a loja diz que é OUTRA categoria — nunca mais pra pular a
+  // checagem de palavra quando ela concorda.
+  if(cat==='skincare') return has(MAKEUP_ONLY_NOUNS) || has(HAIR_ONLY_NOUNS) || hasRealPerfume();
+  if(cat==='maquiagem') return has(SKINCARE_ONLY_NOUNS) || has(HAIR_ONLY_NOUNS) || hasRealPerfume() || isGenericHidratante(t);
+  if(cat==='cabelo') return has(MAKEUP_ONLY_NOUNS) || has(SKINCARE_ONLY_NOUNS) || hasRealPerfume() || isGenericHidratante(t);
   // Perfumaria é diferente das outras 3: é uma categoria estreita (só perfume/colônia/body
   // splash), não um guarda-chuva amplo. Excluir só o que "parece outra categoria" não basta —
   // sobra qualquer creme/máscara/tratamento que não menciona nenhuma palavra das listas de
@@ -2831,6 +2855,16 @@ function isAcneSafeTitle(title){
   var t=foldAccents((title||'').toLowerCase());
   if(isAcneUnsafeTitle(title)) return false;
   return ACNE_SAFE_HINTS.some(function(w){ return t.indexOf(foldAccents(w))>=0; });
+}
+// Achado real na auditoria de 11/09/2026: mesmo fora do concern Acne, um creme de MÃOS
+// aparecia como 1º resultado buscando "creme antiidade" — o quiz de Skincare é sempre sobre
+// rosto (ver rotinas do quiz de tipo de pele), então corpo/mãos/banho nunca fazem sentido em
+// NENHUMA preocupação, não só acne. Mais leve que `isAcneUnsafeTitle` (sem excluir óleo — óleo
+// facial é legítimo pra hidratação/brilho, só é contraindicado especificamente pra acne).
+var SKINCARE_BODY_HINTS=['corporal','corpo','banho','maos'];
+function isBodyOrHandTitle(title){
+  var t=foldAccents((title||'').toLowerCase());
+  return SKINCARE_BODY_HINTS.some(function(w){ return t.indexOf(w)>=0; });
 }
 function renderProds(){
   var g=document.getElementById('productGrid');if(!g)return;
@@ -8808,11 +8842,16 @@ function renderAmazonResults(){
   if(qD.cat && qD.cat!=='todos'){
     pool=pool.filter(function(p){return p.cat===qD.cat;});
   }
-  // Mesma rede de segurança da busca ao vivo (ver isAcneUnsafeTitle): o catálogo fixo guarda
-  // hidratante CORPORAL e creme de mãos sob o mesmo `sub:'hidratante'` do rosto — sem isso,
-  // um quiz de Acne podia sugerir "Loção Hidratante Corporal" da estante de skincare.
-  if(qD.cat==='skincare' && (qD.concern||[]).indexOf('acne')>=0){
-    pool=pool.filter(function(p){ return !isAcneUnsafeTitle((p.brand||'')+' '+(p.name||'')); });
+  // Mesma rede de segurança da busca ao vivo (ver isAcneUnsafeTitle/isBodyOrHandTitle): o
+  // catálogo fixo guarda hidratante CORPORAL e creme de mãos sob o mesmo `sub:'hidratante'`
+  // do rosto — sem isso, um quiz de Skincare (qualquer preocupação, não só Acne — achado real
+  // na auditoria de 11/09/2026) podia sugerir "Loção Hidratante Corporal"/"Creme para Mãos".
+  if(qD.cat==='skincare'){
+    if((qD.concern||[]).indexOf('acne')>=0){
+      pool=pool.filter(function(p){ return !isAcneUnsafeTitle((p.brand||'')+' '+(p.name||'')); });
+    } else {
+      pool=pool.filter(function(p){ return !isBodyOrHandTitle((p.brand||'')+' '+(p.name||'')); });
+    }
   }
   pool.forEach(function(p){p._score=matchScore(p);});
   pool.sort(function(a,b){return b._score-a._score;});
@@ -8869,22 +8908,49 @@ function quizSearchTerms(){
     if(kws[0] && terms.indexOf(kws[0])<0) terms.push(kws[0]);
   });
   if(!terms.length){
-    // Nenhum tipo específico escolhido — termo genérico da categoria, pra nunca ficar sem
-    // nenhuma busca ao vivo (mesmo padrão já usado na navegação por Perfumaria).
-    if(qD.cat==='cabelo') terms=['shampoo','condicionador'];
+    // Nenhum tipo específico escolhido. Achado real na auditoria de 11/09/2026: até ontem,
+    // TODA preocupação de pele (menos Acne) caía sempre em ['hidratante','protetor solar'], e
+    // TODA preocupação de cabelo caía sempre em ['shampoo','condicionador'] — a escolha da
+    // pessoa era decorativa. Exemplo real achado: concern="Proteção da Cor" buscando "shampoo"
+    // trazia "Shampoo Purificante" (clarificante, tira cor do cabelo tingido — o oposto do que
+    // foi pedido) e até um shampoo de PET. Termos abaixo testados ao vivo contra as lojas
+    // parceiras antes de publicar (cada um com resultado real de verdade, não só teoria).
+    if(qD.cat==='cabelo'){
+      var HAIR_CONCERN_TERMS={
+        antiqueda:['shampoo antiqueda','tônico antiqueda'],
+        anticaspa:['shampoo anticaspa'],
+        hidratacao:['máscara de hidratação capilar','condicionador hidratante'],
+        coloridos:['shampoo matizador'],
+        reconstrucao:['máscara reconstrutora capilar','ampola de reconstrução'],
+        brilho:['óleo de brilho capilar'],
+        volume:['shampoo volumizador'],
+        definicao:['creme de pentear cachos','ativador de cachos']
+      };
+      (qD.hair_concern||[]).forEach(function(hc){
+        (HAIR_CONCERN_TERMS[hc]||[]).forEach(function(t){ if(terms.indexOf(t)<0) terms.push(t); });
+      });
+      if(!terms.length) terms=['shampoo','condicionador'];
+    }
     // "base" sozinho é ambíguo (achado ao vivo, 07/08/2026): "Base Fortalecedora Risqué",
     // "Base Unhas Impala" são esmalte/tratamento de unha, não maquiagem — "base líquida" é
     // específico o bastante pra não confundir, mesmo termo já usado em MAKEUP_ONLY_NOUNS.
     else if(qD.cat==='maquiagem') terms=['batom','base líquida'];
-    else if((qD.concern||[]).indexOf('acne')>=0){
-      // Achado real (11/09/2026): o termo genérico "hidratante" ignorava por completo a
-      // preocupação "Acne" escolhida no quiz e trazia hidratante corporal/óleo/creme de mãos
-      // — nada disso serve, e óleo é contraindicado. Termos testados ao vivo contra as lojas
-      // parceiras antes de publicar (Extrafarma/Awin): trazem sabonete antiacne, sérum com
-      // ácido salicílico e gel de limpeza de verdade.
-      terms=['sabonete facial oleosa','ácido salicílico'];
+    else{
+      var SKIN_CONCERN_TERMS={
+        hidratacao:['hidratante facial'],
+        acne:['sabonete facial oleosa','ácido salicílico'],
+        antiidade:['sérum antiidade','creme antiidade'],
+        manchas:['sérum clareador','creme para manchas'],
+        solar:['protetor solar facial'],
+        limpeza:['sabonete facial'],
+        olheiras:['creme para os olhos'],
+        poros:['ácido salicílico']
+      };
+      (qD.concern||[]).forEach(function(sc){
+        (SKIN_CONCERN_TERMS[sc]||[]).forEach(function(t){ if(terms.indexOf(t)<0) terms.push(t); });
+      });
+      if(!terms.length) terms=['hidratante','protetor solar'];
     }
-    else terms=['hidratante','protetor solar'];
   }
   return terms.slice(0,3);
 }
@@ -8908,8 +8974,12 @@ function renderLiveQuizResults(){
         // Manicure precisa ser filtrado sempre, mesmo com qD.cat==='todos' — achado ao vivo
         // (07/08/2026) junto com o bug do termo "base" genérico, mesmo padrão do comparador.
         results=results.filter(function(r){ return !conflictsWithCategory(qD.cat||'todos', r.title, r.category); });
-        if(qD.cat==='skincare' && (qD.concern||[]).indexOf('acne')>=0){
-          results=results.filter(function(r){ return isAcneSafeTitle(r.title); });
+        if(qD.cat==='skincare'){
+          if((qD.concern||[]).indexOf('acne')>=0){
+            results=results.filter(function(r){ return isAcneSafeTitle(r.title); });
+          } else {
+            results=results.filter(function(r){ return !isBodyOrHandTitle(r.title); });
+          }
         }
         allResults=allResults.concat(results);
       }
