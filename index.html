@@ -2854,7 +2854,7 @@ function normalizeProductTitle(t){
 // Agrupa resultados ao vivo de várias lojas parceiras pelo mesmo produto (Ama Beleza é
 // multimarca e revende Eudora/L'Occitane, então o mesmo item pode vir de mais de uma fonte) —
 // vira um card só com várias linhas de preço, comparação de verdade, em vez de cards repetidos.
-function groupLiveResults(results){
+function groupLiveResults(results, activeSort){
   var groups={}, order=[];
   results.forEach(function(r){
     var key=normalizeProductTitle(r.title);
@@ -2864,7 +2864,17 @@ function groupLiveResults(results){
   });
   return order.map(function(key){
     var g=groups[key];
-    g.items.sort(function(a,b){ return a.price-b.price; });
+    // Mesma regra do catálogo (renderCombined, 11/09/2026): na visão padrão "Mais vendidos",
+    // lojas com afiliado de verdade (Awin) vêm primeiro; preço só decide dentro de cada grupo.
+    // Se a pessoa escolheu Menor/Maior preço, é só preço, sem viés — pedido dela.
+    g.items.sort(function(a,b){
+      if(activeSort==='price_asc'||activeSort==='price_desc'){
+        return activeSort==='price_asc' ? a.price-b.price : b.price-a.price;
+      }
+      var aAff=(a._source==='awin')?1:0, bAff=(b._source==='awin')?1:0;
+      if(aAff!==bAff) return bAff-aAff;
+      return a.price-b.price;
+    });
     return g;
   });
 }
@@ -2877,8 +2887,12 @@ function liveResultCard(g){
   var items=g.items;
   var safeTitle=(g.title||'').replace(/'/g,"");
   var img = g.image || ISKIN;
+  // Preço mais barato de verdade entre todas as lojas do grupo — o selo "Melhor preço" nunca
+  // muda de critério mesmo quando a ordem visual prioriza loja de afiliado (ver groupLiveResults).
+  var trueBestPrice = Math.min.apply(null, items.map(function(r){return r.price;}));
+  var hasAffiliate = items.some(function(r){ return r._source==='awin'; });
   var rows=items.map(function(r,i){
-    var isBest=i===0;
+    var isBest = r.price===trueBestPrice;
     var safeStore=(r.store||'').replace(/'/g,"");
     // Feed da Awin às vezes fica desatualizado (produto removido da loja, link cai numa página
     // de erro) — quando o servidor detecta isso, usa um botão sincero de busca na loja em vez
@@ -2891,7 +2905,7 @@ function liveResultCard(g){
       +'<div style="display:flex;align-items:center;gap:8px"><span class="cpc-amt">'+cur+r.price.toFixed(2)+'</span><button class="cpc-buy">'+(lang==='pt'?'Comprar':'Buy')+'</button></div>'
       +'</a>';
   }).join('');
-  return '<div class="cpc" data-price="'+items[0].price+'">'
+  return '<div class="cpc" data-price="'+trueBestPrice+'" data-has-affiliate="'+(hasAffiliate?'1':'0')+'">'
     +'<div class="cpc-img" style="background:var(--gold4)">'
     +(g.image?'':'<span style="position:absolute;bottom:6px;left:6px;background:rgba(0,0,0,.55);color:#fff;font-size:9px;font-weight:600;padding:3px 9px;border-radius:8px;letter-spacing:.03em">'+(lang==='pt'?'Foto ilustrativa':'Illustrative photo')+'</span>')
     +'<img src="'+img+'" alt="'+(g.title||'')+'" style="width:100%;height:100%;object-fit:contain;padding:18px" loading="lazy">'
@@ -2977,10 +2991,18 @@ function finishRenderProds(pool, g){
         // legitimamente vir de mais de uma loja parceira ao mesmo tempo — agrupa por identidade
         // de título antes de virar card, pra mostrar comparação de preço de verdade entre elas
         // em vez de cards repetidos e soltos.
-        var grouped = groupLiveResults(results);
+        var grouped = groupLiveResults(results, srt);
+        if(srt!=='price_asc' && srt!=='price_desc'){
+          grouped.sort(function(a,b){
+            var aAff=a.items.some(function(r){return r._source==='awin';})?1:0;
+            var bAff=b.items.some(function(r){return r._source==='awin';})?1:0;
+            return bAff-aAff;
+          });
+        }
         var liveHtml=grouped.map(liveResultCard).join('');
         if(hadCatalogResults){
           g.insertAdjacentHTML('afterbegin', liveHtml);
+          scheduleSortOrder(g.id, srt);
           // Bug real (achado na auditoria de 06-07/08/2026): "Ver mais" chamava
           // renderProdsPage() de novo, que reescrevia `resultCount` do zero — apagava esse
           // prefixo mesmo com os cards ao vivo continuando certinhos na tela (só o texto
@@ -8849,8 +8871,16 @@ function renderLiveQuizResults(){
           seen[key]=true;
           return true;
         });
-        var grouped=groupLiveResults(deduped);
+        var grouped=groupLiveResults(deduped, srtQuiz);
+        if(srtQuiz!=='price_asc' && srtQuiz!=='price_desc'){
+          grouped.sort(function(a,b){
+            var aAff=a.items.some(function(r){return r._source==='awin';})?1:0;
+            var bAff=b.items.some(function(r){return r._source==='awin';})?1:0;
+            return bAff-aAff;
+          });
+        }
         grid.insertAdjacentHTML('afterbegin', grouped.map(liveResultCard).join(''));
+        scheduleSortOrder(grid.id, srtQuiz);
       }
     });
   });
