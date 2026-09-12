@@ -2122,7 +2122,11 @@ function looseTypeMatch(searchTerm, title){
 // (Priscila confirmou: "nenhum produto de manicure entra") — tratar esmalte como maquiagem
 // legítima deixava passar produto de unha no filtro de Maquilhagem. Movido pra
 // NAIL_ONLY_NOUNS (exclusão total, ver abaixo), nunca mais contado como maquiagem.
-var MAKEUP_ONLY_NOUNS=['batom','gloss','sombra','delineador','rímel','rimel','base líquida','base liquida','corretivo','pó compacto','po compacto','pó solto','po solto','blush','bronzer','iluminador','contorno','bb cream','paleta','lápis de olho','lapis de olho','máscara de cílios','mascara de cilios','labial','lip balm','lip gloss','primer'];
+// "sérum para sobrancelhas"/"base sérum" entraram na auditoria de 11/09/2026: buscando
+// "sérum antiidade" (Skincare), a Una vende sérum de sobrancelha e "base sérum" (fundação
+// líquida com sérum) — nenhum dos dois é skincare, mas "sérum" sozinho não é palavra exclusiva
+// de nenhuma categoria (também é usado em skincare/cabelo de verdade).
+var MAKEUP_ONLY_NOUNS=['batom','gloss','sombra','delineador','rímel','rimel','base líquida','base liquida','base sérum','base serum','corretivo','pó compacto','po compacto','pó solto','po solto','blush','bronzer','iluminador','contorno','bb cream','paleta','lápis de olho','lapis de olho','máscara de cílios','mascara de cilios','labial','lip balm','lip gloss','primer','sérum para sobrancelhas','serum para sobrancelhas'];
 // Manicure/unha nunca é vendido/comparado no site — não existe categoria própria pra isso
 // (só Skincare/Maquilhagem/Cabelo/Perfumaria). Checado ANTES de qualquer regra de categoria
 // em `conflictsWithCategory`, exclui de TODAS as 4 categorias (inclusive "Todas"), não só
@@ -2166,7 +2170,14 @@ var SKINCARE_ONLY_NOUNS=['hidratante facial','hidratante corporal','corporal hid
 // "protetor térmico" entrou na auditoria de 11/09/2026: protetor térmico capilar (Forever
 // Liss) é vendido pela Awin, que ainda não tem `structCat` (depende de coluna nova no feed,
 // pendência da Priscila) — sem essa frase, escapava do filtro de Skincare.
-var HAIR_ONLY_NOUNS=['shampoo','condicionador','leave-in','leave in','óleo capilar','oleo capilar','máscara capilar','mascara capilar','tônico capilar','tonico capilar','ampola capilar','protetor térmico','protetor termico','cabelo','raiz oleosa','pontas secas','capilar','couro cabeludo'];
+// "creme de pentear"/"estimulador de densidade" entraram na auditoria de 11/09/2026: buscando
+// "sérum antiidade"/"creme antiidade" (Skincare), sérum/creme de linhas profissionais de
+// cabelo (Davines, L'Oréal Professionnel, Forever Liss) sem a palavra "capilar" no título
+// vazavam pro filtro de Skincare — essas duas frases são sempre cabelo, cobrem os casos reais
+// achados (o produto continua sem filtro só quando NEM a marca nem o título dizem "capilar"
+// nem usam nenhuma destas frases — limitação residual conhecida, ex: "Sérum Calmante Davines
+// Naturaltech" sozinho, sem mais nenhum sinal de cabelo no título).
+var HAIR_ONLY_NOUNS=['shampoo','condicionador','leave-in','leave in','óleo capilar','oleo capilar','máscara capilar','mascara capilar','tônico capilar','tonico capilar','ampola capilar','protetor térmico','protetor termico','creme de pentear','estimulador de densidade','cabelo','raiz oleosa','pontas secas','capilar','couro cabeludo'];
 // "parfum"/"eau fraiche" entraram na sessão de 05/08/2026: achado ao vivo que "hidratante
 // pele oleosa" ordenado por Maior preço mostrava perfume (Drogaria Venâncio) dentro do
 // filtro de Skincare — os títulos usam grafia francesa/inglesa sem a palavra "perfume" em
