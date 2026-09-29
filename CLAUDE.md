@@ -1,4 +1,4 @@
-# VERAORIS — Histórico do Projeto
+﻿# VERAORIS — Histórico do Projeto
 
 Este arquivo é lido automaticamente pelo Claude Code toda vez que uma sessão começa
 dentro deste repositório. Serve como memória entre sessões: se você (Priscila) abrir
@@ -3755,8 +3755,8 @@ Priscila decidiu pausar os gastos por enquanto, pra lançar mais tarde:
   de ambiente/chaves secretas continuam guardados lá dentro). Risco
   conhecido: se passar do limite gratuito, o Netlify pausa o site sozinho
   (como em 15/07), mas nada se perde.
-- **Claude** passado de Pro pro plano gratuito — Claude Code deixa de
-  funcionar até ela assinar o Pro de novo.
+- **Claude** passado de Pro pro plano gratuito (Pro ativo até 12/10/2026)
+  — depois disso Claude Code deixa de funcionar até ela assinar o Pro de novo.
 - Código inteiro está no GitHub (`main` em `1e8d7fa` + esta nota).
 - Domínio veraoris.com NÃO deve ser cancelado (renovação anual).
 - Supabase (gratuito) pode pausar por inatividade — reativar no painel
