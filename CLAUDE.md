@@ -3748,3 +3748,20 @@ precisa de guessSubcat" sem testar contra o `categories` real da API
 primeiro — essa suposição já se provou falsa 2 vezes (Dermage, e agora
 confirmado de novo que Mahogany/WePink/Payot também tinham categorias
 que o comentário antigo não previa).
+
+## Sessão 29/09/2026 — projeto EM PAUSA (sem custos mensais)
+Priscila decidiu pausar os gastos por enquanto, pra lançar mais tarde:
+- **Netlify** passado pro plano gratuito (não apagado — site e variáveis
+  de ambiente/chaves secretas continuam guardados lá dentro). Risco
+  conhecido: se passar do limite gratuito, o Netlify pausa o site sozinho
+  (como em 15/07), mas nada se perde.
+- **Claude** passado de Pro pro plano gratuito — Claude Code deixa de
+  funcionar até ela assinar o Pro de novo.
+- Código inteiro está no GitHub (`main` em `1e8d7fa` + esta nota).
+- Domínio veraoris.com NÃO deve ser cancelado (renovação anual).
+- Supabase (gratuito) pode pausar por inatividade — reativar no painel
+  ao voltar, os dados não se perdem.
+
+**Ao retomar**: conferir se o Netlify está no ar, reativar Supabase se
+pausado, e seguir as pendências da sessão de 11/09 (promo Eudora já
+expirou — remover o bloco `#eudoraPromoSec` do `index.html`).
